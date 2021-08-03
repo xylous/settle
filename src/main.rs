@@ -1,8 +1,8 @@
 use clap::{App, Arg};
 use std::process::Command;
 use std::env;
-use chrono;
 use rusqlite::{Connection, Result};
+use chrono;
 
 mod io;
 use io::path_exists;
@@ -12,7 +12,6 @@ const ZETTELKASTEN_DB: &str = ".zettelkasten.db";
 
 struct Zettel
 {
-    filename: String,
     id: String,
     title: String,
 }
@@ -24,10 +23,24 @@ impl Zettel
     {
         Zettel
         {
-            filename: format!("{}{}{}.md", id, FILENAME_SEPARATOR, title.replace(" ", "_")),
             id: id.to_string(),
-            title:  title.to_string(),
+            title: title.to_string(),
         }
+    }
+
+    /// Return a string with the format "`id`(FILENAME_SEPARATOR)`title`.md"
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let FILENAME_SEPARATOR = "::";
+    /// let zettel = Zettel::new("2021", "structs in rust");
+    ///
+    /// assert_eq!(zettel.filename(), "2021::structs_in_rust.md");
+    /// ```
+    fn filename(&self) -> String
+    {
+        format!("{}{}{}.md", self.id, FILENAME_SEPARATOR, self.title.replace(" ", "_"))
     }
 
     /// Open `editor` on current Zettel
@@ -42,11 +55,20 @@ impl Zettel
     fn edit(&self, editor: &str) -> ()
     {
         Command::new(editor)
-            .arg(&self.filename)
+            .arg(self.filename())
             .status()
             .expect("failed to execute process");
     }
 
+    /// Save the current Zettel's metadata to the database, through `conn`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let conn = rusqlite::Connection::open("zettelkasten.db")?;
+    /// let zettel = Zettel::new("-1", "my super interesting note");
+    /// zettel.save(&conn)?;
+    /// ```
     fn save(&self, conn: &Connection) -> Result<(), rusqlite::Error>
     {
         conn.execute(
@@ -83,7 +105,10 @@ fn default_system_editor() -> String
         .unwrap_or("vim".to_string())
 }
 
-fn create_db(conn: &Connection) -> Result<(), rusqlite::Error>
+/// Create table `zettelkasten` in database `conn` if it doesn't exist already
+///
+/// The table `zettelkasten` has two properties: `id` and `title`, both of type `TEXT`
+fn initialize_db(conn: &Connection) -> Result<(), rusqlite::Error>
 {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS zettelkasten (
@@ -107,14 +132,14 @@ fn main() -> Result<(), rusqlite::Error>
         .get_matches();
 
     let conn = Connection::open(ZETTELKASTEN_DB)?;
-    create_db(&conn).unwrap();
+    initialize_db(&conn).unwrap();
 
     if let Some(ref matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
         let zettel = Zettel::new(&id_timestamp(), title);
         zettel.edit(&editor);
-        if path_exists(&zettel.filename) { // user may not have written the file
+        if path_exists(&zettel.filename()) { // user may not have written the file
             zettel.save(&conn).unwrap();
         }
     }
