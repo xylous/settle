@@ -1,11 +1,11 @@
 use clap::{App, Arg};
 use std::process::Command;
 use std::env;
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, Result, named_params};
 use chrono;
 
 mod io;
-use io::path_exists;
+use io::{path_exists, replace_extension};
 
 const FILENAME_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = ".zettelkasten.db";
@@ -26,6 +26,38 @@ impl Zettel
             id: id.to_string(),
             title: title.to_string(),
         }
+    }
+
+    /// Search in the database, connected through `conn`, for the Zettels whose `id` matches
+    /// `id_pattern`, and return them in a vector
+    /// Return an Error if nothing was found
+    ///
+    /// `id_pattern` uses SQL pattern syntax, e.g. `%` to match one or more characters.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let conn = rusqlite::Connection::open("test.db")?;
+    /// initialize_db(&conn)?;
+    /// let zet_1 = &Zettel::new("my_id", "some title");
+    /// zet_1.save(&conn)?;
+    /// let zet_2 = &Zettel::from_db_by_id(&conn, "my_id")?[0];
+    /// assert_eq!(zet_1, zet_2);
+    /// ```
+    fn from_db_by_id(conn: &Connection, id_pattern: &str) -> Result<Vec<Self>, rusqlite::Error>
+    {
+        let mut stmt = conn.prepare("SELECT * FROM zettelkasten WHERE id LIKE :pattern")?;
+        let mut rows = stmt.query(named_params! {":pattern": id_pattern})?;
+
+        let mut list_of_zettels: Vec<Self> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let id: String = row.get(0)?;
+            let title: String = row.get(1)?;
+            let zettel = Zettel::new(&id, &title);
+            list_of_zettels.push(zettel);
+        }
+
+        Ok(list_of_zettels)
     }
 
     /// Return a string with the format "`id`(FILENAME_SEPARATOR)`title`.md"
@@ -75,6 +107,30 @@ impl Zettel
             "INSERT INTO zettelkasten (id, title) values (?1, ?2)",
             &[&self.id, &self.title])?;
         Ok(())
+    }
+
+    /// Compile Zettel, from Markdown to HTML
+    /// Requires Pandoc installed
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let zettel = Zettel::new("1a3b", "why do we take notes?");
+    /// zettel.edit("nvim"); // add some content to file first
+    /// zettel.build();
+    /// ```
+    fn build(&self) -> ()
+    {
+        let filename = self.filename();
+        println!("compiling {}...", &filename);
+        Command::new("pandoc")
+            .arg("--standalone")
+            .arg(&filename)
+            .arg("--output")
+            .arg(replace_extension(&filename, "html"))
+            .arg(format!("--metadata=title:{}", &self.title))
+            .status()
+            .expect("failed to execute process");
     }
 }
 
@@ -129,6 +185,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
+        .subcommand(App::new("build")
+            .about("compile a zettel to html\nuses SQL syntax, e.g. `%` to match one or more characters")
+            .arg(Arg::new("ID")
+                .required(true)
+                .about("id of zettel")))
         .get_matches();
 
     let conn = Connection::open(ZETTELKASTEN_DB)?;
@@ -140,7 +201,17 @@ fn main() -> Result<(), rusqlite::Error>
         let zettel = Zettel::new(&id_timestamp(), title);
         zettel.edit(&editor);
         if path_exists(&zettel.filename()) { // user may not have written the file
-            zettel.save(&conn).unwrap();
+            zettel.save(&conn)?;
+        }
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("build") {
+        let id = matches.value_of("ID").unwrap_or_default();
+        let list_of_zettels = Zettel::from_db_by_id(&conn, id)?;
+        for zettel in list_of_zettels {
+            if path_exists(&zettel.filename()) {
+                zettel.build();
+            }
         }
     }
 
