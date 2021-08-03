@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 clap = { version = "3.0.0-beta.2" }
 chrono = { version = "*" }
+rusqlite = { version = "0.25.3" }

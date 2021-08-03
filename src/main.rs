@@ -2,16 +2,14 @@ use clap::{App, Arg};
 use std::process::Command;
 use std::env;
 use chrono;
+use rusqlite::{Connection, Result};
+
+mod io;
+use io::path_exists;
 
 const FILENAME_SEPARATOR: &str = "::";
+const ZETTELKASTEN_DB: &str = ".zettelkasten.db";
 
-#[derive(Debug, PartialEq)]
-struct Zettelkasten
-{
-    zettels: Option<Vec<Zettel>>,
-}
-
-#[derive(Debug, PartialEq)]
 struct Zettel
 {
     filename: String,
@@ -24,8 +22,9 @@ impl Zettel
     /// Create a Zettel with specified `id` and `title`.
     fn new(id: &str, title: &str) -> Self
     {
-        Zettel {
-            filename: format!("{}{}{}", id, FILENAME_SEPARATOR, title.replace(" ", "_")),
+        Zettel
+        {
+            filename: format!("{}{}{}.md", id, FILENAME_SEPARATOR, title.replace(" ", "_")),
             id: id.to_string(),
             title:  title.to_string(),
         }
@@ -46,6 +45,14 @@ impl Zettel
             .arg(&self.filename)
             .status()
             .expect("failed to execute process");
+    }
+
+    fn save(&self, conn: &Connection) -> Result<(), rusqlite::Error>
+    {
+        conn.execute(
+            "INSERT INTO zettelkasten (id, title) values (?1, ?2)",
+            &[&self.id, &self.title])?;
+        Ok(())
     }
 }
 
@@ -76,7 +83,18 @@ fn default_system_editor() -> String
         .unwrap_or("vim".to_string())
 }
 
-fn main() -> ()
+fn create_db(conn: &Connection) -> Result<(), rusqlite::Error>
+{
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS zettelkasten (
+            id      TEXT PRIMARY KEY,
+            title   TEXT NOT NULL
+        )",
+        []).expect("failed to create database");
+    Ok(())
+}
+
+fn main() -> Result<(), rusqlite::Error>
 {
     let matches = App::new("settler")
         .version(env!("CARGO_PKG_VERSION"))
@@ -88,10 +106,19 @@ fn main() -> ()
                 .about("title of zettel")))
         .get_matches();
 
+    let conn = Connection::open(ZETTELKASTEN_DB)?;
+    create_db(&conn).unwrap();
+
     if let Some(ref matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
         let zettel = Zettel::new(&id_timestamp(), title);
         zettel.edit(&editor);
+        if path_exists(&zettel.filename) { // user may not have written the file
+            zettel.save(&conn).unwrap();
+        }
     }
+
+    conn.close().unwrap_or_default();
+    Ok(())
 }
