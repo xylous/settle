@@ -86,6 +86,8 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("ID")
                 .required(true)
                 .about("id of zettel")))
+        .subcommand(App::new("generate")
+            .about("generate the database in the current directory"))
         .get_matches();
 
     let conn = Connection::open(ZETTELKASTEN_DB)?;
@@ -110,6 +112,13 @@ fn main() -> Result<(), rusqlite::Error>
                 zettel.build();
             }
         }
+    }
+
+    if matches.subcommand_matches("generate").is_some() {
+        for file in list_md_files(".") {
+            Zettel::from_str(&file).save(&conn).expect("could not save zettel");
+        }
+        println!("database generated successfuly");
     }
 
     conn.close().unwrap_or_default();
