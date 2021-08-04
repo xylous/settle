@@ -4,6 +4,30 @@ use std::process::Command;
 use crate::io::*;
 use crate::{FILENAME_SEPARATOR, LUA_FILTER_SCRIPT};
 
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+
+    #[test]
+    fn from_str_filename_with_no_extension()
+    {
+        let ans = Zettel::from_str("100b23e::some_title");
+
+        assert_eq!(ans.id, "100b23e");
+        assert_eq!(ans.title, "some title");
+    }
+
+    #[test]
+    fn from_str_filename_with_md_extension()
+    {
+        let ans = Zettel::from_str("100b23e::some_title.md");
+
+        assert_eq!(ans.id, "100b23e");
+        assert_eq!(ans.title, "some title");
+    }
+}
+
 pub struct Zettel
 {
     pub id: String,
@@ -20,6 +44,27 @@ impl Zettel
             id: id.to_string(),
             title: title.to_string(),
         }
+    }
+
+    /// Create a Zettel from a string representing a filename
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// const FILENAME_SEPARATOR = "::";
+    /// let ans = Zettel::from_str("100b23e::some_title");
+    ///
+    /// assert_eq!(ans.id, "100b23e");
+    /// assert_eq!(ans.title, "some title");
+    /// ```
+    pub fn from_str(s: &str) -> Self
+    {
+        let extensionless = replace_extension(s, "");
+        let split = extensionless.split(FILENAME_SEPARATOR);
+        let vec: Vec<&str> = split.collect();
+        let id = vec[0];
+        let title = vec[1].replace("_", " "); // in the filename, spaces are replaced with underscores
+        Zettel::new(id, &title)
     }
 
     /// Search in the database, connected through `conn`, for the Zettels whose `id` matches
