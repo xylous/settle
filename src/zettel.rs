@@ -78,7 +78,7 @@ impl Zettel
     /// zettel.edit("nvim"); // opens neovim, or panics if it can't find it
     /// zettel.edit("emacs"); // opens emacs, or panics if it can't find it
     /// ```
-    pub fn edit(&self, editor: &str) -> ()
+    pub fn edit(&self, editor: &str)
     {
         Command::new(editor)
             .arg(self.filename())
@@ -113,7 +113,7 @@ impl Zettel
     /// zettel.edit("nvim"); // add some content to file first
     /// zettel.build();
     /// ```
-    pub fn build(&self) -> ()
+    pub fn build(&self)
     {
         let filename = self.filename();
         let out_file = replace_extension(&filename, "html");

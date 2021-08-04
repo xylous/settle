@@ -35,8 +35,8 @@ fn id_timestamp() -> String
 fn default_system_editor() -> String
 {
     env::var("EDITOR")
-        .or(env::var("VISUAL"))
-        .unwrap_or("vim".to_string())
+        .or_else(|_| env::var("VISUAL"))
+        .unwrap_or_else(|_| "vim".to_string())
 }
 
 /// Create table `zettelkasten` in database `conn` if it doesn't exist already
@@ -55,7 +55,7 @@ fn initialize_db(conn: &Connection) -> Result<(), rusqlite::Error>
 
 /// Creates a Lua script that will be used by pandoc to replace links ending in `.md` with links
 /// ending in `.html`
-fn create_lua_filter() -> ()
+fn create_lua_filter()
 {
     if path_exists(LUA_FILTER_SCRIPT) {
         return;
@@ -91,7 +91,7 @@ fn main() -> Result<(), rusqlite::Error>
     let conn = Connection::open(ZETTELKASTEN_DB)?;
     initialize_db(&conn).unwrap();
 
-    if let Some(ref matches) = matches.subcommand_matches("new") {
+    if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
         let zettel = Zettel::new(&id_timestamp(), title);
@@ -101,7 +101,7 @@ fn main() -> Result<(), rusqlite::Error>
         }
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("build") {
+    if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
         let list_of_zettels = Zettel::from_db_by_id(&conn, id)?;
