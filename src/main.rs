@@ -1,6 +1,7 @@
 use clap::{App, Arg};
 use std::env;
 use rusqlite::{Connection, Result};
+use rayon::prelude::*;
 
 mod io;
 mod zettel;
@@ -115,10 +116,18 @@ fn main() -> Result<(), rusqlite::Error>
     }
 
     if matches.subcommand_matches("generate").is_some() {
-        for file in list_md_files(".") {
-            Zettel::from_str(&file).save(&conn).expect("could not save zettel");
-        }
-        println!("database generated successfuly");
+        let start = chrono::Local::now();
+        let files = list_md_files();
+        let _ = files.par_iter()
+            .map(|f| {
+                let t_conn = Connection::open(ZETTELKASTEN_DB).unwrap();
+                Zettel::from_str(&f)
+                    .save(&t_conn)
+                    .expect("failed to save zettel");
+            });
+        let end = chrono::Local::now();
+        let time = end - start;
+        println!("database generated successfully, took {}ms", time.num_milliseconds());
     }
 
     conn.close().unwrap_or_default();

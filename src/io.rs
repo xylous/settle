@@ -1,6 +1,7 @@
 #![allow(dead_code)]
-use std::fs::{self, File, read_dir, read_to_string, write};
+use std::fs::{self, File, read_to_string, write};
 use std::path::{Path, PathBuf};
+use glob::glob;
 
 pub fn file_to_string(path: &str) -> String
 {
@@ -34,20 +35,10 @@ pub fn remove_file(path: &str) -> std::io::Result<()>
     fs::remove_file(path)
 }
 
-pub fn list_md_files(path: &str) -> Vec<String>
+pub fn list_md_files() -> Vec<String>
 {
-    let paths = read_dir(path).expect("failed to read directory");
-
-    paths
-        .map(|f| {
-            f
-                .unwrap()
-                .path()
-                .to_string_lossy()
-                .to_string()
-        })
-        .filter(|s| {
-            s.ends_with(".md")
-        })
+    glob("*.md")
+        .expect("failed to read directory")
+        .map(|f| f.unwrap().to_string_lossy().to_string())
         .collect()
 }
