@@ -5,10 +5,11 @@ use rusqlite::{Connection, Result, named_params};
 use chrono;
 
 mod io;
-use io::{path_exists, replace_extension};
+use io::*;
 
 const FILENAME_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = ".zettelkasten.db";
+const LUA_FILTER_SCRIPT: &str = ".md_links_to_html.lua";
 
 struct Zettel
 {
@@ -122,12 +123,15 @@ impl Zettel
     fn build(&self) -> ()
     {
         let filename = self.filename();
+        let out_file = replace_extension(&filename, "html");
+
         println!("compiling {}...", &filename);
         Command::new("pandoc")
             .arg("--standalone")
             .arg(&filename)
             .arg("--output")
-            .arg(replace_extension(&filename, "html"))
+            .arg(&out_file)
+            .arg(format!("--lua-filter={}", LUA_FILTER_SCRIPT))
             .arg(format!("--metadata=title:{}", &self.title))
             .status()
             .expect("failed to execute process");
@@ -175,6 +179,24 @@ fn initialize_db(conn: &Connection) -> Result<(), rusqlite::Error>
     Ok(())
 }
 
+/// Creates a Lua script that will be used by pandoc to replace links ending in `.md` with links
+/// ending in `.html`
+fn create_lua_filter() -> ()
+{
+    if path_exists(LUA_FILTER_SCRIPT) {
+        return;
+    }
+    let lua_script =
+r#"-- this script replaces all links ending in `.md` with ones ending in `.html`
+-- it will used by pandoc when building the Zettelkasten
+function Link(el)
+    el.target = string.gsub(el.target, "%.md", ".html")
+    return el
+end
+"#;
+    write_to_file(LUA_FILTER_SCRIPT, lua_script);
+}
+
 fn main() -> Result<(), rusqlite::Error>
 {
     let matches = App::new("settler")
@@ -206,6 +228,7 @@ fn main() -> Result<(), rusqlite::Error>
     }
 
     if let Some(ref matches) = matches.subcommand_matches("build") {
+        create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
         let list_of_zettels = Zettel::from_db_by_id(&conn, id)?;
         for zettel in list_of_zettels {
