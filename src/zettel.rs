@@ -1,5 +1,6 @@
 use rusqlite::{Connection, Result, named_params};
 use std::process::Command;
+use regex::Regex;
 
 use crate::io::*;
 use crate::{FILENAME_SEPARATOR, LUA_FILTER_SCRIPT};
@@ -26,12 +27,24 @@ mod tests
         assert_eq!(ans.id, "100b23e");
         assert_eq!(ans.title, "some title");
     }
+
+    #[test]
+    fn zettel_update_links_one_link()
+    {
+        let file = "1011::test.md";
+        write_to_file(file, "[test](1012::interesting_note.md)");
+        let mut z = Zettel::from_str(file);
+        z.update_links();
+        let _ = remove_file(file);
+        assert_eq!(z.links_to, vec!["1012"]);
+    }
 }
 
 pub struct Zettel
 {
     pub id: String,
     pub title: String,
+    pub links_to: Vec<String>,
 }
 
 impl Zettel
@@ -43,6 +56,7 @@ impl Zettel
         {
             id: id.to_string(),
             title: title.to_string(),
+            links_to: vec![],
         }
     }
 
@@ -173,5 +187,18 @@ impl Zettel
             .arg(format!("--metadata=title:{}", &self.title))
             .status()
             .expect("failed to execute process");
+    }
+
+    /// Look into the file corresponding to the `Zettel`, extract links from it and put them in
+    /// `Zettel.links_to`
+    pub fn update_links(&mut self)
+    {
+        let filename = &self.filename();
+        let contents = file_to_string(filename);
+        let re = Regex::new(&format!(r#"\[.*\]\(\.?/?(.*?){}.*?\.md\)"#, FILENAME_SEPARATOR)).unwrap();
+        for cap in re.captures_iter(&contents) {
+            let id = cap.get(1).map_or("", |m| m.as_str()).to_string();
+            self.links_to.push(id);
+        }
     }
 }
