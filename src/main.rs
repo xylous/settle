@@ -1,6 +1,7 @@
 use clap::{App, Arg};
 use std::env;
 use rayon::prelude::*;
+use regex::Regex;
 
 mod io;
 mod zettel;
@@ -88,6 +89,8 @@ fn main() -> Result<(), rusqlite::Error>
                 .about("id of zettel")))
         .subcommand(App::new("generate")
             .about("generate the database in the current directory"))
+        .subcommand(App::new("backlinks")
+            .about("update the backlinks of every file in zettelkasten"))
         .get_matches();
 
     let db = Database::new(ZETTELKASTEN_DB)?;
@@ -116,6 +119,36 @@ fn main() -> Result<(), rusqlite::Error>
         let time = end - start;
 
         println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
+    } else if matches.subcommand_matches("backlinks").is_some() {
+        let all_zettels = db.find_by_id("%")?;
+        let start = chrono::Local::now();
+
+        all_zettels.par_iter()
+            .for_each(|z| {
+                let t_m_db = Database::new(ZETTELKASTEN_DB).unwrap();
+                let links = t_m_db.find_by_links_to(&z.id).unwrap();
+
+                let contents = file_to_string(&z.filename());
+                let re = Regex::new(r#"\n## Backlinks(?s:.*)\z"#).unwrap();
+
+                let mut new_content = re.replace(&contents, "").to_string();
+                new_content = format!("{}\n## Backlinks", new_content);
+                for link in links {
+                    new_content = format!(
+                        "{}\n\n[{}]\n\n[{}]: {}",
+                        new_content,
+                        link.title,
+                        link.title,
+                        link.filename(),
+                    );
+                }
+                write_to_file(&z.filename(), &new_content)
+            });
+
+        let end = chrono::Local::now();
+        let time = end - start;
+
+        println!("updated {} files' backlinks, took {}ms", all_zettels.len(), time.num_milliseconds());
     } else if matches.subcommand_matches("generate").is_some() {
         let start = chrono::Local::now();
 

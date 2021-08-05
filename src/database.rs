@@ -66,7 +66,7 @@ impl Database
     /// Search in the database for the Zettels whose `id` matches `pattern`, and return them
     /// Return an Error if nothing was found
     ///
-    /// `id_pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
+    /// `pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     ///
     /// # Examples
     ///
@@ -81,6 +81,30 @@ impl Database
     pub fn find_by_id(&self, pattern: &str) -> Result<Vec<Zettel>, rusqlite::Error>
     {
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE id LIKE :pattern")?;
+        let mut rows = stmt.query(named_params! {":pattern": pattern})?;
+
+        let mut results: Vec<Zettel> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let id: String = row.get(0)?;
+            let title: String = row.get(1)?;
+            let link_str: String = row.get(2)?;
+            let links: Vec<String> = crate::str_to_vec(&link_str, ",");
+            let zettel = Zettel::new(&id, &title, links);
+            results.push(zettel);
+        }
+
+        Ok(results)
+    }
+
+    /// Search in the database for the Zettels whose `links` property contains `id`, and return
+    /// them
+    /// Return an Error if nothing was found
+    ///
+    /// `id` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
+    pub fn find_by_links_to(&self, id: &str) -> Result<Vec<Zettel>>
+    {
+        let pattern = format!("%{}%", id);
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
