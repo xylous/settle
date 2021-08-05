@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use rusqlite::DatabaseName;
 use std::env;
 use rusqlite::{Connection, Result};
 use rayon::prelude::*;
@@ -92,7 +93,7 @@ fn main() -> Result<(), rusqlite::Error>
         .get_matches();
 
     let conn = Connection::open(ZETTELKASTEN_DB)?;
-    initialize_db(&conn).unwrap();
+    initialize_db(&conn)?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
@@ -116,17 +117,25 @@ fn main() -> Result<(), rusqlite::Error>
     }
 
     if matches.subcommand_matches("generate").is_some() {
+        let db_param = format!("file:{}?mode=memory&cache=shared", ZETTELKASTEN_DB);
         let start = chrono::Local::now();
+
+        let m_conn = Connection::open(&db_param)?;
+        initialize_db(&m_conn)?;
         let files = list_md_files();
-        let _ = files.par_iter()
-            .map(|f| {
-                let t_conn = Connection::open(ZETTELKASTEN_DB).unwrap();
+        files.par_iter()
+            .for_each(|f| {
+                let t_conn = Connection::open(&db_param).unwrap();
                 Zettel::from_str(&f)
                     .save(&t_conn)
                     .expect("failed to save zettel");
+                t_conn.close().unwrap_or_default();
             });
+        m_conn.backup(DatabaseName::Main, ZETTELKASTEN_DB, None)?;
+
         let end = chrono::Local::now();
         let time = end - start;
+
         println!("database generated successfully, took {}ms", time.num_milliseconds());
     }
 
