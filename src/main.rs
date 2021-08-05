@@ -93,7 +93,7 @@ fn main() -> Result<(), rusqlite::Error>
             .about("update the backlinks of every file in zettelkasten"))
         .get_matches();
 
-    let db = Database::new(ZETTELKASTEN_DB)?;
+    let db = Database::new(ZETTELKASTEN_DB, None)?;
     db.init()?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
@@ -125,7 +125,7 @@ fn main() -> Result<(), rusqlite::Error>
 
         all_zettels.par_iter()
             .for_each(|z| {
-                let t_m_db = Database::new(ZETTELKASTEN_DB).unwrap();
+                let t_m_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
                 let links = t_m_db.find_by_links_to(&z.id).unwrap();
 
                 let contents = file_to_string(&z.filename());
@@ -152,17 +152,10 @@ fn main() -> Result<(), rusqlite::Error>
     } else if matches.subcommand_matches("generate").is_some() {
         let start = chrono::Local::now();
 
-        let m_db = Database::in_memory(ZETTELKASTEN_DB)?;
-        m_db.init()?;
-        let files = list_md_files();
-        files.par_iter()
-            .for_each(|f| {
-                let t_m_db = Database::in_memory(ZETTELKASTEN_DB).unwrap();
-                let mut t_zet = Zettel::from_str(&f);
-                t_zet.update_links();
-                t_m_db.save(t_zet).unwrap();
-            });
-        m_db.write_to(ZETTELKASTEN_DB)?;
+        let mem_db = Database::in_memory(ZETTELKASTEN_DB)?;
+        mem_db.init()?;
+        mem_db.generate();
+        mem_db.write_to(ZETTELKASTEN_DB)?;
 
         let end = chrono::Local::now();
         let time = end - start;

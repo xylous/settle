@@ -1,19 +1,23 @@
 use rusqlite::{Connection, DatabaseName, Error, Result, named_params};
 
 use crate::zettel::Zettel;
+use rayon::prelude::*;
 
 pub struct Database
 {
+    name: String,
     conn: Connection,
 }
 
 impl Database
 {
     /// Create a `Database` interface to an SQLite database
-    pub fn new(name: &str) -> Result<Self, Error>
+    pub fn new(name: &str, uri: Option<&str>) -> Result<Self, Error>
     {
+        let g_uri = uri.or(Some(name)).unwrap();
         Ok(Database {
-            conn: Connection::open(name)?,
+            name: name.to_string(),
+            conn: Connection::open(g_uri)?,
         })
     }
 
@@ -21,7 +25,7 @@ impl Database
     pub fn in_memory(name: &str) -> Result<Self, Error>
     {
         let uri = &format!("file:{}?mode=memory&cache=shared", name);
-        Database::new(uri)
+        Database::new(name, Some(uri))
     }
 
     /// Initialise the current Database with a `zettelkasten` table that holds the properties of
@@ -118,5 +122,20 @@ impl Database
         }
 
         Ok(results)
+    }
+
+    /// Look for Markdown files in the current directory and populate the database with their
+    /// metadata
+    pub fn generate(&self)
+    {
+        let files = crate::io::list_md_files();
+        let name = &self.name;
+        files.par_iter()
+            .for_each(|f| {
+                let thread_db = Self::in_memory(name).unwrap();
+                let mut thread_zettel = Zettel::from_str(&f);
+                thread_zettel.update_links();
+                thread_db.save(thread_zettel).unwrap();
+            });
     }
 }
