@@ -1,4 +1,3 @@
-use rusqlite::{Connection, Result, named_params};
 use std::process::Command;
 use regex::Regex;
 
@@ -81,40 +80,6 @@ impl Zettel
         Zettel::new(id, &title, vec![])
     }
 
-    /// Search in the database, connected through `conn`, for the Zettels whose `id` matches
-    /// `id_pattern`, and return them in a vector
-    /// Return an Error if nothing was found
-    ///
-    /// `id_pattern` uses SQL pattern syntax, e.g. `%` to match one or more characters.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let conn = rusqlite::Connection::open("test.db")?;
-    /// initialize_db(&conn)?;
-    /// let zet_1 = &Zettel::new("my_id", "some title");
-    /// zet_1.save(&conn)?;
-    /// let zet_2 = &Zettel::from_db_by_id(&conn, "my_id")?[0];
-    /// assert_eq!(zet_1, zet_2);
-    /// ```
-    pub fn from_db_by_id(conn: &Connection, id_pattern: &str) -> Result<Vec<Self>, rusqlite::Error>
-    {
-        let mut stmt = conn.prepare("SELECT * FROM zettelkasten WHERE id LIKE :pattern")?;
-        let mut rows = stmt.query(named_params! {":pattern": id_pattern})?;
-
-        let mut list_of_zettels: Vec<Self> = Vec::new();
-        while let Some(row) = rows.next()? {
-            let id: String = row.get(0)?;
-            let title: String = row.get(1)?;
-            let link_str: String = row.get(2)?;
-            let links: Vec<String> = crate::str_to_vec(&link_str, ",");
-            let zettel = Zettel::new(&id, &title, links);
-            list_of_zettels.push(zettel);
-        }
-
-        Ok(list_of_zettels)
-    }
-
     /// Return a string with the format "`id`(FILENAME_SEPARATOR)`title`.md"
     ///
     /// # Examples
@@ -145,24 +110,6 @@ impl Zettel
             .arg(self.filename())
             .status()
             .expect("failed to execute process");
-    }
-
-    /// Save the current Zettel's metadata to the database, through `conn`
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let conn = rusqlite::Connection::open("zettelkasten.db")?;
-    /// let zettel = Zettel::new("-1", "my super interesting note");
-    /// zettel.save(&conn)?;
-    /// ```
-    pub fn save(&self, conn: &Connection) -> Result<(), rusqlite::Error>
-    {
-        let links = crate::vec_to_str(&self.links, ",");
-        conn.execute(
-            "INSERT INTO zettelkasten (id, title, links) values (?1, ?2, ?3)",
-            &[&self.id, &self.title, &links])?;
-        Ok(())
     }
 
     /// Compile Zettel, from Markdown to HTML

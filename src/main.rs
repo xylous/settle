@@ -1,12 +1,12 @@
 use clap::{App, Arg};
-use rusqlite::DatabaseName;
 use std::env;
-use rusqlite::{Connection, Result};
 use rayon::prelude::*;
 
 mod io;
 mod zettel;
+mod database;
 
+use crate::database::Database;
 use crate::io::*;
 use crate::zettel::Zettel;
 
@@ -39,21 +39,6 @@ fn default_system_editor() -> String
     env::var("EDITOR")
         .or_else(|_| env::var("VISUAL"))
         .unwrap_or_else(|_| "vim".to_string())
-}
-
-/// Create table `zettelkasten` in database `conn` if it doesn't exist already
-///
-/// The table `zettelkasten` has two properties: `id` and `title`, both of type `TEXT`
-fn initialize_db(conn: &Connection) -> Result<(), rusqlite::Error>
-{
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS zettelkasten (
-            id          TEXT PRIMARY KEY,
-            title       TEXT NOT NULL,
-            links       TEXT
-        )",
-        []).expect("failed to create database");
-    Ok(())
 }
 
 /// Join a vector of `String`s, separated by `sep`
@@ -105,8 +90,8 @@ fn main() -> Result<(), rusqlite::Error>
             .about("generate the database in the current directory"))
         .get_matches();
 
-    let conn = Connection::open(ZETTELKASTEN_DB)?;
-    initialize_db(&conn)?;
+    let db = Database::new(ZETTELKASTEN_DB)?;
+    db.init()?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
@@ -114,14 +99,14 @@ fn main() -> Result<(), rusqlite::Error>
         let zettel = Zettel::new(&id_timestamp(), title, vec![]);
         zettel.edit(&editor);
         if path_exists(&zettel.filename()) { // user may not have written the file
-            zettel.save(&conn)?;
+            db.save(zettel)?;
         }
     }
 
     if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
-        let list_of_zettels = Zettel::from_db_by_id(&conn, id)?;
+        let list_of_zettels = db.find_by_id(id)?;
         for zettel in list_of_zettels {
             if path_exists(&zettel.filename()) {
                 zettel.build();
@@ -130,21 +115,19 @@ fn main() -> Result<(), rusqlite::Error>
     }
 
     if matches.subcommand_matches("generate").is_some() {
-        let db_param = format!("file:{}?mode=memory&cache=shared", ZETTELKASTEN_DB);
         let start = chrono::Local::now();
 
-        let m_conn = Connection::open(&db_param)?;
-        initialize_db(&m_conn)?;
+        let m_db = Database::in_memory(ZETTELKASTEN_DB)?;
+        m_db.init()?;
         let files = list_md_files();
         files.par_iter()
             .for_each(|f| {
-                let t_conn = Connection::open(&db_param).unwrap();
+                let t_m_db = Database::in_memory(ZETTELKASTEN_DB).unwrap();
                 let mut t_zet = Zettel::from_str(&f);
                 t_zet.update_links();
-                t_zet.save(&t_conn).expect("failed to save zettel");
-                t_conn.close().unwrap_or_default();
+                t_m_db.save(t_zet).unwrap();
             });
-        m_conn.backup(DatabaseName::Main, ZETTELKASTEN_DB, None)?;
+        m_db.write_to(ZETTELKASTEN_DB)?;
 
         let end = chrono::Local::now();
         let time = end - start;
@@ -152,6 +135,5 @@ fn main() -> Result<(), rusqlite::Error>
         println!("database generated successfully, took {}ms", time.num_milliseconds());
     }
 
-    conn.close().unwrap_or_default();
     Ok(())
 }
