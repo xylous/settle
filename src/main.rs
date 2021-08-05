@@ -101,9 +101,7 @@ fn main() -> Result<(), rusqlite::Error>
         if path_exists(&zettel.filename()) { // user may not have written the file
             db.save(zettel)?;
         }
-    }
-
-    if let Some(matches) = matches.subcommand_matches("build") {
+    } else if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
         let start = chrono::Local::now();
@@ -118,9 +116,7 @@ fn main() -> Result<(), rusqlite::Error>
         let time = end - start;
 
         println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
-    }
-
-    if matches.subcommand_matches("generate").is_some() {
+    } else if matches.subcommand_matches("generate").is_some() {
         let start = chrono::Local::now();
 
         let m_db = Database::in_memory(ZETTELKASTEN_DB)?;
