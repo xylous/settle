@@ -106,12 +106,18 @@ fn main() -> Result<(), rusqlite::Error>
     if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
-        let list_of_zettels = db.find_by_id(id)?;
-        for zettel in list_of_zettels {
-            if path_exists(&zettel.filename()) {
-                zettel.build();
-            }
-        }
+        let start = chrono::Local::now();
+
+        let results = db.find_by_id(id)?;
+        results.par_iter()
+            .for_each(|z| {
+                z.build();
+            });
+
+        let end = chrono::Local::now();
+        let time = end - start;
+
+        println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
     }
 
     if matches.subcommand_matches("generate").is_some() {
