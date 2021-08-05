@@ -36,7 +36,7 @@ mod tests
         let mut z = Zettel::from_str(file);
         z.update_links();
         let _ = remove_file(file);
-        assert_eq!(z.links_to, vec!["1012"]);
+        assert_eq!(z.links, vec!["1012"]);
     }
 }
 
@@ -44,19 +44,19 @@ pub struct Zettel
 {
     pub id: String,
     pub title: String,
-    pub links_to: Vec<String>,
+    pub links: Vec<String>,
 }
 
 impl Zettel
 {
     /// Create a Zettel with specified `id` and `title`.
-    pub fn new(id: &str, title: &str) -> Self
+    pub fn new(id: &str, title: &str, links: Vec<String>) -> Self
     {
         Zettel
         {
             id: id.to_string(),
             title: title.to_string(),
-            links_to: vec![],
+            links
         }
     }
 
@@ -78,7 +78,7 @@ impl Zettel
         let vec: Vec<&str> = split.collect();
         let id = vec[0];
         let title = vec[1].replace("_", " "); // in the filename, spaces are replaced with underscores
-        Zettel::new(id, &title)
+        Zettel::new(id, &title, vec![])
     }
 
     /// Search in the database, connected through `conn`, for the Zettels whose `id` matches
@@ -106,7 +106,9 @@ impl Zettel
         while let Some(row) = rows.next()? {
             let id: String = row.get(0)?;
             let title: String = row.get(1)?;
-            let zettel = Zettel::new(&id, &title);
+            let link_str: String = row.get(2)?;
+            let links: Vec<String> = crate::str_to_vec(&link_str, ",");
+            let zettel = Zettel::new(&id, &title, links);
             list_of_zettels.push(zettel);
         }
 
@@ -156,9 +158,10 @@ impl Zettel
     /// ```
     pub fn save(&self, conn: &Connection) -> Result<(), rusqlite::Error>
     {
+        let links = crate::vec_to_str(&self.links, ",");
         conn.execute(
-            "INSERT INTO zettelkasten (id, title) values (?1, ?2)",
-            &[&self.id, &self.title])?;
+            "INSERT INTO zettelkasten (id, title, links) values (?1, ?2, ?3)",
+            &[&self.id, &self.title, &links])?;
         Ok(())
     }
 
@@ -190,7 +193,7 @@ impl Zettel
     }
 
     /// Look into the file corresponding to the `Zettel`, extract links from it and put them in
-    /// `Zettel.links_to`
+    /// `Zettel.links`
     pub fn update_links(&mut self)
     {
         let filename = &self.filename();
@@ -198,7 +201,7 @@ impl Zettel
         let re = Regex::new(&format!(r#"\[.*\]\(\.?/?(.*?){}.*?\.md\)"#, FILENAME_SEPARATOR)).unwrap();
         for cap in re.captures_iter(&contents) {
             let id = cap.get(1).map_or("", |m| m.as_str()).to_string();
-            self.links_to.push(id);
+            self.links.push(id);
         }
     }
 }

@@ -48,11 +48,24 @@ fn initialize_db(conn: &Connection) -> Result<(), rusqlite::Error>
 {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS zettelkasten (
-            id      TEXT PRIMARY KEY,
-            title   TEXT NOT NULL
+            id          TEXT PRIMARY KEY,
+            title       TEXT NOT NULL,
+            links       TEXT
         )",
         []).expect("failed to create database");
     Ok(())
+}
+
+/// Join a vector of `String`s, separated by `sep`
+fn vec_to_str(vec: &Vec<String>, sep: &str) -> String
+{
+    vec.join(sep)
+}
+
+/// Split `str` on `sep` and return results as a vector
+fn str_to_vec(str: &str, sep: &str) -> Vec<String>
+{
+    str.split(sep).map(|s| s.to_string()).collect()
 }
 
 /// Creates a Lua script that will be used by pandoc to replace links ending in `.md` with links
@@ -98,7 +111,7 @@ fn main() -> Result<(), rusqlite::Error>
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
-        let zettel = Zettel::new(&id_timestamp(), title);
+        let zettel = Zettel::new(&id_timestamp(), title, vec![]);
         zettel.edit(&editor);
         if path_exists(&zettel.filename()) { // user may not have written the file
             zettel.save(&conn)?;
@@ -126,9 +139,9 @@ fn main() -> Result<(), rusqlite::Error>
         files.par_iter()
             .for_each(|f| {
                 let t_conn = Connection::open(&db_param).unwrap();
-                Zettel::from_str(&f)
-                    .save(&t_conn)
-                    .expect("failed to save zettel");
+                let mut t_zet = Zettel::from_str(&f);
+                t_zet.update_links();
+                t_zet.save(&t_conn).expect("failed to save zettel");
                 t_conn.close().unwrap_or_default();
             });
         m_conn.backup(DatabaseName::Main, ZETTELKASTEN_DB, None)?;
