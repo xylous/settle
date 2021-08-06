@@ -4,6 +4,7 @@ use rayon::prelude::*;
 mod io;
 mod zettel;
 mod database;
+mod parser;
 
 use crate::database::Database;
 use crate::io::*;
