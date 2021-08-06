@@ -4,7 +4,7 @@
 
 ## Getting started
 
-### Reguirements
+### Requirements
 
 * cargo/rust toolchain
 
@@ -40,8 +40,9 @@ $ settle new 'A super interesting note!'
 ## Roadmap
 
 - [x] ~~compile to HTML; requires `pandoc`~~
+- [x] ~~update backlinks automatically~~
+- [ ] look for the context of a link when generating backlinks
 - [ ] tags; specifically, search by tags
-- [ ] update backlinks automatically
 
 ## Contributing
 
