@@ -1,6 +1,5 @@
 use clap::{App, Arg};
 use rayon::prelude::*;
-use regex::Regex;
 
 mod io;
 mod zettel;
@@ -111,24 +110,9 @@ fn main() -> Result<(), rusqlite::Error>
 
         all_zettels.par_iter()
             .for_each(|z| {
-                let t_m_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
-                let links = t_m_db.find_by_links_to(&z.id).unwrap();
-
-                let contents = file_to_string(&z.filename());
-                let re = Regex::new(r#"\n## Backlinks(?s:.*)\z"#).unwrap();
-
-                let mut new_contents = re.replace(&contents, "").to_string();
-                new_contents = format!("{}\n## Backlinks", new_contents);
-                for link in links {
-                    new_contents = format!(
-                        "{}\n\n[{}]\n\n[{}]: {}",
-                        new_contents,
-                        link.title,
-                        link.title,
-                        link.filename(),
-                    );
-                }
-                write_to_file(&z.filename(), &new_contents)
+                let thread_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
+                let links = thread_db.find_by_links_to(&z.id).unwrap();
+                z.update_backlinks_section(&links);
             });
 
         let end = chrono::Local::now();

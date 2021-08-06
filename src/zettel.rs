@@ -178,4 +178,58 @@ impl Zettel
             self.links.push(id);
         }
     }
+
+    /// Overwrite (or, if it doesn't exist, create) a `## Backlinks` section at the end of the
+    /// Zettel, with the links being other Zettels
+    pub fn update_backlinks_section(&self, links: &Vec<Zettel>)
+    {
+        let file = &self.filename();
+        let contents = file_to_string(file);
+        let re = Regex::new(r#"\n## Backlinks(?s:.*)\z"#).unwrap();
+
+        let mut new_contents = re.replace(&contents, "").to_string();
+        new_contents.push_str(&Self::backlink_header());
+
+        for link in links {
+            let b_link = &Self::backlink_str(link);
+            new_contents.push_str(b_link);
+        }
+
+        write_to_file(file, &new_contents)
+    }
+
+    /// Return a String containing
+    ///
+    /// ```md
+    ///
+    /// ## Backlinks
+    ///
+    /// ```
+    fn backlink_header() -> String
+    {
+        "\n\
+        ## Backlinks\n\
+        \n"
+        .to_string()
+    }
+
+    /// Return a String containing a markdown reference link with the template:
+    ///
+    /// ```md
+    /// [<link.title>]
+    ///
+    /// [<link.title>]: <link.filename()>
+    /// ```
+    fn backlink_str(link: &Zettel) -> String
+    {
+        format!(
+            "[{}]\n\
+            \n\
+            [{}]: {}\n\
+            ",
+            link.title,
+            link.title,
+            link.filename(),
+        )
+    }
 }
