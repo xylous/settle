@@ -58,7 +58,7 @@ impl Database
     /// let zettel = Zettel::new("-1", "my super interesting note");
     /// zettel.save(&conn)?;
     /// ```
-    pub fn save(&self, zettel: Zettel) -> Result<(), rusqlite::Error>
+    pub fn save(&self, zettel: &Zettel) -> Result<(), rusqlite::Error>
     {
         let links = crate::vec_to_str(&zettel.links, ",");
         &self.conn.execute(
@@ -135,7 +135,7 @@ impl Database
                 let thread_db = Self::in_memory(name).unwrap();
                 let mut thread_zettel = Zettel::from_str(&f);
                 thread_zettel.update_links();
-                thread_db.save(thread_zettel).unwrap();
+                thread_db.save(&thread_zettel).unwrap();
             });
     }
 }

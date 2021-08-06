@@ -13,7 +13,6 @@ mod tests
     fn from_str_filename_with_no_extension()
     {
         let ans = Zettel::from_str("100b23e::some_title");
-
         assert_eq!(ans.id, "100b23e");
         assert_eq!(ans.title, "some title");
     }
@@ -22,7 +21,6 @@ mod tests
     fn from_str_filename_with_md_extension()
     {
         let ans = Zettel::from_str("100b23e::some_title.md");
-
         assert_eq!(ans.id, "100b23e");
         assert_eq!(ans.title, "some title");
     }
@@ -37,6 +35,14 @@ mod tests
         let _ = remove_file(file);
         assert_eq!(z.links, vec!["1012"]);
     }
+}
+
+/// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
+fn default_system_editor() -> String
+{
+    std::env::var("EDITOR")
+        .or_else(|_| std::env::var("VISUAL"))
+        .unwrap_or_else(|_| "vim".to_string())
 }
 
 pub struct Zettel
@@ -78,6 +84,27 @@ impl Zettel
         let id = vec[0];
         let title = vec[1].replace("_", " "); // in the filename, spaces are replaced with underscores
         Zettel::new(id, &title, vec![])
+    }
+
+    /// Create Zettel as a physical file on the system and open system editor on it
+    pub fn create(self) -> Self
+    {
+        let editor = default_system_editor();
+        write_to_file(&self.filename(), &self.yaml_metadata());
+        self.edit(&editor);
+        self
+    }
+
+    /// Generate YAML metadata to put at the top of a newly created Zettel
+    fn yaml_metadata(&self) -> String
+    {
+        format!(
+            "---\n\
+            title: {}\n\
+            tags:\n\
+            ---\n",
+            self.title,
+        )
     }
 
     /// Return a string with the format "`id`(FILENAME_SEPARATOR)`title`.md"

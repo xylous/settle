@@ -1,5 +1,4 @@
 use clap::{App, Arg};
-use std::env;
 use rayon::prelude::*;
 use regex::Regex;
 
@@ -32,14 +31,6 @@ fn id_timestamp() -> String
 {
     let dt = chrono::offset::Local::now();
     dt.format("%Y%m%d%H%M%S").to_string()
-}
-
-/// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
-fn default_system_editor() -> String
-{
-    env::var("EDITOR")
-        .or_else(|_| env::var("VISUAL"))
-        .unwrap_or_else(|_| "vim".to_string())
 }
 
 /// Join a vector of `String`s, separated by `sep`
@@ -98,12 +89,8 @@ fn main() -> Result<(), rusqlite::Error>
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
-        let editor = default_system_editor();
-        let zettel = Zettel::new(&id_timestamp(), title, vec![]);
-        zettel.edit(&editor);
-        if path_exists(&zettel.filename()) { // user may not have written the file
-            db.save(zettel)?;
-        }
+        let zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
+        db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
@@ -117,7 +104,6 @@ fn main() -> Result<(), rusqlite::Error>
 
         let end = chrono::Local::now();
         let time = end - start;
-
         println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
     } else if matches.subcommand_matches("backlinks").is_some() {
         let all_zettels = db.find_by_id("%")?;
@@ -131,18 +117,18 @@ fn main() -> Result<(), rusqlite::Error>
                 let contents = file_to_string(&z.filename());
                 let re = Regex::new(r#"\n## Backlinks(?s:.*)\z"#).unwrap();
 
-                let mut new_content = re.replace(&contents, "").to_string();
-                new_content = format!("{}\n## Backlinks", new_content);
+                let mut new_contents = re.replace(&contents, "").to_string();
+                new_contents = format!("{}\n## Backlinks", new_contents);
                 for link in links {
-                    new_content = format!(
+                    new_contents = format!(
                         "{}\n\n[{}]\n\n[{}]: {}",
-                        new_content,
+                        new_contents,
                         link.title,
                         link.title,
                         link.filename(),
                     );
                 }
-                write_to_file(&z.filename(), &new_content)
+                write_to_file(&z.filename(), &new_contents)
             });
 
         let end = chrono::Local::now();
@@ -159,7 +145,6 @@ fn main() -> Result<(), rusqlite::Error>
 
         let end = chrono::Local::now();
         let time = end - start;
-
         println!("database generated successfully, took {}ms", time.num_milliseconds());
     }
 
