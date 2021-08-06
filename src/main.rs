@@ -48,9 +48,6 @@ fn str_to_vec(str: &str, sep: &str) -> Vec<String>
 /// ending in `.html`
 fn create_lua_filter()
 {
-    if path_exists(LUA_FILTER_SCRIPT) {
-        return;
-    }
     let lua_script =
 r#"-- this script replaces all links ending in `.md` with ones ending in `.html`
 -- it will used by pandoc when building the Zettelkasten
@@ -100,7 +97,7 @@ fn main() -> Result<(), rusqlite::Error>
             .for_each(|z| {
                 z.build();
             });
-        let _ = remove_file(LUA_FILTER_SCRIPT);
+        delete_file(LUA_FILTER_SCRIPT).unwrap_or_default();
 
         let end = chrono::Local::now();
         let time = end - start;
