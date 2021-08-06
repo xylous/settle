@@ -10,7 +10,7 @@ use crate::io::*;
 use crate::zettel::Zettel;
 
 const FILENAME_SEPARATOR: &str = "::";
-const ZETTELKASTEN_DB: &str = ".zettelkasten.db";
+const ZETTELKASTEN_DB: &str = "metadata.db";
 const LUA_FILTER_SCRIPT: &str = ".md_links_to_html.lua";
 
 /// Return a timestamp with the format YYYYMMDDhhmmss
