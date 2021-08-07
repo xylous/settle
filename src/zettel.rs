@@ -47,6 +47,52 @@ fn default_system_editor() -> String
         .unwrap_or_else(|_| "vim".to_string())
 }
 
+/// Return a String containing
+///
+/// ```md
+///
+/// ## Backlinks
+///
+/// ```
+fn backlink_header() -> String
+{
+    "\n\
+    ## Backlinks\n\
+    \n"
+    .to_string()
+}
+
+/// Given a markdown paragraph, generate a context line to be put in the Backlinks section of a
+/// Zettel
+fn backlink_paragraph_format(s: &str) -> String
+{
+    format!(
+        "\t* {}\n",
+        s,
+    )
+}
+
+/// Return a String containing a markdown reference link with the template:
+///
+/// ```md
+/// [<link.title>]
+///
+/// [<link.title>]: <link.filename()>
+/// ```
+fn backlink_str(link: &Zettel, contexts: Vec<String>) -> String
+{
+    format!(
+        "* [{}]\n\
+        {}\n\
+        [{}]: {}\n\
+        ",
+        link.title,
+        contexts.join(""),
+        link.title,
+        link.filename(),
+    )
+}
+
 pub struct Zettel
 {
     pub id: String,
@@ -190,30 +236,16 @@ impl Zettel
         let re = Regex::new(r#"\n## Backlinks(?s:.*)\z"#).unwrap();
 
         let mut new_contents = re.replace(&contents, "").to_string();
-        new_contents.push_str(&Self::backlink_header());
+        let b_header = backlink_header();
+        new_contents.push_str(&b_header);
 
         for link in links {
             let b_contexts = Self::backlink_context(&self, link);
-            let b_link = &Self::backlink_str(link, b_contexts);
-            new_contents.push_str(b_link);
+            let b_link = backlink_str(link, b_contexts);
+            new_contents.push_str(&b_link);
         }
 
         write_to_file(file, &new_contents)
-    }
-
-    /// Return a String containing
-    ///
-    /// ```md
-    ///
-    /// ## Backlinks
-    ///
-    /// ```
-    fn backlink_header() -> String
-    {
-        "\n\
-        ## Backlinks\n\
-        \n"
-        .to_string()
     }
 
     /// Read `link.filename()` and find the paragraphs where the current Zettel is mentioned
@@ -226,7 +258,7 @@ impl Zettel
             .into_par_iter()
             .map(|e| {
                 match e {
-                    Block::Paragraph(s) => Self::backlink_paragraph_format(&s),
+                    Block::Paragraph(s) => backlink_paragraph_format(&s),
                 }
             })
             .filter(|e| {
@@ -236,36 +268,5 @@ impl Zettel
                 re.replace_all(&s, "").to_string()
             })
             .collect()
-    }
-
-    /// Given a markdown paragraph, generate a context line to be put in the Backlinks section of a
-    /// Zettel
-    fn backlink_paragraph_format(s: &str) -> String
-    {
-        format!(
-            "\t* {}\n",
-            s,
-        )
-    }
-
-    /// Return a String containing a markdown reference link with the template:
-    ///
-    /// ```md
-    /// [<link.title>]
-    ///
-    /// [<link.title>]: <link.filename()>
-    /// ```
-    fn backlink_str(link: &Zettel, contexts: Vec<String>) -> String
-    {
-        format!(
-            "* [{}]\n\
-            {}\n\
-            [{}]: {}\n\
-            ",
-            link.title,
-            contexts.join(""),
-            link.title,
-            link.filename(),
-        )
     }
 }
