@@ -243,10 +243,8 @@ impl Zettel
     fn backlink_paragraph_format(s: &str) -> String
     {
         format!(
-            "\t* {}",
-            s.split("\n")
-                .collect::<Vec<&str>>()
-                .join("\n\t  "),
+            "\t* {}\n",
+            s,
         )
     }
 
@@ -260,7 +258,7 @@ impl Zettel
     fn backlink_str(link: &Zettel, contexts: Vec<String>) -> String
     {
         format!(
-            "[{}]\n\
+            "* [{}]\n\
             {}\n\
             [{}]: {}\n\
             ",
