@@ -64,6 +64,7 @@ fn main() -> Result<(), rusqlite::Error>
 {
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
+        .author("xylous, xylous.e@gmail.com")
         .about("CLI tool to manage a digital zettelkasten")
         .subcommand(App::new("new")
             .about("creates a new zettel")
