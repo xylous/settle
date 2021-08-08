@@ -112,6 +112,7 @@ fn main() -> Result<(), rusqlite::Error>
         for mut zettel in results {
             zettel.edit(&editor);
             zettel.update_links();
+            db.delete(&zettel)?;
             db.save(&zettel)?;
         }
     } else if let Some(matches) = matches.subcommand_matches("build") {

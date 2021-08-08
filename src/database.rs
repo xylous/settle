@@ -67,6 +67,16 @@ impl Database
         Ok(())
     }
 
+    /// Remove the Zettel's metadata from the database
+    pub fn delete(&self, zettel: &Zettel) -> Result<(), rusqlite::Error>
+    {
+        &self.conn.execute(
+            "DELETE FROM zettelkasten WHERE id = (?1)",
+            &[&zettel.id]
+        )?;
+        Ok(())
+    }
+
     /// Search in the database for the Zettels whose `id` matches `pattern`, and return them
     /// Return an Error if nothing was found
     ///
