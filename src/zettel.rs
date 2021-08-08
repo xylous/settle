@@ -202,7 +202,6 @@ impl Zettel
         let filename = self.filename();
         let out_file = replace_extension(&filename, "html");
 
-        println!("compiling {}...", &filename);
         Command::new("pandoc")
             .arg("--standalone")
             .arg(&filename)
