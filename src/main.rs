@@ -72,7 +72,9 @@ fn main() -> Result<(), rusqlite::Error>
                 .required(true)
                 .about("title of zettel")))
         .subcommand(App::new("build")
-            .about("compile a zettel to html\nuses SQL syntax, e.g. `%` to match one or more characters")
+            .long_about(
+                "compile a Zettel to html \n\
+                uses SQL syntax, e.g. `%` to match one or more characters")
             .arg(Arg::new("ID")
                 .required(true)
                 .about("id of zettel")))
