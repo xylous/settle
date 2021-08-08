@@ -89,7 +89,8 @@ fn main() -> Result<(), rusqlite::Error>
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
-        let zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
+        let mut zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
+        zettel.update_links();
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
