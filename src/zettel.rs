@@ -5,6 +5,7 @@ use regex::Regex;
 use crate::io::*;
 use crate::{FILENAME_SEPARATOR, LUA_FILTER_SCRIPT};
 use crate::parser::{self, *};
+use crate::default_system_editor;
 
 #[cfg(test)]
 mod tests
@@ -37,14 +38,6 @@ mod tests
         let _ = delete_file(file);
         assert_eq!(z.links, vec!["1012"]);
     }
-}
-
-/// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
-fn default_system_editor() -> String
-{
-    std::env::var("EDITOR")
-        .or_else(|_| std::env::var("VISUAL"))
-        .unwrap_or_else(|_| "vim".to_string())
 }
 
 /// Return a String containing

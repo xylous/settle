@@ -6,9 +6,9 @@ mod zettel;
 mod database;
 mod parser;
 
-use crate::database::Database;
 use crate::io::*;
 use crate::zettel::Zettel;
+use crate::database::Database;
 
 const FILENAME_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = "metadata.db";
@@ -60,6 +60,14 @@ end
     write_to_file(LUA_FILTER_SCRIPT, lua_script);
 }
 
+/// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
+fn default_system_editor() -> String
+{
+    std::env::var("EDITOR")
+        .or_else(|_| std::env::var("VISUAL"))
+        .unwrap_or_else(|_| "vim".to_string())
+}
+
 fn main() -> Result<(), rusqlite::Error>
 {
     let matches = App::new(env!("CARGO_PKG_NAME"))
@@ -71,6 +79,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
+        .subcommand(App::new("edit")
+            .about("edit an existing zettel")
+            .arg(Arg::new("ID")
+                .required(true)
+                .about("id of zettel")))
         .subcommand(App::new("build")
             .long_about(
                 "compile a Zettel to html \n\
@@ -92,6 +105,15 @@ fn main() -> Result<(), rusqlite::Error>
         let mut zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
         zettel.update_links();
         db.save(&zettel)?;
+    } else if let Some(matches) = matches.subcommand_matches("edit") {
+        let id = matches.value_of("ID").unwrap_or_default();
+        let results = db.find_by_id(id)?;
+        let editor = default_system_editor();
+        for mut zettel in results {
+            zettel.edit(&editor);
+            zettel.update_links();
+            db.save(&zettel)?;
+        }
     } else if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
