@@ -76,6 +76,10 @@ fn main() -> Result<(), rusqlite::Error>
         .about("CLI tool to manage a digital zettelkasten")
         .subcommand(App::new("new")
             .about("creates a new zettel")
+            .arg(Arg::new("flag_transient")
+                .short('t')
+                .long("transient")
+                .about("creates a new transient note"))
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
@@ -109,7 +113,13 @@ fn main() -> Result<(), rusqlite::Error>
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap_or_default();
-        let mut zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
+        let mut id = id_timestamp();
+
+        if matches.is_present("flag_transient") {
+            id = format!("t{}", id);
+        }
+
+        let mut zettel = Zettel::new(&id, title, vec![]).create();
         zettel.update_links();
         zettel.update_tags();
         db.save(&zettel)?;
