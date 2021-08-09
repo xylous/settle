@@ -41,10 +41,12 @@ $ settle new 'A super interesting note!'
 
 - [x] ~~compile to HTML; requires `pandoc`~~
 - [x] ~~update backlinks automatically~~
+- [x] ~~tags; specifically, search by tags~~
+- [ ] transient notes
+- [ ] full text search
 - [ ] look for the context of a link when generating backlinks
     - [x] ~~paragraphs~~
     - [ ] lists
-- [ ] tags; specifically, search by tags
 
 ## Contributing
 
