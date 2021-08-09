@@ -2,7 +2,7 @@ use std::process::Command;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
-use crate::io::*;
+use crate::{io::*, str_to_vec};
 use crate::{FILENAME_SEPARATOR, LUA_FILTER_SCRIPT};
 use crate::parser::{self, *};
 use crate::default_system_editor;
@@ -91,6 +91,7 @@ pub struct Zettel
     pub id: String,
     pub title: String,
     pub links: Vec<String>,
+    pub tags: Vec<String>,
 }
 
 impl Zettel
@@ -102,7 +103,8 @@ impl Zettel
         {
             id: id.to_string(),
             title: title.to_string(),
-            links
+            links,
+            tags: vec![],
         }
     }
 
@@ -216,6 +218,20 @@ impl Zettel
         for cap in re.captures_iter(&contents) {
             let id = cap.get(1).map_or("", |m| m.as_str()).to_string();
             self.links.push(id);
+        }
+    }
+
+    /// Look into the file corresponding to the `Zettel`, extract tags from it and put them in
+    /// `Zettel.tags`
+    #[allow(dead_code)]
+    pub fn update_tags(&mut self)
+    {
+        let file = &self.filename();
+        let contents = file_to_string(file);
+        let re = Regex::new(r"\ntags: (.*?)\n").unwrap();
+        for cap in re.captures_iter(&contents) {
+            let tags = str_to_vec(&cap[1], ",");
+            self.tags = tags.into_iter().map(|t| t.replace(" ", "")).collect();
         }
     }
 

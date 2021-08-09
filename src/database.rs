@@ -36,7 +36,8 @@ impl Database
             "CREATE TABLE IF NOT EXISTS zettelkasten (
                 id          TEXT PRIMARY KEY,
                 title       TEXT NOT NULL,
-                links       TEXT
+                links       TEXT,
+                tags        TEXT
             )",
             [])?;
         Ok(())
@@ -61,9 +62,10 @@ impl Database
     pub fn save(&self, zettel: &Zettel) -> Result<(), rusqlite::Error>
     {
         let links = crate::vec_to_str(&zettel.links, ",");
+        let tags = crate::vec_to_str(&zettel.tags, ",");
         &self.conn.execute(
-            "INSERT INTO zettelkasten (id, title, links) values (?1, ?2, ?3)",
-            &[&zettel.id, &zettel.title, &links])?;
+            "INSERT INTO zettelkasten (id, title, links, tags) values (?1, ?2, ?3, ?4)",
+            &[&zettel.id, &zettel.title, &links, &tags])?;
         Ok(())
     }
 
