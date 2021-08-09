@@ -223,7 +223,6 @@ impl Zettel
 
     /// Look into the file corresponding to the `Zettel`, extract tags from it and put them in
     /// `Zettel.tags`
-    #[allow(dead_code)]
     pub fn update_tags(&mut self)
     {
         let file = &self.filename();

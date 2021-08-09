@@ -123,7 +123,6 @@ impl Database
     /// Return an Error if nothing was found
     ///
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    #[allow(dead_code)]
     pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, rusqlite::Error>
     {
         let pattern = format!("%{}%", tag);
@@ -170,6 +169,7 @@ impl Database
                 let thread_db = Self::in_memory(name).unwrap();
                 let mut thread_zettel = Zettel::from_str(&f);
                 thread_zettel.update_links();
+                thread_zettel.update_tags();
                 thread_db.save(&thread_zettel).unwrap();
             });
     }

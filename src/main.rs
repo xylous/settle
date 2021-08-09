@@ -91,6 +91,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("ID")
                 .required(true)
                 .about("id of zettel")))
+        .subcommand(App::new("find")
+            .arg(Arg::new("TAG")
+                .required(true)
+                .about("tag of zettel"))
+            .about("search Zettels by tag"))
         .subcommand(App::new("generate")
             .about("generate the database in the current directory"))
         .subcommand(App::new("backlinks")
@@ -104,6 +109,7 @@ fn main() -> Result<(), rusqlite::Error>
         let title = matches.value_of("TITLE").unwrap_or_default();
         let mut zettel = Zettel::new(&id_timestamp(), title, vec![]).create();
         zettel.update_links();
+        zettel.update_tags();
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {
         let id = matches.value_of("ID").unwrap_or_default();
@@ -112,6 +118,7 @@ fn main() -> Result<(), rusqlite::Error>
         for mut zettel in results {
             zettel.edit(&editor);
             zettel.update_links();
+            zettel.update_tags();
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
@@ -130,6 +137,14 @@ fn main() -> Result<(), rusqlite::Error>
         let end = chrono::Local::now();
         let time = end - start;
         println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
+    } else if let Some(matches) = matches.subcommand_matches("find") {
+        let tag = matches.value_of("TAG").unwrap_or_default();
+        let results = db.find_by_tag(tag)?;
+        println!("found {} items", results.len());
+        results.par_iter()
+            .for_each(|z| {
+                println!("{}", z.filename());
+            });
     } else if matches.subcommand_matches("backlinks").is_some() {
         let all_zettels = db.find_by_id("%")?;
         let start = chrono::Local::now();
