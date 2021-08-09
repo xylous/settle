@@ -1,7 +1,17 @@
-use rusqlite::{Connection, DatabaseName, Error, Result, named_params};
+use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
 use crate::zettel::Zettel;
 use rayon::prelude::*;
+
+/// Construct a Zettel from an entry in the database metadata
+fn zettel_metadata(row: &Row) -> Result<Zettel, rusqlite::Error>
+{
+    let id: String = row.get(0)?;
+    let title: String = row.get(1)?;
+    let link_str: String = row.get(2)?;
+    let links: Vec<String> = crate::str_to_vec(&link_str, ",");
+    Ok(Zettel::new(&id, &title, links))
+}
 
 pub struct Database
 {
@@ -101,11 +111,7 @@ impl Database
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let id: String = row.get(0)?;
-            let title: String = row.get(1)?;
-            let link_str: String = row.get(2)?;
-            let links: Vec<String> = crate::str_to_vec(&link_str, ",");
-            let zettel = Zettel::new(&id, &title, links);
+            let zettel = zettel_metadata(row)?;
             results.push(zettel);
         }
 
@@ -125,11 +131,7 @@ impl Database
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let id: String = row.get(0)?;
-            let title: String = row.get(1)?;
-            let link_str: String = row.get(2)?;
-            let links: Vec<String> = crate::str_to_vec(&link_str, ",");
-            let zettel = Zettel::new(&id, &title, links);
+            let zettel = zettel_metadata(row)?;
             results.push(zettel);
         }
 
