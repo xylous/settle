@@ -1,6 +1,6 @@
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
-use crate::zettel::Zettel;
+use crate::{str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
 
 /// Construct a Zettel from an entry in the database metadata
@@ -69,7 +69,7 @@ impl Database
     /// let zettel = Zettel::new("-1", "my super interesting note");
     /// zettel.save(&conn)?;
     /// ```
-    pub fn save(&self, zettel: &Zettel) -> Result<(), rusqlite::Error>
+    pub fn save(&self, zettel: &Zettel) -> Result<(), Error>
     {
         let links = crate::vec_to_str(&zettel.links, ",");
         let tags = crate::vec_to_str(&zettel.tags, ",");
@@ -80,7 +80,7 @@ impl Database
     }
 
     /// Remove the Zettel's metadata from the database
-    pub fn delete(&self, zettel: &Zettel) -> Result<(), rusqlite::Error>
+    pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
         &self.conn.execute(
             "DELETE FROM zettelkasten WHERE id = (?1)",
@@ -104,7 +104,7 @@ impl Database
     /// let zet_2 = &Zettel::from_db_by_id(&conn, "my_id")?[0];
     /// assert_eq!(zet_1, zet_2);
     /// ```
-    pub fn find_by_id(&self, pattern: &str) -> Result<Vec<Zettel>, rusqlite::Error>
+    pub fn find_by_id(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE id LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
@@ -123,7 +123,7 @@ impl Database
     /// Return an Error if nothing was found
     ///
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, rusqlite::Error>
+    pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, Error>
     {
         let pattern = format!("%{}%", tag);
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :pattern")?;
@@ -135,6 +135,24 @@ impl Database
             results.push(zettel);
         }
 
+        Ok(results)
+    }
+
+    /// Return a list of all unique tags found in the database
+    pub fn list_tags(&self) -> Result<Vec<String>, Error>
+    {
+        let mut stmt = self.conn.prepare("SELECT tags FROM zettelkasten")?;
+        let mut rows = stmt.query([])?;
+
+        let mut results: Vec<String> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let tags: String = row.get(0)?;
+            for tag in str_to_vec(&tags, ",") {
+                results.push(tag);
+            }
+        }
+        results.par_sort();
+        results.dedup();
         Ok(results)
     }
 

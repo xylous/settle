@@ -92,10 +92,12 @@ fn main() -> Result<(), rusqlite::Error>
                 .required(true)
                 .about("id of zettel")))
         .subcommand(App::new("find")
+            .about("search Zettels by tag")
             .arg(Arg::new("TAG")
                 .required(true)
-                .about("tag of zettel"))
-            .about("search Zettels by tag"))
+                .about("tag of zettel")))
+        .subcommand(App::new("list-tags")
+            .about("list all tags registered in the database"))
         .subcommand(App::new("generate")
             .about("generate the database in the current directory"))
         .subcommand(App::new("backlinks")
@@ -145,6 +147,14 @@ fn main() -> Result<(), rusqlite::Error>
             .for_each(|z| {
                 println!("{}", z.filename());
             });
+    } else if matches.subcommand_matches("list-tags").is_some() {
+        let tags = db.list_tags()?;
+        tags.into_par_iter()
+            .for_each(|t|
+                if !t.is_empty() {
+                    println!("{}", t)
+                }
+            )
     } else if matches.subcommand_matches("backlinks").is_some() {
         let all_zettels = db.find_by_id("%")?;
         let start = chrono::Local::now();
