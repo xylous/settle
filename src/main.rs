@@ -165,7 +165,7 @@ fn main() -> Result<(), rusqlite::Error>
     } else if let Some(matches) = matches.subcommand_matches("find") {
         let tag = matches.value_of("TAG").unwrap_or_default();
         let results = db.find_by_tag(tag)?;
-        println!("found {} items", results.len());
+        println!("found {} item(s)", results.len());
         results.par_iter()
             .for_each(|z| {
                 println!("{}", z.filename());
