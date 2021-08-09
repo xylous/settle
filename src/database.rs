@@ -191,4 +191,24 @@ impl Database
                 thread_db.save(&thread_zettel).unwrap();
             });
     }
+
+    /// Given a Zettel, check if it's transient; if it is, mark it as permanent and update the
+    /// database entry
+    pub fn make_permanent(&self, zettel: &Zettel) -> Result<()>
+    {
+
+        let file = zettel.filename();
+        if file.find("t").unwrap_or(1) as i32 == 0 {
+            let new_file = file.replacen("t", "", 1);
+            std::fs::rename(file, &new_file).unwrap();
+
+            let mut new_zettel = Zettel::from_str(&new_file);
+            new_zettel.update_links();
+            new_zettel.update_tags();
+
+            &self.delete(&zettel)?;
+            &self.save(&new_zettel)?;
+        }
+        Ok(())
+    }
 }

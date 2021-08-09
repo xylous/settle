@@ -88,6 +88,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("ID")
                 .required(true)
                 .about("id of zettel")))
+        .subcommand(App::new("make-permanent")
+            .about("mark a transient note as permanent")
+            .arg(Arg::new("ID")
+                .required(true)
+                .about("id of zettel")))
         .subcommand(App::new("build")
             .long_about(
                 "compile a Zettel to html \n\
@@ -134,6 +139,14 @@ fn main() -> Result<(), rusqlite::Error>
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
+    } else if let Some(matches) = matches.subcommand_matches("make-permanent") {
+        let id = matches.value_of("ID").unwrap_or_default();
+        let results = db.find_by_id(id)?;
+        results.into_par_iter()
+            .for_each(|zettel| {
+                let thread_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
+                thread_db.make_permanent(&zettel).unwrap();
+            })
     } else if let Some(matches) = matches.subcommand_matches("build") {
         create_lua_filter();
         let id = matches.value_of("ID").unwrap_or_default();
