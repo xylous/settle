@@ -10,28 +10,8 @@ use crate::io::*;
 use crate::zettel::Zettel;
 use crate::database::Database;
 
-const FILENAME_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = "metadata.db";
 const LUA_FILTER_SCRIPT: &str = "md_links_to_html.lua";
-
-/// Return a timestamp with the format YYYYMMDDhhmmss
-/// where YYYY = year,
-///         MM = month,
-///         DD = day,
-///         hh = hour,
-///         mm = minute,
-///         ss = second
-///
-/// # Examples
-///
-/// ```
-/// let id = id_timestamp();
-/// ```
-fn id_timestamp() -> String
-{
-    let dt = chrono::offset::Local::now();
-    dt.format("%Y%m%d%H%M%S").to_string()
-}
 
 /// Join a vector of `String`s, separated by `sep`
 fn vec_to_str(vec: &Vec<String>, sep: &str) -> String
@@ -76,30 +56,16 @@ fn main() -> Result<(), rusqlite::Error>
         .about("CLI tool to manage a digital zettelkasten")
         .subcommand(App::new("new")
             .about("creates a new zettel")
-            .arg(Arg::new("flag_transient")
-                .short('t')
-                .long("transient")
-                .about("creates a new transient note"))
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
         .subcommand(App::new("edit")
             .about("edit an existing zettel")
-            .arg(Arg::new("ID")
+            .arg(Arg::new("title")
                 .required(true)
-                .about("id of zettel")))
-        .subcommand(App::new("make-permanent")
-            .about("mark a transient note as permanent")
-            .arg(Arg::new("ID")
-                .required(true)
-                .about("id of zettel")))
+                .about("title of zettel")))
         .subcommand(App::new("build")
-            .long_about(
-                "compile a Zettel to html \n\
-                uses SQL syntax, e.g. `%` to match one or more characters")
-            .arg(Arg::new("ID")
-                .required(true)
-                .about("id of zettel")))
+            .about("compile the entire Zettelkasten"))
         .subcommand(App::new("find")
             .about("search Zettels by tag")
             .arg(Arg::new("TAG")
@@ -117,42 +83,27 @@ fn main() -> Result<(), rusqlite::Error>
     db.init()?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
-        let title = matches.value_of("TITLE").unwrap_or_default();
-        let mut id = id_timestamp();
+        let title = matches.value_of("TITLE").unwrap();
 
-        if matches.is_present("flag_transient") {
-            id = format!("t{}", id);
-        }
-
-        let mut zettel = Zettel::new(&id, title, vec![]).create();
+        let mut zettel = Zettel::new(title).create();
         zettel.update_links();
         zettel.update_tags();
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {
-        let id = matches.value_of("ID").unwrap_or_default();
-        let results = db.find_by_id(id)?;
+        let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
-        for mut zettel in results {
+        for mut zettel in db.find_by_title(&title)? {
             zettel.edit(&editor);
             zettel.update_links();
             zettel.update_tags();
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
-    } else if let Some(matches) = matches.subcommand_matches("make-permanent") {
-        let id = matches.value_of("ID").unwrap_or_default();
-        let results = db.find_by_id(id)?;
-        results.into_par_iter()
-            .for_each(|zettel| {
-                let thread_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
-                thread_db.make_permanent(&zettel).unwrap();
-            })
-    } else if let Some(matches) = matches.subcommand_matches("build") {
+    } else if matches.is_present("build") {
         create_lua_filter();
-        let id = matches.value_of("ID").unwrap_or_default();
         let start = chrono::Local::now();
 
-        let results = db.find_by_id(id)?;
+        let results = db.all()?;
         results.par_iter()
             .for_each(|z| {
                 z.build();
@@ -179,13 +130,13 @@ fn main() -> Result<(), rusqlite::Error>
                 }
             )
     } else if matches.subcommand_matches("backlinks").is_some() {
-        let all_zettels = db.find_by_id("%")?;
+        let all_zettels = db.all()?;
         let start = chrono::Local::now();
 
         all_zettels.par_iter()
             .for_each(|z| {
                 let thread_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
-                let links = thread_db.find_by_links_to(&z.id).unwrap();
+                let links = thread_db.find_by_links_to(&z.title).unwrap();
                 z.update_backlinks_section(&links);
             });
 

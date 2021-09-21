@@ -6,11 +6,8 @@ use rayon::prelude::*;
 /// Construct a Zettel from an entry in the database metadata
 fn zettel_metadata(row: &Row) -> Result<Zettel, rusqlite::Error>
 {
-    let id: String = row.get(0)?;
-    let title: String = row.get(1)?;
-    let link_str: String = row.get(2)?;
-    let links: Vec<String> = crate::str_to_vec(&link_str, ",");
-    Ok(Zettel::new(&id, &title, links))
+    let title: String = row.get(0)?;
+    Ok(Zettel::new(&title))
 }
 
 pub struct Database
@@ -42,10 +39,9 @@ impl Database
     /// `Zettel`s
     pub fn init(&self) -> Result<(), Error>
     {
-        &self.conn.execute(
+        self.conn.execute(
             "CREATE TABLE IF NOT EXISTS zettelkasten (
-                id          TEXT PRIMARY KEY,
-                title       TEXT NOT NULL,
+                title       TEXT PRIMARY KEY NOT NULL,
                 links       TEXT,
                 tags        TEXT
             )",
@@ -73,41 +69,45 @@ impl Database
     {
         let links = crate::vec_to_str(&zettel.links, ",");
         let tags = crate::vec_to_str(&zettel.tags, ",");
-        &self.conn.execute(
-            "INSERT INTO zettelkasten (id, title, links, tags) values (?1, ?2, ?3, ?4)",
-            &[&zettel.id, &zettel.title, &links, &tags])?;
+        self.conn.execute(
+            "INSERT INTO zettelkasten (title, links, tags) values (?1, ?2, ?3)",
+            &[&zettel.title, &links, &tags])?;
         Ok(())
     }
 
     /// Remove the Zettel's metadata from the database
     pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
-        &self.conn.execute(
-            "DELETE FROM zettelkasten WHERE id = (?1)",
-            &[&zettel.id]
+        self.conn.execute(
+            "DELETE FROM zettelkasten WHERE title = (?1)",
+            &[&zettel.title]
         )?;
         Ok(())
     }
 
-    /// Search in the database for the Zettels whose `id` matches `pattern`, and return them
+    /// Search in the database for the Zettels whose `title` property matches `title`, and return
+    /// them
     /// Return an Error if nothing was found
     ///
     /// `pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let conn = rusqlite::Connection::open("test.db")?;
-    /// initialize_db(&conn)?;
-    /// let zet_1 = &Zettel::new("my_id", "some title");
-    /// zet_1.save(&conn)?;
-    /// let zet_2 = &Zettel::from_db_by_id(&conn, "my_id")?[0];
-    /// assert_eq!(zet_1, zet_2);
-    /// ```
-    pub fn find_by_id(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
+    pub fn find_by_title(&self, title: &str) -> Result<Vec<Zettel>, Error>
     {
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE id LIKE :pattern")?;
-        let mut rows = stmt.query(named_params! {":pattern": pattern})?;
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE title LIKE :title")?;
+        let mut rows = stmt.query(named_params! {":title": title})?;
+
+        let mut results: Vec<Zettel> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let zettel = zettel_metadata(row)?;
+            results.push(zettel);
+        }
+
+        Ok(results)
+    }
+
+    pub fn all(&self) -> Result<Vec<Zettel>, Error>
+    {
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten")?;
+        let mut rows = stmt.query([])?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
@@ -159,14 +159,14 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `links` property contains `id`, and return
-    /// them
+    /// Search in the database for the Zettels whose `links` property contains `zettel_name`, and
+    /// return them
     /// Return an Error if nothing was found
     ///
-    /// `id` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_links_to(&self, id: &str) -> Result<Vec<Zettel>>
+    /// `zettel_name` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
+    pub fn find_by_links_to(&self, zettel_name: &str) -> Result<Vec<Zettel>>
     {
-        let pattern = format!("%{}%", id);
+        let pattern = format!("%{}%", zettel_name);
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
@@ -193,25 +193,5 @@ impl Database
                 thread_zettel.update_tags();
                 thread_db.save(&thread_zettel).unwrap();
             });
-    }
-
-    /// Given a Zettel, check if it's transient; if it is, mark it as permanent and update the
-    /// database entry
-    pub fn make_permanent(&self, zettel: &Zettel) -> Result<()>
-    {
-
-        let file = zettel.filename();
-        if file.find("t").unwrap_or(1) as i32 == 0 {
-            let new_file = file.replacen("t", "", 1);
-            std::fs::rename(file, &new_file).unwrap();
-
-            let mut new_zettel = Zettel::from_str(&new_file);
-            new_zettel.update_links();
-            new_zettel.update_tags();
-
-            &self.delete(&zettel)?;
-            &self.save(&new_zettel)?;
-        }
-        Ok(())
     }
 }
