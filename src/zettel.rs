@@ -2,10 +2,34 @@ use std::process::Command;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
-use crate::{io::*, str_to_vec};
+use crate::io::*;
 use crate::LUA_FILTER_SCRIPT;
 use crate::parser::{self, *};
 use crate::default_system_editor;
+
+// Find markdown-style links inside of `contents` string
+fn find_links(contents: &str) -> Vec<String>
+{
+    let re = Regex::new(&format!(r#"\[.*\]\((.*?)\.md\)"#)).unwrap();
+    let mut results: Vec<String> = Vec::new();
+    for cap in re.captures_iter(&contents) {
+        let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
+        results.push(title);
+    }
+    results
+}
+
+// Find tags inside of `contents` string
+fn find_tags(contents: &str) -> Vec<String>
+{
+    let re = Regex::new(r"\ntags: (.*?)\n").unwrap();
+    let mut results: Vec<String> = Vec::new();
+    for cap in re.captures_iter(&contents) {
+        let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
+        results.push(tag);
+    }
+    results
+}
 
 /// Return a String containing
 ///
@@ -73,21 +97,16 @@ impl Zettel
         }
     }
 
-    /// Create a Zettel from a string representing a filename
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// const FILENAME_SEPARATOR = "::";
-    /// let ans = Zettel::from_str("100b23e::some_title");
-    ///
-    /// assert_eq!(ans.id, "100b23e");
-    /// assert_eq!(ans.title, "some title");
-    /// ```
-    pub fn from_str(s: &str) -> Self
+    /// Create a Zettel from a file, provided a path
+    pub fn from_file(s: &str) -> Self
     {
         let title = replace_extension(s, "");
-        Zettel::new(&title)
+        let mut zettel = Zettel::new(&title);
+        let contents = file_to_string(&zettel.filename());
+
+        zettel.links = find_links(&contents);
+        zettel.tags = find_tags(&contents);
+        zettel
     }
 
     /// Create Zettel as a physical file on the system and open system editor on it
@@ -151,32 +170,6 @@ impl Zettel
             .arg(format!("--metadata=title:{}", &self.title))
             .status()
             .expect("failed to execute process");
-    }
-
-    /// Look into the file corresponding to the `Zettel`, extract links from it and put them in
-    /// `Zettel.links`
-    pub fn update_links(&mut self)
-    {
-        let filename = &self.filename();
-        let contents = file_to_string(filename);
-        let re = Regex::new(&format!(r#"\[.*\]\((.*?)\.md\)"#)).unwrap();
-        for cap in re.captures_iter(&contents) {
-            let id = cap.get(1).map_or("", |m| m.as_str()).to_string();
-            self.links.push(id);
-        }
-    }
-
-    /// Look into the file corresponding to the `Zettel`, extract tags from it and put them in
-    /// `Zettel.tags`
-    pub fn update_tags(&mut self)
-    {
-        let file = &self.filename();
-        let contents = file_to_string(file);
-        let re = Regex::new(r"\ntags: (.*?)\n").unwrap();
-        for cap in re.captures_iter(&contents) {
-            let tags = str_to_vec(&cap[1], ",");
-            self.tags = tags.into_iter().map(|t| t.replace(" ", "")).collect();
-        }
     }
 
     /// Overwrite (or, if it doesn't exist, create) a `## Backlinks` section at the end of the

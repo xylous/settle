@@ -188,9 +188,7 @@ impl Database
         files.par_iter()
             .for_each(|f| {
                 let thread_db = Self::in_memory(name).unwrap();
-                let mut thread_zettel = Zettel::from_str(&f);
-                thread_zettel.update_links();
-                thread_zettel.update_tags();
+                let thread_zettel = Zettel::from_file(&f);
                 thread_db.save(&thread_zettel).unwrap();
             });
     }

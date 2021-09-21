@@ -61,7 +61,7 @@ fn main() -> Result<(), rusqlite::Error>
                 .about("title of zettel")))
         .subcommand(App::new("edit")
             .about("edit an existing zettel")
-            .arg(Arg::new("title")
+            .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
         .subcommand(App::new("build")
@@ -86,16 +86,14 @@ fn main() -> Result<(), rusqlite::Error>
         let title = matches.value_of("TITLE").unwrap();
 
         let mut zettel = Zettel::new(title).create();
-        zettel.update_links();
-        zettel.update_tags();
+        zettel = Zettel::from_file(&zettel.filename());
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
         for mut zettel in db.find_by_title(&title)? {
             zettel.edit(&editor);
-            zettel.update_links();
-            zettel.update_tags();
+            zettel = Zettel::from_file(&zettel.filename());
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
