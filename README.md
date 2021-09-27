@@ -39,7 +39,6 @@ $ settle new 'A super interesting note!'
 
 ## Roadmap
 
-- [x] ~~compile to HTML; requires `pandoc`~~
 - [x] ~~update backlinks automatically~~
 - [x] ~~tags; specifically, search by tags~~
 - [x] ~~transient/draft notes~~

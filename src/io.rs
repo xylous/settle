@@ -1,4 +1,4 @@
-use std::fs::{self, read_to_string, write};
+use std::fs::{read_to_string, write};
 use std::path::PathBuf;
 use glob::glob;
 
@@ -17,11 +17,6 @@ pub fn replace_extension(file: &str, new_ext: &str) -> String
     let mut path = PathBuf::from(file);
     path.set_extension(new_ext);
     path.to_string_lossy().to_string()
-}
-
-pub fn delete_file(path: &str) -> std::io::Result<()>
-{
-    fs::remove_file(path)
 }
 
 pub fn list_md_files() -> Vec<String>

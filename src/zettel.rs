@@ -3,7 +3,6 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
 use crate::io::*;
-use crate::LUA_FILTER_SCRIPT;
 use crate::parser::{self, *};
 use crate::default_system_editor;
 
@@ -144,24 +143,6 @@ impl Zettel
     {
         Command::new(editor)
             .arg(self.filename())
-            .status()
-            .expect("failed to execute process");
-    }
-
-    /// Compile Zettel, from Markdown to HTML
-    /// Requires Pandoc installed
-    pub fn build(&self)
-    {
-        let filename = self.filename();
-        let out_file = replace_extension(&filename, "html");
-
-        Command::new("pandoc")
-            .arg("--standalone")
-            .arg(&filename)
-            .arg("--output")
-            .arg(&out_file)
-            .arg(format!("--lua-filter={}", LUA_FILTER_SCRIPT))
-            .arg(format!("--metadata=title:{}", &self.title))
             .status()
             .expect("failed to execute process");
     }

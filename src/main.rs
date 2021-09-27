@@ -6,12 +6,10 @@ mod zettel;
 mod database;
 mod parser;
 
-use crate::io::*;
 use crate::zettel::Zettel;
 use crate::database::Database;
 
 const ZETTELKASTEN_DB: &str = "metadata.db";
-const LUA_FILTER_SCRIPT: &str = "md_links_to_html.lua";
 
 /// Join a vector of `String`s, separated by `sep`
 fn vec_to_str(vec: &Vec<String>, sep: &str) -> String
@@ -23,21 +21,6 @@ fn vec_to_str(vec: &Vec<String>, sep: &str) -> String
 fn str_to_vec(str: &str, sep: &str) -> Vec<String>
 {
     str.split(sep).map(|s| s.to_string()).collect()
-}
-
-/// Creates a Lua script that will be used by pandoc to replace links ending in `.md` with links
-/// ending in `.html`
-fn create_lua_filter()
-{
-    let lua_script =
-r#"-- this script replaces all links ending in `.md` with ones ending in `.html`
--- it will used by pandoc when building the Zettelkasten
-function Link(el)
-    el.target = string.gsub(el.target, "%.md", ".html")
-    return el
-end
-"#;
-    write_to_file(LUA_FILTER_SCRIPT, lua_script);
 }
 
 /// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
@@ -64,8 +47,6 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of zettel")))
-        .subcommand(App::new("build")
-            .about("compile the entire Zettelkasten"))
         .subcommand(App::new("find")
             .about("search Zettels by tag")
             .arg(Arg::new("TAG")
@@ -97,20 +78,6 @@ fn main() -> Result<(), rusqlite::Error>
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
-    } else if matches.is_present("build") {
-        create_lua_filter();
-        let start = chrono::Local::now();
-
-        let results = db.all()?;
-        results.par_iter()
-            .for_each(|z| {
-                z.build();
-            });
-        delete_file(LUA_FILTER_SCRIPT).unwrap_or_default();
-
-        let end = chrono::Local::now();
-        let time = end - start;
-        println!("compiled {} files, took {}ms", results.len(), time.num_milliseconds());
     } else if let Some(matches) = matches.subcommand_matches("find") {
         let tag = matches.value_of("TAG").unwrap_or_default();
         let results = db.find_by_tag(tag)?;
