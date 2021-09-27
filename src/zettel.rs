@@ -10,7 +10,7 @@ use crate::default_system_editor;
 // Find markdown-style links inside of `contents` string
 fn find_links(contents: &str) -> Vec<String>
 {
-    let re = Regex::new(&format!(r#"\[.*\]\((.*?)\.md\)"#)).unwrap();
+    let re = Regex::new(&format!(r#"\[\[(.*?)\]\]"#)).unwrap();
     let mut results: Vec<String> = Vec::new();
     for cap in re.captures_iter(&contents) {
         let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
@@ -59,21 +59,15 @@ fn backlink_paragraph_format(s: &str) -> String
 /// Return a String containing a markdown reference link with the template:
 ///
 /// ```md
-/// [<link.title>]
-///
-/// [<link.title>]: <link.filename()>
+/// [[<title of zettel>]]
 /// ```
 fn backlink_str(link: &Zettel, contexts: Vec<String>) -> String
 {
     format!(
-        "* [{}]\n\
-        {}\n\
-        [{}]: {}\n\
-        ",
+        "* [[{}]]\n\
+        {}\n",
         link.title,
         contexts.join(""),
-        link.title,
-        link.filename(),
     )
 }
 
