@@ -131,7 +131,7 @@ impl Database
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let tags: String = row.get(3)?;
+            let tags: String = row.get(2)?;
             if str_to_vec(&tags, ",").contains(&tag.to_string()) {
                 let zettel = zettel_metadata(row)?;
                 results.push(zettel);
