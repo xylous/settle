@@ -1,5 +1,5 @@
 use std::process::Command;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, ParallelBridge, ParallelIterator};
 use regex::Regex;
 
 use crate::io::*;
@@ -10,24 +10,24 @@ use crate::default_system_editor;
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(&format!(r#"\[\[(.*?)\]\]"#)).unwrap();
-    let mut results: Vec<String> = Vec::new();
-    for cap in re.captures_iter(&contents) {
-        let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
-        results.push(title);
-    }
-    results
+    re.captures_iter(&contents).par_bridge()
+        .map(|cap| {
+            let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
+            title
+        })
+        .collect()
 }
 
 // Find tags inside of `contents` string
 fn find_tags(contents: &str) -> Vec<String>
 {
-    let re = Regex::new(r"\ntags: (.*?)\n").unwrap();
-    let mut results: Vec<String> = Vec::new();
-    for cap in re.captures_iter(&contents) {
-        let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
-        results.push(tag);
-    }
-    results
+    let re = Regex::new(r"#([\w/_-]+?)\s+").unwrap();
+    re.captures_iter(&contents).par_bridge()
+        .map(|cap| {
+            let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
+            tag
+        })
+        .collect()
 }
 
 /// Return a String containing
@@ -106,20 +106,17 @@ impl Zettel
     pub fn create(self) -> Self
     {
         let editor = default_system_editor();
-        write_to_file(&self.filename(), &self.yaml_metadata());
+        write_to_file(&self.filename(), &self.title_header());
         self.edit(&editor);
         self
     }
 
-    /// Generate YAML metadata to put at the top of a newly created Zettel
-    fn yaml_metadata(&self) -> String
+    /// Generate title header line for physical file
+    fn title_header(&self) -> String
     {
         format!(
-            "---\n\
-            title: {}\n\
-            tags:\n\
-            ---\n",
-            self.title,
+            "# {}\n",
+            &self.title,
         )
     }
 
