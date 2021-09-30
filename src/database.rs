@@ -67,8 +67,8 @@ impl Database
     /// ```
     pub fn save(&self, zettel: &Zettel) -> Result<(), Error>
     {
-        let links = crate::vec_to_str(&zettel.links, ",");
-        let tags = crate::vec_to_str(&zettel.tags, ",");
+        let links = crate::vec_to_str(&zettel.links);
+        let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
             "INSERT INTO zettelkasten (title, links, tags) values (?1, ?2, ?3)",
             &[&zettel.title, &links, &tags])?;
@@ -132,7 +132,7 @@ impl Database
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
             let tags: String = row.get(2)?;
-            if str_to_vec(&tags, ",").contains(&tag.to_string()) {
+            if str_to_vec(&tags).contains(&tag.to_string()) {
                 let zettel = zettel_metadata(row)?;
                 results.push(zettel);
             }
@@ -150,7 +150,7 @@ impl Database
         let mut results: Vec<String> = Vec::new();
         while let Some(row) = rows.next()? {
             let tags: String = row.get(0)?;
-            for tag in str_to_vec(&tags, ",") {
+            for tag in str_to_vec(&tags) {
                 results.push(tag);
             }
         }

@@ -8,18 +8,27 @@ mod database;
 use crate::zettel::Zettel;
 use crate::database::Database;
 
+const SQL_ARRAY_SEPARATOR: &str = ",";
 const ZETTELKASTEN_DB: &str = "metadata.db";
 
 /// Join a vector of `String`s, separated by `sep`
-fn vec_to_str(vec: &Vec<String>, sep: &str) -> String
+fn vec_to_str(vec: &Vec<String>) -> String
 {
-    vec.join(sep)
+    format!(
+        "{}{}{}",
+        SQL_ARRAY_SEPARATOR,
+        vec.join(&SQL_ARRAY_SEPARATOR),
+        SQL_ARRAY_SEPARATOR,
+    )
 }
 
 /// Split `str` on `sep` and return results as a vector
-fn str_to_vec(str: &str, sep: &str) -> Vec<String>
+fn str_to_vec(str: &str) -> Vec<String>
 {
-    str.split(sep).map(|s| s.to_string()).collect()
+    str.split(SQL_ARRAY_SEPARATOR)
+        .filter(|s| s != &"")
+        .map(|s| s.to_string())
+        .collect()
 }
 
 /// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
