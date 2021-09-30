@@ -4,7 +4,6 @@ use rayon::prelude::*;
 mod io;
 mod zettel;
 mod database;
-mod parser;
 
 use crate::zettel::Zettel;
 use crate::database::Database;
@@ -57,7 +56,10 @@ fn main() -> Result<(), rusqlite::Error>
         .subcommand(App::new("generate")
             .about("generate the database in the current directory"))
         .subcommand(App::new("backlinks")
-            .about("update the backlinks of every file in zettelkasten"))
+            .about("list files linking to <TITLE>")
+            .arg(Arg::new("TITLE")
+                .required(true)
+                .about("title of zettel")))
         .get_matches();
 
     let db = Database::new(ZETTELKASTEN_DB, None)?;
@@ -94,21 +96,15 @@ fn main() -> Result<(), rusqlite::Error>
                     println!("{}", t)
                 }
             )
-    } else if matches.subcommand_matches("backlinks").is_some() {
-        let all_zettels = db.all()?;
-        let start = chrono::Local::now();
+    } else if let Some(matches) = matches.subcommand_matches("backlinks") {
+        let title = matches.value_of("TITLE").unwrap_or_default();
 
-        all_zettels.par_iter()
-            .for_each(|z| {
-                let thread_db = Database::new(ZETTELKASTEN_DB, None).unwrap();
-                let links = thread_db.find_by_links_to(&z.title).unwrap();
-                z.update_backlinks_section(&links);
+        let db = Database::new(ZETTELKASTEN_DB, None).unwrap();
+        let links = db.find_by_links_to(title).unwrap();
+        links.par_iter()
+            .for_each(|l| {
+                println!("{}", l.title);
             });
-
-        let end = chrono::Local::now();
-        let time = end - start;
-
-        println!("updated {} files' backlinks, took {}ms", all_zettels.len(), time.num_milliseconds());
     } else if matches.subcommand_matches("generate").is_some() {
         let start = chrono::Local::now();
 
