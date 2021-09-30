@@ -104,20 +104,6 @@ impl Database
         Ok(results)
     }
 
-    pub fn all(&self) -> Result<Vec<Zettel>, Error>
-    {
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten")?;
-        let mut rows = stmt.query([])?;
-
-        let mut results: Vec<Zettel> = Vec::new();
-        while let Some(row) = rows.next()? {
-            let zettel = zettel_metadata(row)?;
-            results.push(zettel);
-        }
-
-        Ok(results)
-    }
-
     /// Search in the database for the Zettels whose `tags` property includes `tag`, and return
     /// them
     /// Return an Error if nothing was found
@@ -125,17 +111,14 @@ impl Database
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, Error>
     {
-        let pattern = format!("%{}%", tag);
+        let pattern = format!(",{},", tag);
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let tags: String = row.get(2)?;
-            if str_to_vec(&tags).contains(&tag.to_string()) {
-                let zettel = zettel_metadata(row)?;
-                results.push(zettel);
-            }
+            let zettel = zettel_metadata(row)?;
+            results.push(zettel);
         }
 
         Ok(results)
