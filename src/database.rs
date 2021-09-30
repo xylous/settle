@@ -111,7 +111,7 @@ impl Database
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, Error>
     {
-        let pattern = format!(",{},", tag);
+        let pattern = format!("%,{},%", tag);
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
@@ -149,7 +149,7 @@ impl Database
     /// `zettel_name` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_links_to(&self, zettel_name: &str) -> Result<Vec<Zettel>>
     {
-        let pattern = format!("%{}%", zettel_name);
+        let pattern = format!("%,{},%", zettel_name);
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
