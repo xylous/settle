@@ -8,7 +8,7 @@ mod database;
 use crate::zettel::Zettel;
 use crate::database::Database;
 
-const SQL_ARRAY_SEPARATOR: &str = ",";
+const SQL_ARRAY_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = "metadata.db";
 
 /// Join a vector of `String`s, separated by `sep`

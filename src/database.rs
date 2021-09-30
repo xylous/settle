@@ -1,6 +1,6 @@
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
-use crate::{str_to_vec, zettel::Zettel};
+use crate::{SQL_ARRAY_SEPARATOR, str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
 
 /// Construct a Zettel from an entry in the database metadata
@@ -111,7 +111,12 @@ impl Database
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, Error>
     {
-        let pattern = format!("%,{},%", tag);
+        let pattern = format!(
+            "%{}{}{}%",
+            SQL_ARRAY_SEPARATOR,
+            tag,
+            SQL_ARRAY_SEPARATOR,
+        );
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
@@ -142,14 +147,19 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `links` property contains `zettel_name`, and
+    /// Search in the database for the Zettels whose `links` property contains `title`, and
     /// return them
     /// Return an Error if nothing was found
     ///
-    /// `zettel_name` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_links_to(&self, zettel_name: &str) -> Result<Vec<Zettel>>
+    /// `title` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
+    pub fn find_by_links_to(&self, title: &str) -> Result<Vec<Zettel>>
     {
-        let pattern = format!("%,{},%", zettel_name);
+        let pattern = format!(
+            "%{}{}{}%",
+            SQL_ARRAY_SEPARATOR,
+            title,
+            SQL_ARRAY_SEPARATOR,
+        );
         let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
