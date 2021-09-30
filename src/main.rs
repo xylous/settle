@@ -95,7 +95,7 @@ fn main() -> Result<(), rusqlite::Error>
         println!("found {} item(s)", results.len());
         results.par_iter()
             .for_each(|z| {
-                println!("{}", z.filename());
+                println!("{}", z.title);
             });
     } else if matches.subcommand_matches("list-tags").is_some() {
         let tags = db.list_tags()?;
