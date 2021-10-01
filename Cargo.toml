@@ -1,6 +1,6 @@
 [package]
 name = "settle"
-version = "0.15.5"
+version = "0.16.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,3 +12,8 @@ rusqlite = { version = "0.25.3", features = [ "backup" ] }
 rayon = { version = "1.5.1" }
 glob = { version = "0.3.0" }
 regex = { version = "1.5.4" }
+serde = { version = "1.0.130", features = [ "derive" ] }
+confy = { version = "*", default_features = false, features = [ "yaml_conf" ] }
+
+[patch.crates-io]
+confy = { git = 'https://github.com/rust-cli/confy' }

@@ -4,12 +4,13 @@ use rayon::prelude::*;
 mod io;
 mod zettel;
 mod database;
+mod config;
 
 use crate::zettel::Zettel;
 use crate::database::Database;
+use crate::config::*;
 
 const SQL_ARRAY_SEPARATOR: &str = "::";
-const ZETTELKASTEN_DB: &str = "metadata.db";
 
 /// Join a vector of `String`s, and return a string starting and ending with `SQL_ARRAY_SEPARATOR`,
 /// and with the elements of the vector separated by `SQL_ARRAY_SEPARATOR`
@@ -79,21 +80,24 @@ fn main() -> Result<(), rusqlite::Error>
                 .about("title of Zettel")))
         .get_matches();
 
-    let db = Database::new(ZETTELKASTEN_DB, None)?;
+    let cfg = ConfigOptions::load();
+    let zettelkasten_db = format!("{}/metadata.sql", cfg.zettelkasten);
+
+    let db = Database::new(&zettelkasten_db, None)?;
     db.init()?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap();
 
-        let mut zettel = Zettel::new(title).create();
-        zettel = Zettel::from_file(&zettel.filename());
+        let mut zettel = Zettel::new(title).create(&cfg);
+        zettel = Zettel::from_file(&zettel.filename(&cfg));
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {
         let title = matches.value_of("TITLE").unwrap_or_default();
         let editor = default_system_editor();
         for mut zettel in db.find_by_title(&title)? {
-            zettel.edit(&editor);
-            zettel = Zettel::from_file(&zettel.filename());
+            zettel.edit(&editor, &cfg);
+            zettel = Zettel::from_file(&zettel.filename(&cfg));
             db.delete(&zettel)?;
             db.save(&zettel)?;
         }
@@ -116,7 +120,7 @@ fn main() -> Result<(), rusqlite::Error>
     } else if let Some(matches) = matches.subcommand_matches("backlinks") {
         let title = matches.value_of("TITLE").unwrap_or_default();
 
-        let db = Database::new(ZETTELKASTEN_DB, None).unwrap();
+        let db = Database::new(&zettelkasten_db, None).unwrap();
         let links = db.find_by_links_to(title).unwrap();
         links.par_iter()
             .for_each(|l| {
@@ -125,10 +129,10 @@ fn main() -> Result<(), rusqlite::Error>
     } else if matches.subcommand_matches("generate").is_some() {
         let start = chrono::Local::now();
 
-        let mem_db = Database::in_memory(ZETTELKASTEN_DB)?;
+        let mem_db = Database::in_memory(&zettelkasten_db)?;
         mem_db.init()?;
-        mem_db.generate();
-        mem_db.write_to(ZETTELKASTEN_DB)?;
+        mem_db.generate(&cfg);
+        mem_db.write_to(&zettelkasten_db)?;
 
         let end = chrono::Local::now();
         let time = end - start;

@@ -2,6 +2,7 @@ use std::process::Command;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::Regex;
 
+use crate::config::ConfigOptions;
 use crate::io::*;
 use crate::default_system_editor;
 
@@ -54,21 +55,21 @@ impl Zettel
     /// Create a Zettel from a file, provided a path
     pub fn from_file(path: &str) -> Self
     {
-        let title = replace_extension(path, "");
-        let mut zettel = Zettel::new(&title);
-        let contents = file_to_string(&zettel.filename());
+        let title = basename(&replace_extension(path, ""));
+        let contents = file_to_string(path);
 
+        let mut zettel = Zettel::new(&title);
         zettel.links = find_links(&contents);
         zettel.tags = find_tags(&contents);
         zettel
     }
 
     /// Create Zettel as a physical file on the system and open system editor on it
-    pub fn create(self) -> Self
+    pub fn create(self, cfg: &ConfigOptions) -> Self
     {
         let editor = default_system_editor();
-        write_to_file(&self.filename(), &self.title_header());
-        self.edit(&editor);
+        write_to_file(&self.filename(cfg), &self.title_header());
+        self.edit(&editor, cfg);
         self
     }
 
@@ -89,16 +90,16 @@ impl Zettel
     /// let zettel = Zettel::new("Structs in rust");
     /// assert_eq!(zettel.filename(), "Structs in rust.md");
     /// ```
-    pub fn filename(&self) -> String
+    pub fn filename(&self, cfg: &ConfigOptions) -> String
     {
-        format!("{}.md", self.title)
+        format!("{}/{}.md", cfg.zettelkasten, &self.title)
     }
 
     /// Open `editor` on current Zettel
-    pub fn edit(&self, editor: &str)
+    pub fn edit(&self, editor: &str, cfg: &ConfigOptions)
     {
         Command::new(editor)
-            .arg(self.filename())
+            .arg(self.filename(cfg))
             .status()
             .expect("failed to execute process");
     }

@@ -1,6 +1,6 @@
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
-use crate::{SQL_ARRAY_SEPARATOR, str_to_vec, zettel::Zettel};
+use crate::{SQL_ARRAY_SEPARATOR, config::ConfigOptions, str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
 
 impl Zettel {
@@ -183,9 +183,9 @@ impl Database
 
     /// Look for Markdown files in the current directory and populate the database with their
     /// metadata
-    pub fn generate(&self)
+    pub fn generate(&self, cfg: &ConfigOptions)
     {
-        let files = crate::io::list_md_files();
+        let files = crate::io::list_md_files(cfg);
         let name = &self.name;
         files.par_iter()
             .for_each(|f| {
