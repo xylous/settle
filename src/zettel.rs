@@ -5,7 +5,8 @@ use regex::Regex;
 use crate::io::*;
 use crate::default_system_editor;
 
-// Find wiki-style links inside of `contents` string
+// Find and return wiki-style links inside of `contents` string
+// wiki-style links are of the form `[[LINK]]`
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(&format!(r#"\[\[(.*?)\]\]"#)).unwrap();
@@ -17,7 +18,8 @@ fn find_links(contents: &str) -> Vec<String>
         .collect()
 }
 
-// Find tags inside of `contents` string
+// Find tags inside of `contents` string and return them
+// Tags are hashtag-tags, e.g. `#gardening`, `#note-taking`
 fn find_tags(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r"#([\w/_-]+?)\s+").unwrap();
@@ -38,7 +40,7 @@ pub struct Zettel
 
 impl Zettel
 {
-    /// Create a Zettel with specified `title` and `links` property.
+    /// Create a Zettel with specified `title`
     pub fn new(title: &str) -> Self
     {
         Zettel
@@ -50,9 +52,9 @@ impl Zettel
     }
 
     /// Create a Zettel from a file, provided a path
-    pub fn from_file(s: &str) -> Self
+    pub fn from_file(path: &str) -> Self
     {
-        let title = replace_extension(s, "");
+        let title = replace_extension(path, "");
         let mut zettel = Zettel::new(&title);
         let contents = file_to_string(&zettel.filename());
 
@@ -79,15 +81,13 @@ impl Zettel
         )
     }
 
-    /// Return a string with the format "`id`(FILENAME_SEPARATOR)`title`.md"
+    /// Return a string with the format "`Zettel.title`.md"
     ///
     /// # Examples
     ///
     /// ```
-    /// let FILENAME_SEPARATOR = "::";
-    /// let zettel = Zettel::new("2021", "structs in rust");
-    ///
-    /// assert_eq!(zettel.filename(), "2021::structs_in_rust.md");
+    /// let zettel = Zettel::new("Structs in rust");
+    /// assert_eq!(zettel.filename(), "Structs in rust.md");
     /// ```
     pub fn filename(&self) -> String
     {

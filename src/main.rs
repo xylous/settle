@@ -11,7 +11,15 @@ use crate::database::Database;
 const SQL_ARRAY_SEPARATOR: &str = "::";
 const ZETTELKASTEN_DB: &str = "metadata.db";
 
-/// Join a vector of `String`s, separated by `sep`
+/// Join a vector of `String`s, and return a string starting and ending with `SQL_ARRAY_SEPARATOR`,
+/// and with the elements of the vector separated by `SQL_ARRAY_SEPARATOR`
+///
+/// # Examples
+///
+/// ```
+/// let v = vec!["foo", "bar", "baz"];
+/// assert_eq!(vec_to_str(v), String::from(",foo,bar,baz,"));
+/// ```
 fn vec_to_str(vec: &Vec<String>) -> String
 {
     format!(
@@ -22,7 +30,7 @@ fn vec_to_str(vec: &Vec<String>) -> String
     )
 }
 
-/// Split `str` on `sep` and return results as a vector
+/// Split `str` on `SQL_ARRAY_SEPARATOR` and return non-empty results as a vector
 fn str_to_vec(str: &str) -> Vec<String>
 {
     str.split(SQL_ARRAY_SEPARATOR)
