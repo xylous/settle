@@ -78,6 +78,8 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of Zettel")))
+        .subcommand(App::new("not-created")
+            .about("list Zettel linked to, but not yet created"))
         .get_matches();
 
     let cfg = ConfigOptions::load();
@@ -137,6 +139,11 @@ fn main() -> Result<(), rusqlite::Error>
         let end = chrono::Local::now();
         let time = end - start;
         println!("database generated successfully, took {}ms", time.num_milliseconds());
+    } else if matches.subcommand_matches("not-created").is_some() {
+        let results = db.zettel_not_yet_created()?;
+        for title in results {
+            println!("{}", title);
+        }
     }
 
     Ok(())

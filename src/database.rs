@@ -156,7 +156,7 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `links` property contains `title`, and
+    /// Search in the database for the Zettel whose `links` property contains `title`, and
     /// return them
     /// Return an Error if the database was unreachable
     ///
@@ -179,6 +179,33 @@ impl Database
         }
 
         Ok(results)
+    }
+
+    /// Search in the database for Zettel that have been linked to, but don't yet exist
+    /// Return an Error if the database was unreachable or if the data in a Row couldn't have been
+    /// accessed
+    pub fn zettel_not_yet_created(&self) -> Result<Vec<String>>
+    {
+        let mut stmt = self.conn.prepare("SELECT links FROM zettelkasten")?;
+        let mut rows = stmt.query([])?;
+
+        let mut unique_links: Vec<String> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let links_str: String = row.get(0)?;
+            let links = str_to_vec(&links_str);
+            unique_links.extend(links);
+        }
+
+        unique_links.par_sort();
+        unique_links.dedup();
+
+        Ok(unique_links.into_iter()
+            .filter(|link| {
+                // if the response was empty, then nothing has been found, meaning it doesn't exist
+                // in the database
+                self.find_by_title(link).unwrap().is_empty()
+            })
+            .collect())
     }
 
     /// Look for Markdown files in the current directory and populate the database with their
