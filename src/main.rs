@@ -72,7 +72,7 @@ fn main() -> Result<(), rusqlite::Error>
         .subcommand(App::new("list-tags")
             .about("list all tags registered in the database"))
         .subcommand(App::new("generate")
-            .about("generate the database in the current directory"))
+            .about("(re)generate the database"))
         .subcommand(App::new("backlinks")
             .about("list files linking to <TITLE>")
             .arg(Arg::new("TITLE")

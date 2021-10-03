@@ -25,27 +25,18 @@ cargo build
 
 ### Usage
 
-```
-$ settle [SUBCOMMAND] [...params]`
-```
-
-Consult `settle help` for subcommands.
-
-Example usage:
-
-```
-$ settle new 'A super interesting note!'
-```
+Read [the User Manual](./USER-MANUAL.md)
 
 ## Roadmap
 
-- [x] ~~update backlinks automatically~~
+- [x] ~~create Zettel~~
+- [x] ~~edit Zettel~~
 - [x] ~~tags; specifically, search by tags~~
-- [x] ~~transient/draft notes~~
+- [x] ~~custom Zettelkasten directory~~
+- [x] ~~list existing Zettel~~
+- [x] ~~list linked-to, but not yet created Zettel~~
+- [ ] keep track of and use an inbox
 - [ ] full text search
-- [ ] look for the context of a link when generating backlinks
-    - [x] ~~paragraphs~~
-    - [ ] lists
 
 ## Contributing
 
