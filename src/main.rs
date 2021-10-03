@@ -80,6 +80,8 @@ fn main() -> Result<(), rusqlite::Error>
                 .about("title of Zettel")))
         .subcommand(App::new("not-created")
             .about("list Zettel linked to, but not yet created"))
+        .subcommand(App::new("ls")
+            .about("list all existing Zettel"))
         .get_matches();
 
     let cfg = ConfigOptions::load();
@@ -143,6 +145,11 @@ fn main() -> Result<(), rusqlite::Error>
         let results = db.zettel_not_yet_created()?;
         for title in results {
             println!("{}", title);
+        }
+    } else if matches.subcommand_matches("ls").is_some() {
+        let results = db.all()?;
+        for zettel in results {
+            println!("{}", zettel.title);
         }
     }
 

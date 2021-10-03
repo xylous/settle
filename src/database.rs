@@ -93,6 +93,23 @@ impl Database
         Ok(())
     }
 
+    /// Return all Zettel in the database
+    /// Return an Error if the data in a row couldn't be accessed or if the database was
+    /// unreachable
+    pub fn all(&self) -> Result<Vec<Zettel>, Error>
+    {
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten")?;
+        let mut rows = stmt.query([])?;
+
+        let mut results: Vec<Zettel> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let zettel = Zettel::from_db(row)?;
+            results.push(zettel);
+        }
+
+        Ok(results)
+    }
+
     /// Search in the database for the Zettels whose `title` property matches `title`, and return
     /// them
     /// Return an Error if the databases was unreachable.
