@@ -4,16 +4,26 @@ use serde::{Serialize, Deserialize};
 pub struct ConfigOptions
 {
     pub zettelkasten: String,
+    pub db_file: String,
 }
 
 impl ::std::default::Default for ConfigOptions
 {
     fn default() -> ConfigOptions
     {
-        let zettelkasten_path = format!("{}/zettelkasten/", env!("HOME"));
+        let zettelkasten_path = format!("{}/zettelkasten", env!("HOME"));
         ConfigOptions {
             zettelkasten: zettelkasten_path,
+            db_file: String::from("metadata.sql"),
         }
+    }
+}
+
+impl ConfigOptions
+{
+    pub fn db_file(&self) -> String
+    {
+        format!("{}/{}", &self.zettelkasten, &self.db_file)
     }
 }
 

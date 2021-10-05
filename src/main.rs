@@ -1,10 +1,10 @@
 use clap::{App, Arg};
-use rayon::prelude::*;
 
 mod io;
 mod zettel;
 mod database;
 mod config;
+mod subcommands;
 
 use crate::zettel::Zettel;
 use crate::database::Database;
@@ -90,78 +90,23 @@ fn main() -> Result<(), rusqlite::Error>
         .get_matches();
 
     let cfg = ConfigOptions::load();
-    let zettelkasten_db = format!("{}/metadata.sql", cfg.zettelkasten);
-
-    let db = Database::new(&zettelkasten_db, None)?;
-    db.init()?;
 
     if let Some(matches) = matches.subcommand_matches("new") {
-        let title = matches.value_of("TITLE").unwrap();
-        let is_inbox = matches.is_present("inbox");
-
-        let mut zettel = Zettel::new(title, is_inbox).create(&cfg);
-        zettel = Zettel::from_file(&zettel.filename(&cfg));
-        db.save(&zettel)?;
+        subcommands::new(matches, &cfg)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {
-        let title = matches.value_of("TITLE").unwrap_or_default();
-        let editor = default_system_editor();
-        for mut zettel in db.find_by_title(&title)? {
-            zettel.edit(&editor, &cfg);
-            zettel = Zettel::from_file(&zettel.filename(&cfg));
-            db.delete(&zettel)?;
-            db.save(&zettel)?;
-        }
+        subcommands::edit(matches, &cfg)?;
     } else if let Some(matches) = matches.subcommand_matches("find") {
-        let tag = matches.value_of("TAG").unwrap_or_default();
-        let results = db.find_by_tag(tag)?;
-        println!("found {} item(s)", results.len());
-        results.par_iter()
-            .for_each(|z| {
-                println!("{}", z.title);
-            });
-    } else if matches.subcommand_matches("list-tags").is_some() {
-        let tags = db.list_tags()?;
-        tags.into_par_iter()
-            .for_each(|t|
-                if !t.is_empty() {
-                    println!("{}", t)
-                }
-            )
+        subcommands::find(matches, &cfg)?;
     } else if let Some(matches) = matches.subcommand_matches("backlinks") {
-        let title = matches.value_of("TITLE").unwrap_or_default();
-
-        let db = Database::new(&zettelkasten_db, None).unwrap();
-        let links = db.find_by_links_to(title).unwrap();
-        links.par_iter()
-            .for_each(|l| {
-                println!("{}", l.title);
-            });
+        subcommands::backlinks(matches, &cfg)?;
+    } else if matches.subcommand_matches("list-tags").is_some() {
+        subcommands::list_tags(&cfg)?;
     } else if matches.subcommand_matches("generate").is_some() {
-        let start = chrono::Local::now();
-
-        let mem_db = Database::in_memory(&zettelkasten_db)?;
-        mem_db.init()?;
-        mem_db.generate(&cfg);
-        mem_db.write_to(&zettelkasten_db)?;
-
-        let end = chrono::Local::now();
-        let time = end - start;
-        println!("database generated successfully, took {}ms", time.num_milliseconds());
+        subcommands::generate(&cfg)?;
     } else if matches.subcommand_matches("not-created").is_some() {
-        let results = db.zettel_not_yet_created()?;
-        for title in results {
-            println!("{}", title);
-        }
+        subcommands::not_created(&cfg)?;
     } else if matches.subcommand_matches("ls").is_some() {
-        let results = db.all()?;
-        for zettel in results {
-            if zettel.inbox {
-                print!("inbox: ");
-            } else {
-                print!("permanent: ");
-            }
-            println!("{}", zettel.title);
-        }
+        subcommands::ls(&cfg)?;
     }
 
     Ok(())
