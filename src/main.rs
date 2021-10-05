@@ -155,6 +155,11 @@ fn main() -> Result<(), rusqlite::Error>
     } else if matches.subcommand_matches("ls").is_some() {
         let results = db.all()?;
         for zettel in results {
+            if zettel.inbox {
+                print!("inbox: ");
+            } else {
+                print!("permanent: ");
+            }
             println!("{}", zettel.title);
         }
     }
