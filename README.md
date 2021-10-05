@@ -35,7 +35,7 @@ Read [the User Manual](./USER-MANUAL.md)
 - [x] ~~custom Zettelkasten directory~~
 - [x] ~~list existing Zettel~~
 - [x] ~~list linked-to, but not yet created Zettel~~
-- [ ] keep track of and use an inbox
+- [x] ~~keep track of and use an inbox~~
 - [ ] full text search
 
 ## Contributing
