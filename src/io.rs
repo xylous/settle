@@ -2,8 +2,6 @@ use std::fs::{read_to_string, write};
 use std::path::PathBuf;
 use glob::glob;
 
-use crate::config::ConfigOptions;
-
 /// Read `path` and return the contents
 pub fn file_to_string(path: &str) -> String
 {
@@ -30,10 +28,10 @@ pub fn replace_extension(file: &str, new_ext: &str) -> String
     path.to_string_lossy().to_string()
 }
 
-/// List all markdown files in the Zettelkasten directory
-pub fn list_md_files(cfg: &ConfigOptions) -> Vec<String>
+/// List all markdown files in the specified directory
+pub fn list_md_files(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*.md", &cfg.zettelkasten))
+    glob(&format!("{}/*.md", dir))
         .expect("failed to read directory")
         .map(|f| f.unwrap().to_string_lossy().to_string())
         .collect()

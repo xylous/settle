@@ -56,6 +56,11 @@ fn main() -> Result<(), rusqlite::Error>
         .about("CLI tool to manage a digital Zettelkasten")
         .subcommand(App::new("new")
             .about("creates a new Zettel")
+            .arg(Arg::new("inbox")
+                .short('i')
+                .long("inbox")
+                .takes_value(false)
+                .about("create the new Zettel in the inbox"))
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of Zettel")))
@@ -92,8 +97,9 @@ fn main() -> Result<(), rusqlite::Error>
 
     if let Some(matches) = matches.subcommand_matches("new") {
         let title = matches.value_of("TITLE").unwrap();
+        let is_inbox = matches.is_present("inbox");
 
-        let mut zettel = Zettel::new(title).create(&cfg);
+        let mut zettel = Zettel::new(title, is_inbox).create(&cfg);
         zettel = Zettel::from_file(&zettel.filename(&cfg));
         db.save(&zettel)?;
     } else if let Some(matches) = matches.subcommand_matches("edit") {

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
 use crate::{SQL_ARRAY_SEPARATOR, config::ConfigOptions, str_to_vec, zettel::Zettel};
@@ -9,7 +11,9 @@ impl Zettel {
     fn from_db(row: &Row) -> Result<Zettel, rusqlite::Error>
     {
         let title: String = row.get(0)?;
-        Ok(Zettel::new(&title))
+        let inbox_row: String = row.get(3)?;
+        let inbox: bool = FromStr::from_str(&inbox_row).unwrap_or(false);
+        Ok(Zettel::new(&title, inbox))
     }
 }
 
@@ -47,9 +51,11 @@ impl Database
     {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS zettelkasten (
-                title       TEXT PRIMARY KEY NOT NULL,
+                title       TEXT NOT NULL,
                 links       TEXT,
-                tags        TEXT
+                tags        TEXT,
+                inbox       INTEGER,
+                UNIQUE(title, inbox)
             )",
             [])?;
         Ok(())
@@ -77,8 +83,8 @@ impl Database
         let links = crate::vec_to_str(&zettel.links);
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
-            "INSERT INTO zettelkasten (title, links, tags) values (?1, ?2, ?3)",
-            &[&zettel.title, &links, &tags])?;
+            "INSERT INTO zettelkasten (title, links, tags, inbox) values (?1, ?2, ?3, ?4)",
+            &[&zettel.title, &links, &tags, &zettel.inbox.to_string() ])?;
         Ok(())
     }
 
@@ -229,7 +235,8 @@ impl Database
     /// metadata
     pub fn generate(&self, cfg: &ConfigOptions)
     {
-        let files = crate::io::list_md_files(cfg);
+        let mut files = crate::io::list_md_files(&cfg.zettelkasten);
+        files.append(&mut crate::io::list_md_files(&format!("{}/inbox", &cfg.zettelkasten)));
         let name = &self.name;
         files.par_iter()
             .for_each(|f| {
