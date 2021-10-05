@@ -9,6 +9,7 @@ mod subcommands;
 use crate::zettel::Zettel;
 use crate::database::Database;
 use crate::config::*;
+use crate::subcommands::*;
 
 const SQL_ARRAY_SEPARATOR: &str = "::";
 
@@ -91,23 +92,21 @@ fn main() -> Result<(), rusqlite::Error>
 
     let cfg = ConfigOptions::load();
 
-    if let Some(matches) = matches.subcommand_matches("new") {
-        subcommands::new(matches, &cfg)?;
-    } else if let Some(matches) = matches.subcommand_matches("edit") {
-        subcommands::edit(matches, &cfg)?;
-    } else if let Some(matches) = matches.subcommand_matches("find") {
-        subcommands::find(matches, &cfg)?;
-    } else if let Some(matches) = matches.subcommand_matches("backlinks") {
-        subcommands::backlinks(matches, &cfg)?;
-    } else if matches.subcommand_matches("list-tags").is_some() {
-        subcommands::list_tags(&cfg)?;
-    } else if matches.subcommand_matches("generate").is_some() {
-        subcommands::generate(&cfg)?;
-    } else if matches.subcommand_matches("not-created").is_some() {
-        subcommands::not_created(&cfg)?;
-    } else if matches.subcommand_matches("ls").is_some() {
-        subcommands::ls(&cfg)?;
-    }
+    // we can safely unwrap, since subcommands are mandatory
+    let cmd = matches.subcommand_name().unwrap();
+    let cmd_matches = matches.subcommand_matches(cmd).unwrap();
+
+    match cmd {
+        "new" => new(cmd_matches, &cfg)?,
+        "edit" => edit(cmd_matches, &cfg)?,
+        "find" => find(cmd_matches, &cfg)?,
+        "backlinks" => backlinks(cmd_matches, &cfg)?,
+        "list-tags" => list_tags(&cfg)?,
+        "generate" => generate(&cfg)?,
+        "not-created" => not_created(&cfg)?,
+        "ls" => ls(&cfg)?,
+        _ => (),
+    };
 
     Ok(())
 }
