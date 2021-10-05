@@ -22,12 +22,12 @@ const SQL_ARRAY_SEPARATOR: &str = "::";
 /// let v = vec!["foo", "bar", "baz"];
 /// assert_eq!(vec_to_str(v), String::from(",foo,bar,baz,"));
 /// ```
-fn vec_to_str(vec: &Vec<String>) -> String
+fn vec_to_str(vec: &[String]) -> String
 {
     format!(
         "{}{}{}",
         SQL_ARRAY_SEPARATOR,
-        vec.join(&SQL_ARRAY_SEPARATOR),
+        vec.join(SQL_ARRAY_SEPARATOR),
         SQL_ARRAY_SEPARATOR,
     )
 }

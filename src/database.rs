@@ -241,7 +241,7 @@ impl Database
         files.par_iter()
             .for_each(|f| {
                 let thread_db = Self::in_memory(name).unwrap();
-                let thread_zettel = Zettel::from_file(&f);
+                let thread_zettel = Zettel::from_file(f);
                 thread_db.save(&thread_zettel).unwrap();
             });
     }

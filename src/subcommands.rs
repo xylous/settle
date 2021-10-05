@@ -28,8 +28,8 @@ pub fn edit(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let title = matches.value_of("TITLE").unwrap_or_default();
     let editor = default_system_editor();
-    for mut zettel in db.find_by_title(&title)? {
-        zettel.edit(&editor, &cfg);
+    for mut zettel in db.find_by_title(title)? {
+        zettel.edit(&editor, cfg);
         zettel = Zettel::from_file(&zettel.filename(cfg));
         db.delete(&zettel)?;
         db.save(&zettel)?;
@@ -88,7 +88,7 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 
     let mem_db = Database::in_memory(&cfg.db_file())?;
     mem_db.init()?;
-    mem_db.generate(&cfg);
+    mem_db.generate(cfg);
     mem_db.write_to(&cfg.db_file())?;
 
     let end = chrono::Local::now();

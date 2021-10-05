@@ -10,7 +10,7 @@ pub fn file_to_string(path: &str) -> String
 
 pub fn basename(path: &str) -> String
 {
-    let pieces: Vec<&str> = path.split("/").collect();
+    let pieces: Vec<&str> = path.split('/').collect();
     pieces[pieces.len() - 1].to_string()
 }
 

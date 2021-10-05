@@ -10,8 +10,8 @@ use crate::default_system_editor;
 // wiki-style links are of the form `[[LINK]]`
 fn find_links(contents: &str) -> Vec<String>
 {
-    let re = Regex::new(&format!(r#"\[\[(.*?)\]\]"#)).unwrap();
-    re.captures_iter(&contents).par_bridge()
+    let re = Regex::new(r#"\[\[(.*?)\]\]"#).unwrap();
+    re.captures_iter(contents).par_bridge()
         .map(|cap| {
             let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
             title
@@ -24,7 +24,7 @@ fn find_links(contents: &str) -> Vec<String>
 fn find_tags(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r"#([\w/_-]+?)\s+").unwrap();
-    re.captures_iter(&contents).par_bridge()
+    re.captures_iter(contents).par_bridge()
         .map(|cap| {
             let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
             tag
@@ -61,7 +61,7 @@ impl Zettel
         let contents = file_to_string(path);
 
         let mut is_inbox = false;
-        let pieces: Vec<_> = path.split("/").collect();
+        let pieces: Vec<_> = path.split('/').collect();
         if pieces[pieces.len() - 2] == "inbox" {
             is_inbox = true;
         }
