@@ -36,7 +36,7 @@ Read [the User Manual](./USER-MANUAL.md)
 - [x] ~~list existing Zettel~~
 - [x] ~~list linked-to, but not yet created Zettel~~
 - [x] ~~keep track of and use an inbox~~
-- [ ] full text search
+- [x] ~~search for text inside notes~~
 
 ## Contributing
 
