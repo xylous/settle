@@ -245,4 +245,17 @@ impl Database
                 thread_db.save(&thread_zettel).unwrap();
             });
     }
+
+    /// Return titles of Zettel that contain `text`
+    pub fn search_text(&self, cfg: &ConfigOptions, text: &str) -> Result<Vec<String>, Error>
+    {
+        let zettel = self.all()?;
+        Ok(zettel.par_iter()
+            .filter(|&z|
+                z.has_text(cfg, text)
+            )
+            .map(|z|
+                z.title.clone()
+            ).collect())
+    }
 }
