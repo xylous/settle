@@ -506,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "settle"
-version = "0.20.3"
+version = "0.21.0"
 dependencies = [
  "chrono",
  "clap",
