@@ -117,4 +117,13 @@ impl Zettel
             .status()
             .expect("failed to execute process");
     }
+
+    /// Check if the current Zettel file contains `text`
+    pub fn has_text(&self, cfg: &ConfigOptions, text: &str) -> bool
+    {
+        let contents = file_to_string(&self.filename(cfg));
+        let re = Regex::new(&format!(r"(?i){}", text)).unwrap();
+
+        re.is_match(&contents)
+    }
 }
