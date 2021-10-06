@@ -82,6 +82,19 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let text = matches.value_of("TEXT").unwrap();
+
+    let db = Database::new(&cfg.db_file(), None)?;
+    let results = db.search_text(cfg, text)?;
+    for title in results {
+        println!("{}", title);
+    }
+
+    Ok(())
+}
+
 pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let start = chrono::Local::now();

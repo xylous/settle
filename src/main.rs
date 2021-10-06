@@ -75,15 +75,20 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TAG")
                 .required(true)
                 .about("tag of Zettel")))
-        .subcommand(App::new("list-tags")
-            .about("list all tags registered in the database"))
-        .subcommand(App::new("generate")
-            .about("(re)generate the database"))
         .subcommand(App::new("backlinks")
             .about("list files linking to <TITLE>")
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of Zettel")))
+        .subcommand(App::new("search")
+            .about("list titles of Zettel that contain provided text")
+            .arg(Arg::new("TEXT")
+                .required(true)
+                .about("text to be searched")))
+        .subcommand(App::new("list-tags")
+            .about("list all tags registered in the database"))
+        .subcommand(App::new("generate")
+            .about("(re)generate the database"))
         .subcommand(App::new("not-created")
             .about("list Zettel linked to, but not yet created"))
         .subcommand(App::new("ls")
@@ -101,6 +106,7 @@ fn main() -> Result<(), rusqlite::Error>
         "edit" => edit(cmd_matches, &cfg)?,
         "find" => find(cmd_matches, &cfg)?,
         "backlinks" => backlinks(cmd_matches, &cfg)?,
+        "search" => search(cmd_matches, &cfg)?,
         "list-tags" => list_tags(&cfg)?,
         "generate" => generate(&cfg)?,
         "not-created" => not_created(&cfg)?,
