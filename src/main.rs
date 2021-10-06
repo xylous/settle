@@ -97,9 +97,15 @@ fn main() -> Result<(), rusqlite::Error>
 
     let cfg = ConfigOptions::load();
 
-    // we can safely unwrap, since subcommands are mandatory
-    let cmd = matches.subcommand_name().unwrap();
-    let cmd_matches = matches.subcommand_matches(cmd).unwrap();
+    let cmd = matches.subcommand_name().unwrap_or_default();
+    let cmd_matches;
+
+    // If no subcommand was specified, quit
+    if ! cmd.is_empty() {
+        cmd_matches = matches.subcommand_matches(cmd).unwrap();
+    } else {
+        return Ok(());
+    }
 
     match cmd {
         "new" => new(cmd_matches, &cfg)?,
