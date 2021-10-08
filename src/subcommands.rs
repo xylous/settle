@@ -17,11 +17,20 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let title = matches.value_of("TITLE").unwrap();
     let is_inbox = matches.is_present("inbox");
 
-    let mut zettel = Zettel::new(title, is_inbox).create(cfg);
+    let zettel = Zettel::new(title, is_inbox);
+
     if file_exists(&zettel.filename(cfg)) {
-        zettel = Zettel::from_file(&zettel.filename(cfg));
+        eprintln!("couldn't create new Zettel: one with the same title already exists");
+        return Ok(());
+    } else {
+        zettel.create(cfg);
     }
-    db.save(&zettel)?;
+
+    // User may not have actually written to the file
+    if file_exists(&zettel.filename(cfg)) {
+        let updated_metadata = Zettel::from_file(&zettel.filename(cfg));
+        db.save(&updated_metadata)?;
+    }
 
     Ok(())
 }

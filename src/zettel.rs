@@ -75,7 +75,7 @@ impl Zettel
     /// If `cfg.template` is set and a file, then replace placeholders and use it. Otherwise leave
     /// a blank file.
     /// Open editor on new Zettel either way.
-    pub fn create(self, cfg: &ConfigOptions) -> Self
+    pub fn create(&self, cfg: &ConfigOptions)
     {
         let editor = default_system_editor();
 
@@ -88,7 +88,6 @@ impl Zettel
         }
 
         self.edit(&editor, cfg);
-        self
     }
 
     /// Return a string with the format "`Zettel.title`.md"
