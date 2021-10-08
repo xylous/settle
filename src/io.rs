@@ -1,5 +1,5 @@
 use std::fs::{read_to_string, write};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use glob::glob;
 
 /// Read `path` and return the contents
@@ -8,6 +8,13 @@ pub fn file_to_string(path: &str) -> String
     read_to_string(path).expect("failed to read file")
 }
 
+/// Return true if the path specified exists and is a file
+pub fn file_exists(path: &str) -> bool
+{
+    Path::new(path).is_file()
+}
+
+/// Return the smallest part
 pub fn basename(path: &str) -> String
 {
     let pieces: Vec<&str> = path.split('/').collect();

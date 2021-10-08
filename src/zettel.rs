@@ -72,22 +72,23 @@ impl Zettel
         zettel
     }
 
-    /// Create Zettel as a physical file on the system and open system editor on it
+    /// If `cfg.template` is set and a file, then replace placeholders and use it. Otherwise leave
+    /// a blank file.
+    /// Open editor on new Zettel either way.
     pub fn create(self, cfg: &ConfigOptions) -> Self
     {
         let editor = default_system_editor();
-        write_to_file(&self.filename(cfg), &self.title_header());
+
+        if file_exists(&cfg.template) {
+            let template_contents = file_to_string(&cfg.template);
+            let new_zettel_contents = self.replace_template_placeholders(&template_contents);
+            write_to_file(&self.filename(cfg), &new_zettel_contents);
+        } else {
+            write_to_file(&self.filename(cfg), "");
+        }
+
         self.edit(&editor, cfg);
         self
-    }
-
-    /// Generate title header line for physical file
-    fn title_header(&self) -> String
-    {
-        format!(
-            "# {}\n",
-            &self.title,
-        )
     }
 
     /// Return a string with the format "`Zettel.title`.md"
@@ -125,5 +126,12 @@ impl Zettel
         let re = Regex::new(&format!(r"(?i){}", text)).unwrap();
 
         re.is_match(&contents)
+    }
+
+    /// Given the contents of a template file, replace all placeholders with their proper value
+    fn replace_template_placeholders(&self, contents: &str) -> String
+    {
+        let re_title = Regex::new(r"\$\{TITLE\}").unwrap();
+        re_title.replace_all(contents, &self.title).to_string()
     }
 }

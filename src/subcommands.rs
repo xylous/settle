@@ -7,6 +7,8 @@ use crate::Zettel;
 use crate::config::ConfigOptions;
 use crate::default_system_editor;
 
+use crate::io::file_exists;
+
 pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -16,7 +18,9 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let is_inbox = matches.is_present("inbox");
 
     let mut zettel = Zettel::new(title, is_inbox).create(cfg);
-    zettel = Zettel::from_file(&zettel.filename(cfg));
+    if file_exists(&zettel.filename(cfg)) {
+        zettel = Zettel::from_file(&zettel.filename(cfg));
+    }
     db.save(&zettel)?;
 
     Ok(())
