@@ -4,7 +4,8 @@ use serde::{Serialize, Deserialize};
 pub struct ConfigOptions
 {
     pub zettelkasten: String,
-    pub db_file: String,
+    pub template: String,
+    db_file: String,
 }
 
 impl ::std::default::Default for ConfigOptions
@@ -15,6 +16,7 @@ impl ::std::default::Default for ConfigOptions
         ConfigOptions {
             zettelkasten: zettelkasten_path,
             db_file: String::from("metadata.sql"),
+            template: String::from(""),
         }
     }
 }
