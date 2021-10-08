@@ -3,11 +3,12 @@
 `settle` is a command line note manager for the Zettelkasten method.
 
 - exclusively recognizes wiki-style links (such as `[[Neurons]]`, that redirects
-you to a Zettel titled "Neurons").
+you to a Zettel titled "Neurons")
 - looks for hashtag-tags, like `#psychology`. You could use subtags, such as
-`#biology/neuroscience`.
+`#biology/neuroscience`
 - everything is stored locally
-- set a custom Zettelkasten directory that contains notes.
+- set a custom Zettelkasten directory to contains notes
+- [create Zettel from templates](#writing-templates)
 
 Notes are written in Markdown. The filenames have a simple format,
 `${TITLE}.md`.
@@ -22,6 +23,30 @@ You can specify the following options:
 `/home/johndoe/zettelkasten/`
 - `db_file`: the path relative to your Zettelkasten directory the program is
 going to use for storing metadata
+- `template`: path to Zettel template; requires absolute paths. If empty, or if
+the path is invalid, then templates won't be used.
+
+### Writing Templates
+
+You can store templates anywhere on the filesystem (see above). But what do
+templates actually contain?
+
+Most text in a template is interpreted literally. Except for the following
+placeholders, which will be replaced accordingly:
+
+- `${TITLE}`: is replaced with the title of the Zettel upon creation
+
+Thus, a template may look like:
+
+```md
+# ${TITLE}
+
+
+
+### References
+
+
+```
 
 ## Commands
 
