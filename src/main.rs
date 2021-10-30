@@ -96,6 +96,8 @@ fn main() -> Result<(), rusqlite::Error>
         .get_matches();
 
     let cfg = ConfigOptions::load();
+    io::mkdir(&cfg.zettelkasten);
+    io::mkdir(&format!("{}/inbox", &cfg.zettelkasten));
 
     let cmd = matches.subcommand_name().unwrap_or_default();
     let cmd_matches;

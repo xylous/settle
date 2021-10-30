@@ -43,3 +43,9 @@ pub fn list_md_files(dir: &str) -> Vec<String>
         .map(|f| f.unwrap().to_string_lossy().to_string())
         .collect()
 }
+
+/// Create specified `path` as a directory
+pub fn mkdir(path: &str)
+{
+    std::fs::create_dir_all(path).expect("Wasn't able to create directory:")
+}
