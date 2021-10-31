@@ -29,6 +29,17 @@ impl ConfigOptions
     }
 }
 
+/// Given a path, expand environment variables and tilde at beginning if it exists
+fn expand_path(path: &str) -> String
+{
+    let result = match path.chars().next().unwrap() {
+        '/' => path.to_string(),
+        '~' => shellexpand::tilde(path).to_string(),
+        _ => format!("$HOME/{}", path),
+    };
+    shellexpand::env(&result).unwrap().to_string()
+}
+
 impl ConfigOptions
 {
     pub fn load() -> ConfigOptions
@@ -37,6 +48,12 @@ impl ConfigOptions
             "{}/.config/settle/settle.yaml",
             env!("HOME"),
         );
-        confy::load_path(config_path).unwrap_or_default()
+
+        let tmp: ConfigOptions = confy::load_path(config_path).unwrap_or_default();
+        ConfigOptions {
+            zettelkasten: expand_path(&tmp.zettelkasten),
+            template: expand_path(&tmp.template),
+            db_file: tmp.db_file,
+        }
     }
 }
