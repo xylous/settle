@@ -7,6 +7,7 @@
 ### Requirements
 
 * cargo/rust toolchain
+* SQLite
 
 ### Installation
 
