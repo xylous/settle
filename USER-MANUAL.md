@@ -66,12 +66,22 @@ afterwards
 - `not-created`: return a list of Zettel that have links pointing to them, but
 haven't been created
 - `list-tags`: list all unique tags used in Zettelkasten
-- `find`: search for Zettel that have been tagged with the specified tag. You
-can use `%` as a wildcard, matching zero or more characters.
-- `backlinks`: return a list of Zettel referencing the note specified as an
-argument. You can use `%` as a wildcard, matching zero or more characters.
-- `search`: return a list of Zettel that contain specified text. You can use
-regex wildcards, i.e. `*` to match zero or more characters.
+- `find`: search for Zettel that have the specified tag
+- `backlinks`: return a list of Zettel that reference the note specified as an
+argument
+- `search`: return a list of Zettel that contain the specified text
+
+### Patterns
+
+Matching literal text is tedious. Fortunately, `settle` supports two wildcards
+that'll come in very handy:
+
+- `*`, which matches zero or more characters
+- `.`, which matches a single character
+
+If you want a literal `*`, or a literal `.`, you'll need to escape the
+character, i.e. `\*` or `\.`. If you want a literal backslash, you're also going
+to have to escape it, i.e. `\\`. All other text is matched literally.
 
 ## Authors
 
