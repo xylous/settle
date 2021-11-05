@@ -1,5 +1,5 @@
 use std::str::FromStr;
-
+use regex::{Regex, Captures};
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
 use crate::{SQL_ARRAY_SEPARATOR, config::ConfigOptions, str_to_vec, zettel::Zettel};
@@ -21,6 +21,37 @@ pub struct Database
 {
     name: String,
     conn: Connection,
+}
+
+/// Turn command line input pattern into database request string equivalent
+///
+/// ### Rules
+///
+/// [characters in input] -> [characters in output]
+///
+/// - '\\' -> '\'
+/// - '%' -> '\%'
+/// - '*' -> '%'
+/// - '\*' -> '*'
+/// - '_' -> '\_'
+/// - '.' -> '_'
+/// - '\.' -> '.'
+/// - '\' -> ''
+fn cli_input_to_db_input(inp: &str) -> String
+{
+    let re = Regex::new(r"(\\\\|%|\*|\\\*|_|\.|\\\.|\\)").unwrap();
+    re.replace_all(inp, |cap: &Captures| {
+        match &cap[0] {
+            r"\\" => r"\",
+            r"%" => r"\%",
+            r"*" => r"%",
+            r"\*" => r"*",
+            r"_" => r"\_",
+            r"." => r"_",
+            r"\." => r".",
+            _ => r"",
+        }
+    }).to_string()
 }
 
 impl Database
@@ -116,15 +147,16 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `title` property matches `title`, and return
+    /// Search in the database for the Zettels whose `title` property matches `pattern`, and return
     /// them
     /// Return an Error if the databases was unreachable.
     ///
     /// `pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_title(&self, title: &str) -> Result<Vec<Zettel>, Error>
+    pub fn find_by_title(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE title LIKE :title")?;
-        let mut rows = stmt.query(named_params! {":title": title})?;
+        let req_pattern = cli_input_to_db_input(pattern);
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE title LIKE :req_pattern")?;
+        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
@@ -135,21 +167,21 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `tags` property includes `tag`, and return
+    /// Search in the database for the Zettels whose `tags` property includes `pattern`, and return
     /// them
     /// Return an Error if the database was unreachable
     ///
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_tag(&self, tag: &str) -> Result<Vec<Zettel>, Error>
+    pub fn find_by_tag(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
-        let pattern = format!(
+        let req_pattern = format!(
             "%{}{}{}%",
             SQL_ARRAY_SEPARATOR,
-            tag,
+            cli_input_to_db_input(pattern),
             SQL_ARRAY_SEPARATOR,
         );
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :pattern")?;
-        let mut rows = stmt.query(named_params! {":pattern": pattern})?;
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :req_pattern")?;
+        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
@@ -179,21 +211,21 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettel whose `links` property contains `title`, and
+    /// Search in the database for the Zettel whose `links` property includes `pattern`, and
     /// return them
     /// Return an Error if the database was unreachable
     ///
     /// `title` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_links_to(&self, title: &str) -> Result<Vec<Zettel>>
+    pub fn find_by_links_to(&self, pattern: &str) -> Result<Vec<Zettel>>
     {
-        let pattern = format!(
+        let req_pattern = format!(
             "%{}{}{}%",
             SQL_ARRAY_SEPARATOR,
-            title,
+            cli_input_to_db_input(pattern),
             SQL_ARRAY_SEPARATOR,
         );
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :pattern")?;
-        let mut rows = stmt.query(named_params! {":pattern": pattern})?;
+        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :req_pattern")?;
+        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
