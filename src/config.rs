@@ -35,6 +35,7 @@ fn expand_path(path: &str) -> String
     let result = match path.chars().next().unwrap() {
         '/' => path.to_string(),
         '~' => shellexpand::tilde(path).to_string(),
+        '$' => path.to_string(),
         _ => format!("$HOME/{}", path),
     };
     shellexpand::env(&result).unwrap().to_string()
