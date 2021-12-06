@@ -32,6 +32,7 @@ fn find_tags(contents: &str) -> Vec<String>
         .collect()
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Zettel
 {
     pub title: String,

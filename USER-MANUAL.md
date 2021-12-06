@@ -4,7 +4,7 @@
 
 - exclusively recognizes wiki-style links (such as `[[Neurons]]`, that redirects
 you to a Zettel titled "Neurons")
-- looks for hashtag-tags, like `#psychology`. You could use subtags, such as
+- looks for hashtag-tags, like `#psychology`. You can also use subtags, such as
 `#biology/neuroscience`
 - everything is stored locally
 - set a custom Zettelkasten directory to contains notes

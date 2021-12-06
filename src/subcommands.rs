@@ -55,10 +55,15 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
 
-    let tag = matches.value_of("TAG").unwrap_or_default();
-    let results = db.find_by_tag(tag)?;
-    println!("found {} item(s)", results.len());
-    results.par_iter()
+    let input = matches.value_of("TAG").unwrap_or_default();
+
+    let mut tags = db.find_by_tag(input)?;
+    let mut subtags = db.find_by_tag(&format!("{}/*", input))?;
+    tags.append(&mut subtags);
+    tags.par_sort();
+    tags.dedup();
+
+    tags.par_iter()
         .for_each(|z| {
             println!("{}", z.title);
         });
