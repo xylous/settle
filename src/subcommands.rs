@@ -152,3 +152,9 @@ pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
 
     Ok(())
 }
+
+pub fn zettelkasten_dir(cfg: &ConfigOptions) -> Result<(), Error>
+{
+    println!("{}", cfg.zettelkasten);
+    Ok(())
+}

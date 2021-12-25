@@ -85,6 +85,8 @@ fn main() -> Result<(), rusqlite::Error>
             .about("list Zettel linked to, but not yet created"))
         .subcommand(App::new("ls")
             .about("list all existing Zettel"))
+        .subcommand(App::new("zettelkasten")
+            .about("return the path to the Zettelkasten"))
         .get_matches();
 
     let cfg = ConfigOptions::load();
@@ -111,6 +113,7 @@ fn main() -> Result<(), rusqlite::Error>
         "generate" => generate(&cfg)?,
         "not-created" => not_created(&cfg)?,
         "ls" => ls(&cfg)?,
+        "zettelkasten" => zettelkasten_dir(&cfg)?,
         _ => (),
     };
 
