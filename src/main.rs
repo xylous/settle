@@ -57,6 +57,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of Zettel")))
+        .subcommand(App::new("update")
+            .about("update the metadata of a Zettel")
+            .arg(Arg::new("FILENAME")
+                .required(true)
+                .about("path to Zettel")))
         .subcommand(App::new("query")
             .about("return a list of Zettel whose title matches the text")
             .arg(Arg::new("PATTERN")
@@ -105,6 +110,7 @@ fn main() -> Result<(), rusqlite::Error>
 
     match cmd {
         "new" => new(cmd_matches, &cfg)?,
+        "update" => update(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,
         "find" => find(cmd_matches, &cfg)?,
         "backlinks" => backlinks(cmd_matches, &cfg)?,

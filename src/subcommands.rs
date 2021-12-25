@@ -47,6 +47,19 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file(), None)?;
+
+    let path = matches.value_of("FILENAME").unwrap();
+    if file_exists(path) {
+        let zettel = Zettel::from_file(path);
+        db.update(cfg, &zettel)?;
+    }
+
+    Ok(())
+}
+
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;

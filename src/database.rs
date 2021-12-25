@@ -119,6 +119,15 @@ impl Database
         Ok(())
     }
 
+    /// Delete a Zettel's metadata from the database
+    pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
+    {
+        self.conn.execute(
+            "DELETE FROM zettelkasten WHERE title=?1 AND inbox=?2",
+            &[&zettel.title, &zettel.inbox.to_string() ])?;
+        Ok(())
+    }
+
     /// Return all Zettel in the database
     /// Return an Error if the data in a row couldn't be accessed or if the database was
     /// unreachable
@@ -265,6 +274,16 @@ impl Database
                 let thread_zettel = Zettel::from_file(f);
                 thread_db.save(&thread_zettel).unwrap();
             });
+    }
+
+    /// Update the metadata for a given Zettel. The specified path *must* exist
+    /// Not practical for a bunch of Zettel. Use `generate` instead.
+    pub fn update(&self, cfg: &ConfigOptions, zettel: &Zettel) -> Result<(), Error>
+    {
+        self.delete(zettel)?;
+        let z = &Zettel::from_file(&zettel.filename(cfg));
+        self.save(z)?;
+        Ok(())
     }
 
     /// Return titles of Zettel that contain `text`
