@@ -35,6 +35,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         return Ok(());
     } else {
         zettel.create(cfg);
+        print_zettel_info(vec![&zettel]);
     }
 
     // User may not have actually written to the file

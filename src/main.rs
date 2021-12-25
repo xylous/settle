@@ -48,7 +48,7 @@ fn main() -> Result<(), rusqlite::Error>
         .author("xylous <xylous.e@gmail.com>")
         .about("CLI tool to manage a digital Zettelkasten")
         .subcommand(App::new("new")
-            .about("creates a new Zettel")
+            .about("create a new Zettel and print its inbox status and title")
             .arg(Arg::new("inbox")
                 .short('i')
                 .long("inbox")
