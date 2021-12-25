@@ -8,6 +8,18 @@ use crate::config::ConfigOptions;
 
 use crate::io::file_exists;
 
+fn print_zettel_info(zettel: Vec<&Zettel>)
+{
+    zettel.par_iter()
+        .for_each(|&z| {
+            let mut location = String::from("p");
+            if z.inbox {
+                location = String::from("i");
+            }
+            println!("[{}] {}", location, z.title);
+        })
+}
+
 pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -39,9 +51,8 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file(), None)?;
 
     let pattern = matches.value_of("PATTERN").unwrap_or_default();
-    for zettel in db.find_by_title(pattern)? {
-        println!("{}", zettel.title);
-    }
+    let result = db.find_by_title(pattern)?;
+    print_zettel_info(result.iter().collect());
 
     Ok(())
 }
@@ -87,10 +98,7 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let db = Database::new(&cfg.db_file(), None)?;
     let links = db.find_by_links_to(title)?;
-    links.par_iter()
-        .for_each(|l| {
-            println!("{}", l.title);
-        });
+    print_zettel_info(links.iter().collect());
 
     Ok(())
 }
@@ -101,9 +109,7 @@ pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let db = Database::new(&cfg.db_file(), None)?;
     let results = db.search_text(cfg, text)?;
-    for title in results {
-        println!("{}", title);
-    }
+    print_zettel_info(results.iter().collect());
 
     Ok(())
 }
@@ -141,14 +147,7 @@ pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file(), None)?;
     let results = db.all()?;
 
-    for zettel in results {
-        if zettel.inbox {
-            print!("inbox: ");
-        } else {
-            print!("permanent: ");
-        }
-        println!("{}", zettel.title);
-    }
+    print_zettel_info(results.iter().collect());
 
     Ok(())
 }
