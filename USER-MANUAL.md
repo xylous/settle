@@ -13,6 +13,10 @@ you to a Zettel titled "Neurons")
 Notes are written in Markdown. The filenames have a simple format,
 `${TITLE}.md`.
 
+Note, you're probably going to want to use (or write) a plugin for your
+favourite editor; as of v0.26.0, the program no longer supports starting an
+editor on a file.
+
 ## Configurability
 
 The config file is located at `~/.config/settle/settle.yaml`. When you first
@@ -21,12 +25,12 @@ run the program, it's going to be generated automatically with default values.
 You can specify the following options:
 - `zettelkasten`: path to Zettelkasten. If you don't specify an absolute path,
 e.g. `notes`, it's assumed you want your Zettelkasten to be at `~/notes`. You
-can also use paths with environment variables or paths starting with tilde (`~`)
-- `db_file`: the path relative to your Zettelkasten directory the program is
-going to use for storing metadata
+can also use paths containing environment variables or paths starting with a
+tilde (`~`)
+- `db_file`: database file `settle` uses
 - `template`: path to Zettel template; if empty, or if the path is invalid, then
-templates won't be used. You can use paths with environment variables, or tilde
-(`~`).
+templates won't be used. You can use paths containing environment variables, or
+a leading tilde (`~`).
 
 ### Writing Templates
 
@@ -61,8 +65,7 @@ database!
 - `generate`: create and populate the database with Zettel metadata
 - `ls`: list existing files in Zettelkasten, based on database info
 - `new`: create a new Zettel and add its metadata to the database
-- `edit`: edit a currently existing Zettel and update database entry for it
-afterwards
+- `query`: return existing Zettel matching the pattern provided as argument
 - `not-created`: return a list of Zettel that have links pointing to them, but
 haven't been created
 - `list-tags`: list all unique tags used in Zettelkasten
@@ -70,11 +73,12 @@ haven't been created
 - `backlinks`: return a list of Zettel that reference the note specified as an
 argument
 - `search`: return a list of Zettel that contain the specified text
+- `zettelkasten`: the absolute path to the directory `settle` uses
 
 ### Patterns
 
-Matching literal text is tedious. Fortunately, `settle` supports two wildcards
-that'll come in very handy:
+Matching literal text gets boring, quick. Fortunately, `settle` supports two
+wildcards that'll come in very handy:
 
 - `*`, which matches zero or more characters
 - `.`, which matches a single character
