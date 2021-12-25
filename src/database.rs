@@ -119,17 +119,6 @@ impl Database
         Ok(())
     }
 
-    /// Remove a Zettel's metadata from the database
-    /// Return an Error if this wasn't possible
-    pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
-    {
-        self.conn.execute(
-            "DELETE FROM zettelkasten WHERE title = (?1)",
-            &[&zettel.title]
-        )?;
-        Ok(())
-    }
-
     /// Return all Zettel in the database
     /// Return an Error if the data in a row couldn't be accessed or if the database was
     /// unreachable

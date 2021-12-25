@@ -5,7 +5,6 @@ use rayon::prelude::*;
 use crate::Database;
 use crate::Zettel;
 use crate::config::ConfigOptions;
-use crate::default_system_editor;
 
 use crate::io::file_exists;
 
@@ -35,17 +34,13 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-pub fn edit(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
 
-    let title = matches.value_of("TITLE").unwrap_or_default();
-    let editor = default_system_editor();
-    for mut zettel in db.find_by_title(title)? {
-        zettel.edit(&editor, cfg);
-        zettel = Zettel::from_file(&zettel.filename(cfg));
-        db.delete(&zettel)?;
-        db.save(&zettel)?;
+    let pattern = matches.value_of("PATTERN").unwrap_or_default();
+    for zettel in db.find_by_title(pattern)? {
+        println!("{}", zettel.title);
     }
 
     Ok(())

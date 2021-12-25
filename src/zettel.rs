@@ -1,10 +1,8 @@
-use std::process::Command;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::Regex;
 
 use crate::config::ConfigOptions;
 use crate::io::*;
-use crate::default_system_editor;
 
 // Find and return wiki-style links inside of `contents` string
 // wiki-style links are of the form `[[LINK]]`
@@ -73,13 +71,10 @@ impl Zettel
         zettel
     }
 
-    /// If `cfg.template` is set and a file, then replace placeholders and use it. Otherwise leave
+    /// If `cfg.template` is set and a file, then replace placeholders and use it. Otherwise create
     /// a blank file.
-    /// Open editor on new Zettel either way.
     pub fn create(&self, cfg: &ConfigOptions)
     {
-        let editor = default_system_editor();
-
         if file_exists(&cfg.template) {
             let template_contents = file_to_string(&cfg.template);
             let new_zettel_contents = self.replace_template_placeholders(&template_contents);
@@ -87,8 +82,6 @@ impl Zettel
         } else {
             write_to_file(&self.filename(cfg), "");
         }
-
-        self.edit(&editor, cfg);
     }
 
     /// Return a string with the format "`Zettel.title`.md"
@@ -108,15 +101,6 @@ impl Zettel
             dir = cfg.zettelkasten.clone();
         }
         format!("{}/{}.md", dir, &self.title)
-    }
-
-    /// Open `editor` on current Zettel
-    pub fn edit(&self, editor: &str, cfg: &ConfigOptions)
-    {
-        Command::new(editor)
-            .arg(self.filename(cfg))
-            .status()
-            .expect("failed to execute process");
     }
 
     /// Check if the current Zettel file contains `text`

@@ -41,14 +41,6 @@ fn str_to_vec(str: &str) -> Vec<String>
         .collect()
 }
 
-/// Return the value of $EDITOR or $VISUAL, or, if those are empty, return `"vim"`
-fn default_system_editor() -> String
-{
-    std::env::var("EDITOR")
-        .or_else(|_| std::env::var("VISUAL"))
-        .unwrap_or_else(|_| "vim".to_string())
-}
-
 fn main() -> Result<(), rusqlite::Error>
 {
     let matches = App::new(env!("CARGO_PKG_NAME"))
@@ -65,9 +57,9 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TITLE")
                 .required(true)
                 .about("title of Zettel")))
-        .subcommand(App::new("edit")
-            .about("edit an existing Zettel")
-            .arg(Arg::new("TITLE")
+        .subcommand(App::new("query")
+            .about("return a list of Zettel whose title matches the text")
+            .arg(Arg::new("PATTERN")
                 .required(true)
                 .about("title of Zettel")))
         .subcommand(App::new("find")
@@ -111,7 +103,7 @@ fn main() -> Result<(), rusqlite::Error>
 
     match cmd {
         "new" => new(cmd_matches, &cfg)?,
-        "edit" => edit(cmd_matches, &cfg)?,
+        "query" => query(cmd_matches, &cfg)?,
         "find" => find(cmd_matches, &cfg)?,
         "backlinks" => backlinks(cmd_matches, &cfg)?,
         "search" => search(cmd_matches, &cfg)?,
