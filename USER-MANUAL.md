@@ -13,9 +13,10 @@ you to a Zettel titled "Neurons")
 Notes are written in Markdown. The filenames have a simple format,
 `${TITLE}.md`.
 
-Note, you're probably going to want to use (or write) a plugin for your
-favourite editor; as of v0.26.0, the program no longer supports starting an
-editor on a file.
+NOTE: you're probably going to want to use (or write) a plugin for your
+favourite editor, such as [settle.vim](https://github.com/xylous/settle.vim) for
+Vim and Neovim; as of v0.26.0, the program no longer supports starting an editor
+on a file.
 
 ## Configurability
 
