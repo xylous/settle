@@ -116,6 +116,34 @@ pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print the titles of the Zettel matching the pattern provided in the CLi arguments and the other
+/// Zettel it links to under the following format:
+///
+/// ```
+/// [<i>] <TITLE>
+///     | <LINK_1>
+///     | <LINK_2>
+///     | ...
+///     | <LINK_N>
+/// ```
+///
+/// ...where `<i>` is the inbox status, `<TITLE>` is the title of the Zettel matching the pattern,
+/// and `LINK_N` is the title of a Zettel linked to by `<TITLE>`
+pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let title = matches.value_of("TITLE").unwrap_or_default();
+
+    let db = Database::new(&cfg.db_file())?;
+    let zettel = db.find_by_title(title)?;
+    for z in zettel {
+        print_zettel_info(&[z.clone()]);
+        for link in &z.links {
+            println!("    | {}", link);
+        }
+    }
+    Ok(())
+}
+
 /// Print all Zettel that match the one specified in the CLI argument matches
 pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {

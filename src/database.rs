@@ -11,9 +11,14 @@ impl Zettel {
     fn from_db(row: &Row) -> Result<Zettel, rusqlite::Error>
     {
         let title: String = row.get(0)?;
+        let links: String = row.get(1)?;
+        let tags: String = row.get(2)?;
         let inbox_row: String = row.get(3)?;
         let inbox: bool = FromStr::from_str(&inbox_row).unwrap_or(false);
-        Ok(Zettel::new(&title, inbox))
+        let mut z = Zettel::new(&title, inbox);
+        z.links = str_to_vec(&links);
+        z.tags = str_to_vec(&tags);
+        Ok(z)
     }
 }
 

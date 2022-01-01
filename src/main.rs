@@ -72,6 +72,11 @@ fn main() -> Result<(), rusqlite::Error>
             .arg(Arg::new("TAG")
                 .required(true)
                 .about("tag of Zettel")))
+        .subcommand(App::new("links")
+            .about("list Zettel that <TITLE> links to")
+            .arg(Arg::new("TITLE")
+                .required(true)
+                .about("title of Zettel")))
         .subcommand(App::new("backlinks")
             .about("list files linking to <TITLE>")
             .arg(Arg::new("TITLE")
@@ -113,6 +118,7 @@ fn main() -> Result<(), rusqlite::Error>
         "update" => update(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,
         "find" => find(cmd_matches, &cfg)?,
+        "links" => links(cmd_matches, &cfg)?,
         "backlinks" => backlinks(cmd_matches, &cfg)?,
         "search" => search(cmd_matches, &cfg)?,
         "list-tags" => list_tags(&cfg)?,
