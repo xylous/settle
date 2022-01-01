@@ -8,6 +8,8 @@ use crate::config::ConfigOptions;
 
 use crate::io::file_exists;
 
+/// Print all Zettel in the given vector with the format: `[i] <TITLE>` if in inbox, and `[p]
+/// <TITLE>` if in outbox.
 fn print_zettel_info(zettel: &Vec<Zettel>)
 {
     zettel.par_iter()
@@ -20,6 +22,7 @@ fn print_zettel_info(zettel: &Vec<Zettel>)
         })
 }
 
+/// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
 pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -30,19 +33,22 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let zettel = Zettel::new(title, is_inbox);
 
-    if file_exists(&zettel.filename(cfg)) {
+    let exists_in_fs = file_exists(&zettel.filename(cfg));
+    let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z.clone() == zettel);
+
+    // If the corresponding file exists and there's an entry in the database, abort.
+    // If there's a file but there's no entry in the database, create an entry.
+    // Otherwise, create a new file from template and add a database entry.
+    if exists_in_fs && exists_in_db {
         eprintln!("couldn't create new Zettel: one with the same title already exists");
         return Ok(());
+    } else if exists_in_fs {
+        println!("file exists in filesystem but not in database; added entry"); // saved right after
     } else {
         zettel.create(cfg);
-        print_zettel_info(&vec![zettel.clone()]);
+        print_zettel_info(&vec![zettel.clone()]); // confirm that the Zettel was created
     }
-
-    // User may not have actually written to the file
-    if file_exists(&zettel.filename(cfg)) {
-        let updated_metadata = Zettel::from_file(&zettel.filename(cfg));
-        db.save(&updated_metadata)?;
-    }
+    db.save(&zettel)?;
 
     Ok(())
 }
