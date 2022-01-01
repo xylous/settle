@@ -30,15 +30,36 @@ Read [the User Manual](./USER-MANUAL.md)
 
 ## Roadmap
 
-- [x] ~~create Zettel~~
-- [x] ~~edit Zettel~~
-- [x] ~~tags; specifically, search by tags~~
-- [x] ~~custom Zettelkasten directory~~
-- [x] ~~list existing Zettel~~
-- [x] ~~list linked-to, but not yet created Zettel~~
-- [x] ~~keep track of and use an inbox~~
-- [x] ~~search for text inside notes~~
-- [x] ~~be able to use templates~~
+- [x] generate database from existing files
+- [x] create Zettel
+- [x] list Zettel
+- [x] tags
+    - [x] recognize hashtag-tags (e.g. `#interesting-tag`)
+    - [x] search for tags
+    - [x] list all tags
+- [x] configuration
+    - [x] custom Zettelkasten directory
+    - [x] custom database file path
+    - [x] be able to use templates
+- [x] list mentioned but non-existent Zettel
+- [x] use an inbox
+- [x] search for text inside notes
+- [x] support matching titles with wildcards
+- [x] update Zettel metadata individually
+- [ ] print links
+    - [x] backlinks (to a Zettel from other Zettel)
+    - [ ] forward links (from a Zettel to other Zettel)
+- [ ] list "lonely" Zettel (with zero connections)
+
+##### Meta
+
+- [ ] configure `Cargo.toml` properties
+- [ ] shell autocompletion
+    - [ ] zsh
+    - [ ] bash
+- [ ] write a proper `man` page
+- [ ] logo (pixel art?)
+- [ ] publish to crates.io
 
 ## Contributing
 
