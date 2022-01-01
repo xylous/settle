@@ -127,16 +127,14 @@ pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
 pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let start = chrono::Local::now();
+    let start = std::time::Instant::now();
 
     let mem_db = Database::in_memory(&cfg.db_file())?;
     mem_db.init()?;
     mem_db.generate(cfg);
     mem_db.write_to(&cfg.db_file())?;
 
-    let end = chrono::Local::now();
-    let time = end - start;
-    println!("database generated successfully, took {}ms", time.num_milliseconds());
+    println!("database generated successfully, took {}ms", start.elapsed().as_millis());
 
     Ok(())
 }
