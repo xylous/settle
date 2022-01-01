@@ -46,9 +46,9 @@ Read [the User Manual](./USER-MANUAL.md)
 - [x] search for text inside notes
 - [x] support matching titles with wildcards
 - [x] update Zettel metadata individually
-- [ ] print links
+- [x] print links
+    - [x] forward links (from a Zettel to other Zettel)
     - [x] backlinks (to a Zettel from other Zettel)
-    - [ ] forward links (from a Zettel to other Zettel)
 - [ ] list "lonely" Zettel (with zero connections)
 
 ##### Meta

@@ -74,6 +74,8 @@ doesn't exist, print an error message.
 haven't been created
 - `list-tags`: list all unique tags used in Zettelkasten
 - `find`: search for Zettel that have the specified tag
+- `links`: print the Zettel that match the query provided and the forward links
+they contain.
 - `backlinks`: return a list of Zettel that reference the note specified as an
 argument
 - `search`: return a list of Zettel that contain the specified text
