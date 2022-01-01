@@ -132,8 +132,8 @@ pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
 pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let title = matches.value_of("TITLE").unwrap_or_default();
-
     let db = Database::new(&cfg.db_file())?;
+
     let zettel = db.find_by_title(title)?;
     for z in zettel {
         print_zettel_info(&[z.clone()]);
@@ -148,11 +148,17 @@ pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let title = matches.value_of("TITLE").unwrap_or_default();
-
     let db = Database::new(&cfg.db_file())?;
-    let links = db.find_by_links_to(title)?;
-    print_zettel_info(&links);
 
+    let zettel = db.find_by_title(title)?;
+    for z in zettel {
+        print_zettel_info(&[z.clone()]);
+        let res = db.find_by_links_to(&z.title)?;
+        for blink in res {
+            print!("    | ");
+            print_zettel_info(&[blink]);
+        }
+    }
     Ok(())
 }
 
