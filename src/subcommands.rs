@@ -25,7 +25,7 @@ fn print_zettel_info(zettel: &[Zettel])
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
 pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
     db.init()?;
 
     let title = matches.value_of("TITLE").unwrap();
@@ -57,7 +57,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Update the metadata of a file
 pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
 
     let path = matches.value_of("FILENAME").unwrap();
     if file_exists(path) {
@@ -73,7 +73,7 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Print all Zettel matching the pattern from the CLI
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
 
     let pattern = matches.value_of("PATTERN").unwrap_or_default();
     let result = db.find_by_title(pattern)?;
@@ -85,7 +85,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Print all Zettel whose tags contain the pattern specified in the CLI args
 pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
 
     let input = matches.value_of("TAG").unwrap_or_default();
 
@@ -103,7 +103,7 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Print all tags used inside the Zettelkasten
 pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
 
     let tags = db.list_tags()?;
     tags.into_par_iter()
@@ -121,7 +121,7 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let title = matches.value_of("TITLE").unwrap_or_default();
 
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
     let links = db.find_by_links_to(title)?;
     print_zettel_info(&links);
 
@@ -133,7 +133,7 @@ pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let text = matches.value_of("TEXT").unwrap();
 
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
     let results = db.search_text(cfg, text)?;
     print_zettel_info(&results);
 
@@ -158,7 +158,7 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 /// Print a list of Zettel that haven't yet been created
 pub fn not_created(cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
 
     let results = db.zettel_not_yet_created()?;
     for title in results {
@@ -171,7 +171,7 @@ pub fn not_created(cfg: &ConfigOptions) -> Result<(), Error>
 /// List all files in the Zettelkasten
 pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file(), None)?;
+    let db = Database::new(&cfg.db_file())?;
     let results = db.all()?;
 
     print_zettel_info(&results);

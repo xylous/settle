@@ -58,12 +58,11 @@ impl Database
 {
     /// Create a `Database` interface to an SQLite database
     /// Return an Error if the connection couldn't be made
-    pub fn new(name: &str, uri: Option<&str>) -> Result<Self, Error>
+    pub fn new(name: &str) -> Result<Self, Error>
     {
-        let g_uri = uri.or(Some(name)).unwrap();
         Ok(Database {
             name: name.to_string(),
-            conn: Connection::open(g_uri)?,
+            conn: Connection::open(name)?,
         })
     }
 
@@ -72,7 +71,10 @@ impl Database
     pub fn in_memory(name: &str) -> Result<Self, Error>
     {
         let uri = &format!("file:{}?mode=memory&cache=shared", name);
-        Database::new(name, Some(uri))
+        Ok(Database {
+            name: name.to_string(),
+            conn: Connection::open(uri)?,
+        })
     }
 
     /// Initialise the current Database with a `zettelkasten` table that holds the properties of
@@ -101,14 +103,6 @@ impl Database
     }
 
     /// Save a Zettel's metadata to the database
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let db = Database::in_memory("some_db_name");
-    /// let zettel = Zettel::new("my super interesting note");
-    /// db.save(zettel)?;
-    /// ```
     pub fn save(&self, zettel: &Zettel) -> Result<(), Error>
     {
         let links = crate::vec_to_str(&zettel.links);
