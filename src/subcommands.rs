@@ -8,10 +8,10 @@ use crate::config::ConfigOptions;
 
 use crate::io::file_exists;
 
-fn print_zettel_info(zettel: Vec<&Zettel>)
+fn print_zettel_info(zettel: &Vec<Zettel>)
 {
     zettel.par_iter()
-        .for_each(|&z| {
+        .for_each(|z| {
             let mut location = String::from("p");
             if z.inbox {
                 location = String::from("i");
@@ -35,7 +35,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         return Ok(());
     } else {
         zettel.create(cfg);
-        print_zettel_info(vec![&zettel]);
+        print_zettel_info(&vec![zettel.clone()]);
     }
 
     // User may not have actually written to the file
@@ -66,7 +66,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let pattern = matches.value_of("PATTERN").unwrap_or_default();
     let result = db.find_by_title(pattern)?;
-    print_zettel_info(result.iter().collect());
+    print_zettel_info(&result);
 
     Ok(())
 }
@@ -77,16 +77,13 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let input = matches.value_of("TAG").unwrap_or_default();
 
-    let mut tags = db.find_by_tag(input)?;
-    let mut subtags = db.find_by_tag(&format!("{}/*", input))?;
-    tags.append(&mut subtags);
-    tags.par_sort();
-    tags.dedup();
+    let mut zettel = db.find_by_tag(input)?;
+    let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", input))?;
+    zettel.append(&mut zettel_with_subtag);
+    zettel.par_sort();
+    zettel.dedup();
 
-    tags.par_iter()
-        .for_each(|z| {
-            println!("{}", z.title);
-        });
+    print_zettel_info(&zettel);
 
     Ok(())
 }
@@ -112,7 +109,7 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let db = Database::new(&cfg.db_file(), None)?;
     let links = db.find_by_links_to(title)?;
-    print_zettel_info(links.iter().collect());
+    print_zettel_info(&links);
 
     Ok(())
 }
@@ -123,7 +120,7 @@ pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let db = Database::new(&cfg.db_file(), None)?;
     let results = db.search_text(cfg, text)?;
-    print_zettel_info(results.iter().collect());
+    print_zettel_info(&results);
 
     Ok(())
 }
@@ -161,7 +158,7 @@ pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file(), None)?;
     let results = db.all()?;
 
-    print_zettel_info(results.iter().collect());
+    print_zettel_info(&results);
 
     Ok(())
 }
