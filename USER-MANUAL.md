@@ -65,9 +65,10 @@ database!
 - `help`: print a help message
 - `generate`: create and populate the database with Zettel metadata
 - `ls`: list existing files in Zettelkasten, based on database info
-- `new`: create a new Zettel and add its metadata to the database
+- `new`: create a new Zettel and add its metadata to the database, but don't
+overwrite; if the file exists and the metadata entry also exists, abort
 - `update`: update the metadata for a given path. If the path isn't a file or
-doesn't exist, don't do anything.
+doesn't exist, print an error message.
 - `query`: return existing Zettel matching the pattern provided as argument
 - `not-created`: return a list of Zettel that have links pointing to them, but
 haven't been created

@@ -40,10 +40,11 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     // If there's a file but there's no entry in the database, create an entry.
     // Otherwise, create a new file from template and add a database entry.
     if exists_in_fs && exists_in_db {
-        eprintln!("couldn't create new Zettel: one with the same title already exists");
+        eprintln!("error: couldn't create new Zettel: one with the same title already exists");
         return Ok(());
     } else if exists_in_fs {
-        println!("file exists in filesystem but not in database; added entry"); // saved right after
+        println!("file exists in the filesystem but not in the database; added entry");
+        // saved outside of the loop
     } else {
         zettel.create(cfg);
         print_zettel_info(&vec![zettel.clone()]); // confirm that the Zettel was created
@@ -53,6 +54,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Update the metadata of a file
 pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -61,11 +63,14 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     if file_exists(path) {
         let zettel = Zettel::from_file(path);
         db.update(cfg, &zettel)?;
+    } else {
+        eprintln!("error: provided path isn't a file");
     }
 
     Ok(())
 }
 
+/// Print all Zettel matching the pattern from the CLI
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -77,6 +82,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print all Zettel whose tags contain the pattern specified in the CLI args
 pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -94,6 +100,7 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print all tags used inside the Zettelkasten
 pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -109,6 +116,7 @@ pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print all Zettel that match the one specified in the CLI argument matches
 pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let title = matches.value_of("TITLE").unwrap_or_default();
@@ -120,6 +128,7 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print all Zettel that contain the text provided in the CLI argument matches
 pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let text = matches.value_of("TEXT").unwrap();
@@ -131,6 +140,7 @@ pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// (Re)generate the database file
 pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let start = std::time::Instant::now();
@@ -145,6 +155,7 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print a list of Zettel that haven't yet been created
 pub fn not_created(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -157,6 +168,7 @@ pub fn not_created(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// List all files in the Zettelkasten
 pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file(), None)?;
@@ -167,6 +179,7 @@ pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print the directory used as Zettelkasten
 pub fn zettelkasten_dir(cfg: &ConfigOptions) -> Result<(), Error>
 {
     println!("{}", cfg.zettelkasten);
