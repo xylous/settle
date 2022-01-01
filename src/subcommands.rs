@@ -10,7 +10,7 @@ use crate::io::file_exists;
 
 /// Print all Zettel in the given vector with the format: `[i] <TITLE>` if in inbox, and `[p]
 /// <TITLE>` if in outbox.
-fn print_zettel_info(zettel: &Vec<Zettel>)
+fn print_zettel_info(zettel: &[Zettel])
 {
     zettel.par_iter()
         .for_each(|z| {
@@ -34,7 +34,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let zettel = Zettel::new(title, is_inbox);
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
-    let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z.clone() == zettel);
+    let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z == zettel);
 
     // If the corresponding file exists and there's an entry in the database, abort.
     // If there's a file but there's no entry in the database, create an entry.
@@ -47,7 +47,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         // saved outside of the loop
     } else {
         zettel.create(cfg);
-        print_zettel_info(&vec![zettel.clone()]); // confirm that the Zettel was created
+        print_zettel_info(&[zettel.clone()]); // confirm that the Zettel was created
     }
     db.save(&zettel)?;
 
