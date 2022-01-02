@@ -2,6 +2,13 @@
 name = "settle"
 version = "0.32.0"
 edition = "2018"
+authors = [ "xylous <xylous.e@gmail.com>" ]
+description = "CLI tool for managing digital Zettelkasten"
+keywords = [ "zettelkasten", "zettel", "notes", "note-taking" ]
+categories = [ "command-line-utilities" ]
+license = "MIT"
+repository = "https://github.com/xylous/settle"
+readme = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

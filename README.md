@@ -53,7 +53,7 @@ Read [the User Manual](./USER-MANUAL.md)
 
 ##### Meta
 
-- [ ] configure `Cargo.toml` properties
+- [x] configure `Cargo.toml` properties
 - [ ] shell autocompletion
     - [ ] zsh
     - [ ] bash
