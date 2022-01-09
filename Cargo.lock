@@ -67,6 +67,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "3.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a394f7ec0715b42a4e52b294984c27c9a61f77c8d82f7774c5198350be143f19"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "confy"
 version = "0.4.0"
 source = "git+https://github.com/rust-cli/confy#664992aecd97b4af0eda8d9d2825885662e1c6b4"
@@ -440,6 +449,7 @@ name = "settle"
 version = "0.33.0"
 dependencies = [
  "clap",
+ "clap_complete",
  "confy",
  "glob",
  "rayon",
