@@ -32,6 +32,7 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     let sh = match shell {
         "zsh" => Some(Zsh),
         "bash" => Some(Bash),
+        "fish" => Some(Fish),
         _ => None,
     };
 
