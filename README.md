@@ -49,14 +49,14 @@ Read [the User Manual](./USER-MANUAL.md)
 - [x] print links
     - [x] forward links (from a Zettel to other Zettel)
     - [x] backlinks (to a Zettel from other Zettel)
-- [ ] list "lonely" Zettel (with zero connections)
 
 ##### Meta
 
 - [x] configure `Cargo.toml` properties
-- [ ] shell autocompletion
-    - [ ] zsh
-    - [ ] bash
+- [x] shell autocompletion
+    - [x] zsh
+    - [x] bash
+    - [x] fish
 - [ ] write a proper `man` page
 - [ ] logo (pixel art?)
 - [ ] publish to crates.io
