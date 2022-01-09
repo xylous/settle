@@ -1,5 +1,6 @@
 use rusqlite::Error;
 use clap::ArgMatches;
+use clap_complete::shells::Zsh;
 use rayon::prelude::*;
 
 use crate::Database;
@@ -7,6 +8,7 @@ use crate::Zettel;
 use crate::config::ConfigOptions;
 
 use crate::io::file_exists;
+use crate::cli;
 
 /// Print all Zettel in the given vector with the format: `[i] <TITLE>` if in inbox, and `[p]
 /// <TITLE>` if in outbox.
@@ -20,6 +22,26 @@ fn print_zettel_info(zettel: &[Zettel])
             }
             println!("[{}] {}", location, z.title);
         })
+}
+
+/// Generate completions for a shell
+pub fn compl(matches: &ArgMatches) -> Result<(), Error>
+{
+    let shell = matches.value_of("SHELL").unwrap_or_default();
+
+    let sh = match shell {
+        "zsh" => Some(Zsh),
+        _ => None,
+    };
+
+    if let Some(sh) = sh {
+        clap_complete::generate(sh, &mut cli::build(), "settle", &mut std::io::stdout());
+        print!("\n");
+    } else {
+        eprintln!("error: '{}' isn't a (supported) shell", shell);
+    }
+
+    Ok(())
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database

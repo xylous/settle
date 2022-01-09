@@ -1,11 +1,16 @@
 use clap::{App, Arg};
 
+/// Generate the clap App by using a builer pattern
 pub fn build() -> App<'static>
 {
     App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author("xylous <xylous.e@gmail.com>")
         .about("CLI tool to manage a digital Zettelkasten")
+        .subcommand(App::new("compl")
+            .arg(Arg::new("SHELL")
+                .required(true))
+            .about("generate completion file for a given shell"))
         .subcommand(App::new("new")
             .about("create a new Zettel and print its inbox status and title")
             .arg(Arg::new("inbox")

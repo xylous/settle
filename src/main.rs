@@ -59,6 +59,7 @@ fn main() -> Result<(), rusqlite::Error>
     }
 
     match cmd {
+        "compl" => compl(cmd_matches)?,
         "new" => new(cmd_matches, &cfg)?,
         "update" => update(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,
