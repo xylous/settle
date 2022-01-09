@@ -36,8 +36,13 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     };
 
     if let Some(sh) = sh {
-        clap_complete::generate(sh, &mut cli::build(), "settle", &mut std::io::stdout());
-        print!("\n");
+        let app = &mut cli::build();
+        clap_complete::generate(
+            sh,
+            app,
+            app.get_name().to_string(),
+            &mut std::io::stdout()
+        );
     } else {
         eprintln!("error: '{}' isn't a (supported) shell", shell);
     }
