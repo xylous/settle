@@ -1,6 +1,6 @@
 use rusqlite::Error;
 use clap::ArgMatches;
-use clap_complete::shells::Zsh;
+use clap_complete::Shell::*;
 use rayon::prelude::*;
 
 use crate::Database;
@@ -31,6 +31,7 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 
     let sh = match shell {
         "zsh" => Some(Zsh),
+        "bash" => Some(Bash),
         _ => None,
     };
 
