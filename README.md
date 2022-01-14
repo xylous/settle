@@ -26,7 +26,7 @@ cargo build
 
 ### Usage
 
-Read [the User Manual](./USER-MANUAL.md)
+Read [the manual](./doc/settle.1.md)
 
 ## Roadmap
 
@@ -57,7 +57,7 @@ Read [the User Manual](./USER-MANUAL.md)
     - [x] zsh
     - [x] bash
     - [x] fish
-- [ ] write a proper `man` page
+- [x] write a proper `man` page
 - [ ] logo (pixel art?)
 - [ ] publish to crates.io
 
