@@ -1,4 +1,4 @@
-% SETTLE(1) Settle 0.33.0 | Settle Manual
+% SETTLE(1) Settle 0.33.1 | Settle Manual
 
 # NAME
 
@@ -134,7 +134,7 @@ inside said new note, replacing variables.
 
 : placeholder for the actual title
 
-## Example
+## Example template
 
 ```md
 # ${TITLE}
@@ -148,9 +148,8 @@ inside said new note, replacing variables.
 
 # FILES
 
-`~/.config/settle/settle.yaml`
-
-: configuration file. Hardcoded; it doesn't respect XDG variables.
+The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
+`$XDG_CONFIG_HOME` is set, either `~/.config/settle/settle.yaml`, by default.
 
 # WILDCARDS
 
