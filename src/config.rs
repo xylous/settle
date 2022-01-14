@@ -45,11 +45,16 @@ impl ConfigOptions
 {
     pub fn load() -> ConfigOptions
     {
-        let config_path = format!(
-            "{}/.config/settle/settle.yaml",
-            env!("HOME"),
-        );
+        let xdg_cfg_dir = env!("XDG_CONFIG_HOME");
+        let config_path = if xdg_cfg_dir.is_empty() {
+            // Use $HOME/.config/settle/settle.yaml if XDG_CONFIG_HOME isn't set
+            format!( "{}/.config/settle/settle.yaml", env!("HOME"))
+        } else {
+            // Use $XDG_CONFIG_HOME/settle/settle.yaml otherwise
+            format!( "{}/settle/settle.yaml", env!("XDG_CONFIG_HOME"))
+        };
 
+        // The paths inside the config file may not be absolute, and so we need to expand them
         let tmp: ConfigOptions = confy::load_path(config_path).unwrap_or_default();
         ConfigOptions {
             zettelkasten: expand_path(&tmp.zettelkasten),
