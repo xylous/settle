@@ -76,16 +76,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "confy"
-version = "0.4.0"
-source = "git+https://github.com/rust-cli/confy#664992aecd97b4af0eda8d9d2825885662e1c6b4"
-dependencies = [
- "directories-next",
- "serde",
- "serde_yaml",
-]
-
-[[package]]
 name = "crossbeam-channel"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -127,16 +117,6 @@ checksum = "d82cfc11ce7f2c3faef78d8a684447b40d503d9681acebed6cb728d45940c4db"
 dependencies = [
  "cfg-if",
  "lazy_static",
-]
-
-[[package]]
-name = "directories-next"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "339ee130d97a610ea5a5872d2bbb130fdf68884ff09d3028b81bec8a1ac23bbc"
-dependencies = [
- "cfg-if",
- "dirs-sys-next",
 ]
 
 [[package]]
@@ -450,12 +430,12 @@ version = "0.33.1"
 dependencies = [
  "clap",
  "clap_complete",
- "confy",
  "glob",
  "rayon",
  "regex",
  "rusqlite",
  "serde",
+ "serde_yaml",
  "shellexpand",
 ]
 

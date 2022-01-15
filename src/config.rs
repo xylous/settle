@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use crate::io::{file_to_string, file_exists, write_to_file};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConfigOptions
@@ -54,8 +55,14 @@ impl ConfigOptions
             format!( "{}/settle/settle.yaml", env!("XDG_CONFIG_HOME"))
         };
 
+        // If the file doesn't exist, create it
+        if !file_exists(&config_path) {
+            let data = serde_yaml::to_string(&ConfigOptions::default()).unwrap();
+            write_to_file(&config_path, &data);
+        }
+
         // The paths inside the config file may not be absolute, and so we need to expand them
-        let tmp: ConfigOptions = confy::load_path(config_path).unwrap_or_default();
+        let tmp: ConfigOptions = serde_yaml::from_str(&file_to_string(&config_path)).unwrap();
         ConfigOptions {
             zettelkasten: expand_path(&tmp.zettelkasten),
             template: expand_path(&tmp.template),

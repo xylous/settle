@@ -14,14 +14,11 @@ readme = true
 
 [dependencies]
 clap = { version = "3.0.5" }
-clap_complete = "3.0.3"
+clap_complete = { version = "3.0.3" }
 rusqlite = { version = "0.25.3", features = [ "backup" ] }
 rayon = { version = "1.5.1" }
 glob = { version = "0.3.0" }
 regex = { version = "1.5.4" }
 serde = { version = "1.0.130", features = [ "derive" ] }
-confy = { version = "0.4.0", default_features = false, features = [ "yaml_conf" ] }
+serde_yaml = { version = "0.8.23" }
 shellexpand = { version = "2.1.0" }
-
-[patch.crates-io]
-confy = { git = 'https://github.com/rust-cli/confy' }
