@@ -11,17 +11,10 @@
 
 ### Installation
 
-Clone this repository locally, for example:
+There's a crate on crates.io, so you can simply run:
 
 ```
-git clone https://github.com/xylous/settle settle
-```
-
-And then build:
-
-```
-cd settle/
-cargo build
+cargo install settle
 ```
 
 ### Usage
@@ -59,7 +52,7 @@ Read [the manual](./doc/settle.1.md)
     - [x] fish
 - [x] write a proper `man` page
 - [ ] logo (pixel art?)
-- [ ] publish to crates.io
+- [x] publish to crates.io
 
 ## Contributing
 
