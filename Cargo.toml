@@ -15,7 +15,7 @@ readme = true
 [dependencies]
 clap = { version = "3.0.5" }
 clap_complete = { version = "3.0.3" }
-rusqlite = { version = "0.25.3", features = [ "backup" ] }
+rusqlite = { version = "0.26.3", features = [ "backup" ] }
 rayon = { version = "1.5.1" }
 glob = { version = "0.3.0" }
 regex = { version = "1.5.4" }
