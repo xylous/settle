@@ -67,11 +67,11 @@ fn main() -> Result<(), rusqlite::Error>
         "links" => links(cmd_matches, &cfg)?,
         "backlinks" => backlinks(cmd_matches, &cfg)?,
         "search" => search(cmd_matches, &cfg)?,
-        "list-tags" => list_tags(&cfg)?,
+        "tags" => tags(&cfg)?,
         "generate" => generate(&cfg)?,
-        "not-created" => not_created(&cfg)?,
+        "ghosts" => ghosts(&cfg)?,
         "ls" => ls(&cfg)?,
-        "zettelkasten" => zettelkasten_dir(&cfg)?,
+        "zk" => zk(&cfg)?,
         _ => (),
     };
 

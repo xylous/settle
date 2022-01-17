@@ -130,7 +130,7 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Print all tags used inside the Zettelkasten
-pub fn list_tags(cfg: &ConfigOptions) -> Result<(), Error>
+pub fn tags(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
@@ -219,7 +219,7 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Print a list of Zettel that haven't yet been created
-pub fn not_created(cfg: &ConfigOptions) -> Result<(), Error>
+pub fn ghosts(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
@@ -243,7 +243,7 @@ pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Print the directory used as Zettelkasten
-pub fn zettelkasten_dir(cfg: &ConfigOptions) -> Result<(), Error>
+pub fn zk(cfg: &ConfigOptions) -> Result<(), Error>
 {
     println!("{}", cfg.zettelkasten);
     Ok(())
