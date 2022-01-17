@@ -1,4 +1,4 @@
-% SETTLE(1) Settle 0.33.1 | Settle Manual
+% SETTLE(1) Settle 0.34.0 | Settle Manual
 
 # NAME
 
@@ -71,12 +71,12 @@ hashtags, e.g. `#psychology`. Subtags/hierarchical tags, such as
 
 :   Return existing Zettel matching the pattern provided as argument
 
-*not-created*
+*ghost*
 
 :   Print a list of Zettel that have links pointing to them, but haven't been
     created
 
-*list-tags*
+*tags*
 
 :   List all unique tags used in Zettelkasten
 
@@ -98,7 +98,7 @@ hashtags, e.g. `#psychology`. Subtags/hierarchical tags, such as
 
 :   Return a list of Zettel that contain the specified text
 
-*zettelkasten*
+*zk*
 
 :   Print the absolute path to the directory Settle uses
 
