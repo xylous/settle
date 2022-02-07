@@ -134,6 +134,10 @@ inside said new note, replacing variables.
 
 : placeholder for the actual title
 
+`${DATE}`
+
+: replaced with the output of `date +%Y-%m-%d`
+
 ## Example template
 
 ```md
