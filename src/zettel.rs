@@ -1,5 +1,6 @@
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::Regex;
+use chrono::prelude::*;
 
 use crate::config::ConfigOptions;
 use crate::io::*;
@@ -116,6 +117,8 @@ impl Zettel
     fn replace_template_placeholders(&self, contents: &str) -> String
     {
         let re_title = Regex::new(r"\$\{TITLE\}").unwrap();
-        re_title.replace_all(contents, &self.title).to_string()
+        let c1 = re_title.replace_all(contents, &self.title).to_string();
+        let re_date = Regex::new(r"\$\{DATE\}").unwrap();
+        re_date.replace_all(&c1, Utc::today().format("%Y-%m-%d").to_string()).to_string()
     }
 }
