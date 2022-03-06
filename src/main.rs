@@ -49,14 +49,12 @@ fn main() -> Result<(), rusqlite::Error>
     io::mkdir(&format!("{}/inbox", &cfg.zettelkasten));
 
     let cmd = matches.subcommand_name().unwrap_or_default();
-    let cmd_matches;
-
     // If no subcommand was specified, quit
-    if ! cmd.is_empty() {
-        cmd_matches = matches.subcommand_matches(cmd).unwrap();
+    let cmd_matches = if cmd.is_empty() {
+        return Ok(())
     } else {
-        return Ok(());
-    }
+        matches.subcommand_matches(cmd).unwrap()
+    };
 
     match cmd {
         "compl" => compl(cmd_matches)?,
