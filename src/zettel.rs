@@ -35,7 +35,7 @@ fn find_tags(contents: &str) -> Vec<String>
 pub struct Zettel
 {
     pub title: String,
-    pub inbox: bool,
+    pub project: String,
     pub links: Vec<String>,
     pub tags: Vec<String>,
 }
@@ -43,12 +43,12 @@ pub struct Zettel
 impl Zettel
 {
     /// Create a Zettel with specified `title`
-    pub fn new(title: &str, inbox: bool) -> Self
+    pub fn new(title: &str, project: &str) -> Self
     {
         Zettel
         {
             title: title.to_string(),
-            inbox,
+            project: project.to_string(),
             links: vec![],
             tags: vec![],
         }
@@ -60,13 +60,10 @@ impl Zettel
         let title = basename(&replace_extension(path, ""));
         let contents = file_to_string(path);
 
-        let mut is_inbox = false;
         let pieces: Vec<_> = path.split('/').collect();
-        if pieces[pieces.len() - 2] == "inbox" {
-            is_inbox = true;
-        }
+        let project = pieces[pieces.len() - 2];
 
-        let mut zettel = Zettel::new(&title, is_inbox);
+        let mut zettel = Zettel::new(&title, project);
         zettel.links = find_links(&contents);
         zettel.tags = find_tags(&contents);
         zettel
@@ -95,12 +92,7 @@ impl Zettel
     /// ```
     pub fn filename(&self, cfg: &ConfigOptions) -> String
     {
-        let dir;
-        if self.inbox {
-            dir = format!("{}/inbox", cfg.zettelkasten);
-        } else {
-            dir = cfg.zettelkasten.clone();
-        }
+        let dir = format!("{}/{}", cfg.zettelkasten, &self.project);
         format!("{}/{}.md", dir, &self.title)
     }
 

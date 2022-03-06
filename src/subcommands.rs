@@ -16,11 +16,7 @@ fn print_zettel_info(zettel: &[Zettel])
 {
     zettel.par_iter()
         .for_each(|z| {
-            let mut location = String::from("p");
-            if z.inbox {
-                location = String::from("i");
-            }
-            println!("[{}] {}", location, z.title);
+            println!("[{}] {}", z.project, z.title);
         })
 }
 
@@ -58,9 +54,8 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     db.init()?;
 
     let title = matches.value_of("TITLE").unwrap();
-    let is_inbox = matches.is_present("inbox");
 
-    let zettel = Zettel::new(title, is_inbox);
+    let zettel = Zettel::new(title, "");
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
     let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z == zettel);

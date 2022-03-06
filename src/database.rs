@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use regex::{Regex, Captures};
 use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
 
@@ -11,11 +10,10 @@ impl Zettel {
     fn from_db(row: &Row) -> Result<Zettel, rusqlite::Error>
     {
         let title: String = row.get(0)?;
-        let links: String = row.get(1)?;
-        let tags: String = row.get(2)?;
-        let inbox_row: String = row.get(3)?;
-        let inbox: bool = FromStr::from_str(&inbox_row).unwrap_or(false);
-        let mut z = Zettel::new(&title, inbox);
+        let project: String = row.get(1)?;
+        let links: String = row.get(2)?;
+        let tags: String = row.get(3)?;
+        let mut z = Zettel::new(&title, &project);
         z.links = str_to_vec(&links);
         z.tags = str_to_vec(&tags);
         Ok(z)
@@ -90,10 +88,10 @@ impl Database
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS zettelkasten (
                 title       TEXT NOT NULL,
+                project     TEXT,
                 links       TEXT,
                 tags        TEXT,
-                inbox       INTEGER,
-                UNIQUE(title, inbox)
+                UNIQUE(title, project)
             )",
             [])?;
         Ok(())
@@ -114,7 +112,7 @@ impl Database
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
             "INSERT INTO zettelkasten (title, links, tags, inbox) values (?1, ?2, ?3, ?4)",
-            &[&zettel.title, &links, &tags, &zettel.inbox.to_string() ])?;
+            &[&zettel.title, &links, &tags, &zettel.project ])?;
         Ok(())
     }
 
@@ -123,7 +121,7 @@ impl Database
     {
         self.conn.execute(
             "DELETE FROM zettelkasten WHERE title=?1 AND inbox=?2",
-            &[&zettel.title, &zettel.inbox.to_string() ])?;
+            &[&zettel.title, &zettel.project ])?;
         Ok(())
     }
 
