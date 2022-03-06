@@ -35,13 +35,17 @@ Read [the manual](./doc/settle.1.md)
     - [x] custom database file path
     - [x] be able to use templates
 - [x] list mentioned but non-existent Zettel
-- [x] use an inbox
+- [x] ~~use an inbox~~
 - [x] search for text inside notes
 - [x] support matching titles with wildcards
 - [x] update Zettel metadata individually
 - [x] print links
     - [x] forward links (from a Zettel to other Zettel)
     - [x] backlinks (to a Zettel from other Zettel)
+- [x] projects (subdirectories within the main Zettelkasten folder)
+    - [x] add notes to projects
+    - [x] generate the database with projects included
+    - [x] start with an 'inbox' project by default
 
 ##### Meta
 
