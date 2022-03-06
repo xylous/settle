@@ -1,4 +1,4 @@
-% SETTLE(1) Settle 0.34.0 | Settle Manual
+% SETTLE(1) Settle 0.36.0 | Settle Manual
 
 # NAME
 
@@ -46,9 +46,14 @@ hashtags, e.g. `#psychology`. Subtags/hierarchical tags, such as
 :   Generate autocompletion file for a certain shell (currently supported: zsh,
     bash, fish) (see: section on autocompletion)
 
+    All subdirectories within the Zettelkasten one are treated as "projects"
+
 *generate*
 
 :   Create and populate the database with all Zettel's metadata
+
+    If ran for the first time, creates a directory to hold all your notes (as
+    per your configuration options) and populates it with an 'inbox' project
 
 *ls*
 
@@ -59,8 +64,8 @@ hashtags, e.g. `#psychology`. Subtags/hierarchical tags, such as
 :   Create a new Zettel and add its metadata to the database, but don't
     overwrite; if the file exists and the metadata entry also exists, abort
 
-    If you toggle the \-i or \-\-inbox option, the created file will be in the
-    inbox directory
+    With the \-p or \-\-project option, you can specify a certain project
+    (directory within the zettelkasten) to create your new note in.
 
 *update*
 
