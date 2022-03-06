@@ -49,3 +49,12 @@ pub fn mkdir(path: &str)
 {
     std::fs::create_dir_all(path).expect("Wasn't able to create directory:")
 }
+
+/// List all subdirectories in the specified directory
+pub fn list_subdirectories(dir: &str) -> Vec<String>
+{
+    glob(&format!("{}/*/", dir))
+        .expect("failed to read directory")
+        .map(|f| f.unwrap().to_string_lossy().to_string())
+        .collect()
+}

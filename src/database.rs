@@ -262,14 +262,18 @@ impl Database
     /// metadata
     pub fn generate(&self, cfg: &ConfigOptions)
     {
-        let mut files = crate::io::list_md_files(&cfg.zettelkasten);
-        files.append(&mut crate::io::list_md_files(&format!("{}/inbox", &cfg.zettelkasten)));
-        let name = &self.name;
-        files.par_iter()
-            .for_each(|f| {
-                let thread_db = Self::in_memory(name).unwrap();
-                let thread_zettel = Zettel::from_file(f);
-                thread_db.save(&thread_zettel).unwrap();
+        let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
+        directories.push(cfg.zettelkasten.clone());
+        directories.iter()
+            .for_each(|dir| {
+                let notes = crate::io::list_md_files(&dir);
+                let name = &self.name;
+                notes.par_iter()
+                    .for_each(|note| {
+                        let thread_db = Self::in_memory(name).unwrap();
+                        let thread_zettel = Zettel::from_file(note);
+                        thread_db.save(&thread_zettel).unwrap();
+                    });
             });
     }
 
