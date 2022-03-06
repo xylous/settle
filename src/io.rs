@@ -14,11 +14,18 @@ pub fn file_exists(path: &str) -> bool
     Path::new(path).is_file()
 }
 
-/// Return the smallest part
+/// Return the last segment of a path
 pub fn basename(path: &str) -> String
 {
     let pieces: Vec<&str> = path.split('/').collect();
     pieces[pieces.len() - 1].to_string()
+}
+
+/// Return the first segments of a path
+pub fn dirname(path: &str) -> String
+{
+    let pieces: Vec<&str> = path.split('/').collect();
+    pieces[0..pieces.len()-1].join("/")
 }
 
 /// Write `data` to `path`
