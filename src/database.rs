@@ -266,12 +266,12 @@ impl Database
         directories.push(cfg.zettelkasten.clone());
         directories.iter()
             .for_each(|dir| {
-                let notes = crate::io::list_md_files(&dir);
+                let notes = crate::io::list_md_files(dir);
                 let name = &self.name;
                 notes.par_iter()
                     .for_each(|note| {
                         let thread_db = Self::in_memory(name).unwrap();
-                        let thread_zettel = Zettel::from_file(note);
+                        let thread_zettel = Zettel::from_file(cfg, note);
                         thread_db.save(&thread_zettel).unwrap();
                     });
             });
@@ -282,7 +282,7 @@ impl Database
     pub fn update(&self, cfg: &ConfigOptions, zettel: &Zettel) -> Result<(), Error>
     {
         self.delete(zettel)?;
-        let z = &Zettel::from_file(&zettel.filename(cfg));
+        let z = &Zettel::from_file(cfg, &zettel.filename(cfg));
         self.save(z)?;
         Ok(())
     }

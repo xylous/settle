@@ -86,7 +86,7 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let path = matches.value_of("FILENAME").unwrap();
     if file_exists(path) {
-        let zettel = Zettel::from_file(path);
+        let zettel = Zettel::from_file(cfg, path);
         db.update(cfg, &zettel)?;
     } else {
         eprintln!("error: provided path isn't a file");

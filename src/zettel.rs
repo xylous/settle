@@ -55,15 +55,19 @@ impl Zettel
     }
 
     /// Create a Zettel from a file, provided a path
-    pub fn from_file(path: &str) -> Self
+    pub fn from_file(cfg: &ConfigOptions, path: &str) -> Self
     {
         let title = basename(&replace_extension(path, ""));
         let contents = file_to_string(path);
 
-        let pieces: Vec<_> = path.split('/').collect();
-        let project = pieces[pieces.len() - 2];
+        let project = if dirname(path) == cfg.zettelkasten {
+            "".to_string()
+        } else {
+            let segments: Vec<&str> = path.split('/').collect();
+            segments[segments.len() - 2].to_string()
+        };
 
-        let mut zettel = Zettel::new(&title, project);
+        let mut zettel = Zettel::new(&title, &project);
         zettel.links = find_links(&contents);
         zettel.tags = find_tags(&contents);
         zettel
