@@ -111,7 +111,7 @@ impl Database
         let links = crate::vec_to_str(&zettel.links);
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
-            "INSERT INTO zettelkasten (title, links, tags, inbox) values (?1, ?2, ?3, ?4)",
+            "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
             &[&zettel.title, &links, &tags, &zettel.project ])?;
         Ok(())
     }
@@ -120,7 +120,7 @@ impl Database
     pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
         self.conn.execute(
-            "DELETE FROM zettelkasten WHERE title=?1 AND inbox=?2",
+            "DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
             &[&zettel.title, &zettel.project ])?;
         Ok(())
     }
