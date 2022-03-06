@@ -112,7 +112,7 @@ impl Database
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
             "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
-            &[&zettel.title, &links, &tags, &zettel.project ])?;
+            &[ &zettel.title, &zettel.project, &links, &tags ])?;
         Ok(())
     }
 
