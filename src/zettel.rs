@@ -73,6 +73,7 @@ impl Zettel
     /// a blank file.
     pub fn create(&self, cfg: &ConfigOptions)
     {
+        mkdir(&format!("{}/{}", &cfg.zettelkasten, &self.project));
         if file_exists(&cfg.template) {
             let template_contents = file_to_string(&cfg.template);
             let new_zettel_contents = self.replace_template_placeholders(&template_contents);
