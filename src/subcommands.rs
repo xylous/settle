@@ -54,8 +54,9 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     db.init()?;
 
     let title = matches.value_of("TITLE").unwrap();
+    let project = matches.value_of("PROJECT").unwrap_or_default();
 
-    let zettel = Zettel::new(title, "");
+    let zettel = Zettel::new(title, project);
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
     let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z == zettel);
