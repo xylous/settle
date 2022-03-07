@@ -258,19 +258,20 @@ impl Database
             .collect())
     }
 
-    /// Look for Markdown files in the current directory and populate the database with their
+    /// Look for Markdown files in the Zettelkasten directory and populate the database with their
     /// metadata
     pub fn generate(&self, cfg: &ConfigOptions)
     {
+        let db_name = &self.name;
+
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
         directories.push(cfg.zettelkasten.clone());
-        directories.iter()
+        directories.par_iter()
             .for_each(|dir| {
                 let notes = crate::io::list_md_files(dir);
-                let name = &self.name;
                 notes.par_iter()
                     .for_each(|note| {
-                        let thread_db = Self::in_memory(name).unwrap();
+                        let thread_db = Self::in_memory(db_name).unwrap();
                         let thread_zettel = Zettel::from_file(cfg, note);
                         thread_db.save(&thread_zettel).unwrap();
                     });
