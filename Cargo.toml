@@ -13,13 +13,13 @@ readme = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.0.5" }
-clap_complete = { version = "3.0.3" }
-rusqlite = { version = "0.26.3", features = [ "backup" ] }
+clap = { version = "3.1.5" }
+clap_complete = { version = "3.1.1" }
+rusqlite = { version = "0.27.0", features = [ "backup" ] }
 rayon = { version = "1.5.1" }
 glob = { version = "0.3.0" }
 regex = { version = "1.5.4" }
-serde = { version = "1.0.130", features = [ "derive" ] }
+serde = { version = "1.0.136", features = [ "derive" ] }
 serde_yaml = { version = "0.8.23" }
 shellexpand = { version = "2.1.0" }
 chrono = { version = "0.4.19" }
