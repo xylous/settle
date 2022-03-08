@@ -149,9 +149,9 @@ Settle supports two wildcards that'll come in very handy:
 - `*` - matches zero or more characters
 - `.` - matches a single character
 
-If you want a literal '\*', or a literal '.', you'll need to escape the
-character, i.e. '\\\*' or '\\\.'. If you want a literal backslash, you're also going
-to have to escape it, i.e. '\\\\'. All other text is matched literally.
+If you want a literal `\*`, or a literal `.`, you'll need to escape the
+character, i.e. `\\\*` or `\\\.`. If you want a literal backslash, you're also going
+to have to escape it, i.e. `\\\\`. All other text is matched literally.
 
 ## Autocompletion
 
