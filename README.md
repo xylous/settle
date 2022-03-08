@@ -19,7 +19,7 @@ cargo install settle
 
 ### Usage
 
-Read [the manual](./doc/settle.1.md)
+Read [the manual](./doc/SETTLE_MANUAL.md)
 
 ## Roadmap
 
