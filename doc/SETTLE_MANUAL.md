@@ -1,6 +1,6 @@
 # settle
 
-settle is a Zettelkasten note manager. All notes are written in Markdown and are
+Settle is a Zettelkasten note manager. All notes are written in Markdown and are
 stored locally.
 
 As of v0.26.0, Settle no longer supports editing a file directly.
@@ -22,85 +22,56 @@ settle [-h | --help | -V | --version]
 
 ## Options
 
-\-h, \-\-help
+- `-h`, `--help` - Print usage information
 
-:   Print usage information
-
-\-V, \-\-version
-
-:   Print version information
+- `-V`, `--version` - Print version information
 
 ## Commands
 
-- `help`
-
-    Print usage information broadly or, if a subcommand is given, usage
+- `help` - Print usage information broadly or, if a subcommand is given, usage
     information for said subcommand
 
-- `compl`
-
-    Generate autocompletion file for a certain shell (currently supported: zsh,
-    bash, fish) (see: section on autocompletion)
+- `compl` - Generate autocompletion file for a certain shell (currently
+    supported: zsh, bash, fish) (see: section on autocompletion)
 
     All subdirectories within the Zettelkasten one are treated as "projects"
 
-- `generate`
+- `generate` - Create and populate the database with all Zettel's metadata
 
-    Create and populate the database with all Zettel's metadata
     If ran for the first time, creates a directory to hold all your notes (as
     per your configuration options) and populates it with an 'inbox' project
 
-- `ls`
-
-    List existing files in Zettelkasten, based on database info
+- `ls` - List existing files in Zettelkasten, based on database info
 
 - `new`
 
     Create a new Zettel and add its metadata to the database, but don't
     overwrite; if the file exists and the metadata entry also exists, abort
 
-    With the \-p or \-\-project option, you can specify a certain project
+    With the `-p` or `--project` option, you can specify a certain project
     (directory within the zettelkasten) to create your new note in.
 
-- `update`
-
-    Update the metadata for a given path. If the path isn't a file or
+- `update` - Update the metadata for a given path. If the path isn't a file or
     doesn't exist, print an error message.
 
-- `query`
+- `query` - Return existing Zettel matching the pattern provided as argument
 
-    Return existing Zettel matching the pattern provided as argument
+- `ghost` - Print a list of Zettel that have links pointing to them, but haven't
+    been created
 
-- `ghost`
+- `tags` - List all unique tags used in Zettelkasten
 
-    Print a list of Zettel that have links pointing to them, but haven't been
-    created
+- `find` - Search for Zettel that have the specified tag
 
-- `tags`
+- `links` - Print the Zettel that match the query provided and the forward links
+    they contain
 
-    List all unique tags used in Zettelkasten
+- `backlinks` - Print the Zettel (plural) that match the query provided and the
+    Zettel (also plural) that have links pointing to them
 
-- `find`
+- `search` - Return a list of Zettel that contain the specified text
 
-    Search for Zettel that have the specified tag
-
-- `links`
-
-    Print the Zettel that match the query provided and the forward links they
-    contain
-
-- `backlinks`
-
-    Print the Zettel (plural) that match the query provided and the Zettel (also
-    plural) that have links pointing to them
-
-- `search`
-
-    Return a list of Zettel that contain the specified text
-
-- `zk`
-
-    Print the absolute path to the directory Settle uses
+- `zk` - Print the absolute path to the directory Settle uses
 
 ## Configuration
 
