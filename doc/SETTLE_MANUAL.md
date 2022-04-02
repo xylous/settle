@@ -34,9 +34,9 @@ settle [-h | --help | -V | --version]
 - `compl` - Generate autocompletion file for a certain shell (currently
     supported: zsh, bash, fish) (see: section on autocompletion)
 
-    All subdirectories within the Zettelkasten one are treated as "projects"
-
 - `generate` - Create and populate the database with all Zettel's metadata
+
+    All subdirectories within the Zettelkasten one are treated as "projects"
 
     If ran for the first time, creates a directory to hold all your notes (as
     per your configuration options) and populates it with an 'inbox' project
