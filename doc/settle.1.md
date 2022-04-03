@@ -19,11 +19,6 @@ Therefore, you're probably going to want to use (or write) a plugin for your
 favourite editor, such as [settle.vim](https://github.com/xylous/settle.vim) for
 Vim and Neovim.
 
-Wiki-style links (such as `[[Neurons]]`, which would redirect you to a Zettel
-titled "Neurons") are used to denote links between Zettel. Tags are denoted with
-hashtags, e.g. `#psychology`. Subtags/hierarchical tags, such as
-`#biology/anatomy/humans` are supported, if you want to stay more organised.
-
 # OPTIONS
 
 \-h, \-\-help
