@@ -2,6 +2,14 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.36.2 - 2022-04-03
+
+- add a readable manual in markdown (which works on e.g. GitHub)
+- use backticks in the 'Wildcards' section in the markdown manual
+- update the markdown manual's formatting
+- move a paragraph to its proper position in the manuals
+- add a section on how to actually take notes with it
+
 ## v0.36.1 - 2022-03-07
 
 - process projects in parallel
