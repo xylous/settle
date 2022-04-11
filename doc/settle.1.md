@@ -78,7 +78,11 @@ Vim and Neovim.
 
 *tags*
 
-:   List all unique tags used in Zettelkasten
+:   List all unique tags used in the Zettelkasten
+
+*projects*
+
+:   List all projects that the Zettelkasten contains
 
 *find*
 

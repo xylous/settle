@@ -2,6 +2,12 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.36.3 - 2022-04-11
+
+- add the 'projects' command for listing existing projects
+- add `buildman.sh` in `docs/`, a script that builds the man documentation
+    automatically
+
 ## v0.36.2 - 2022-04-03
 
 - add a readable manual in markdown (which works on e.g. GitHub)

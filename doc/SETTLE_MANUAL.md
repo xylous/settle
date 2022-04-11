@@ -54,7 +54,9 @@ settle [-h | --help | -V | --version]
 - `ghost` - Print a list of Zettel that have links pointing to them, but haven't
     been created
 
-- `tags` - List all unique tags used in Zettelkasten
+- `tags` - List all unique tags used in the Zettelkasten
+
+- `projects` - List all projects that the Zettelkasten contains
 
 - `find` - Search for Zettel that have the specified tag
 
