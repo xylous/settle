@@ -141,6 +141,22 @@ pub fn tags(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print all tags used inside the Zettelkasten
+pub fn projects(cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+
+    let projects = db.list_projects()?;
+    projects.into_par_iter()
+        .for_each(|p|
+            if !p.is_empty() {
+                println!("{}", p)
+            }
+        );
+
+    Ok(())
+}
+
 /// Print the titles of the Zettel matching the pattern provided in the CLi arguments and the other
 /// Zettel it links to under the following format:
 ///

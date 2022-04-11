@@ -53,6 +53,8 @@ pub fn build() -> Command<'static>
                 .help("text to be searched")))
         .subcommand(Command::new("tags")
             .about("list all tags registered in the database"))
+        .subcommand(Command::new("projects")
+            .about("list all projects within the Zettelkasten"))
         .subcommand(Command::new("generate")
             .about("(re)generate the database"))
         .subcommand(Command::new("ghosts")

@@ -66,6 +66,7 @@ fn main() -> Result<(), rusqlite::Error>
         "backlinks" => backlinks(cmd_matches, &cfg)?,
         "search" => search(cmd_matches, &cfg)?,
         "tags" => tags(&cfg)?,
+        "projects" => projects(&cfg)?,
         "generate" => generate(&cfg)?,
         "ghosts" => ghosts(&cfg)?,
         "ls" => ls(&cfg)?,
