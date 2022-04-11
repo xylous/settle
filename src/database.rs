@@ -188,6 +188,7 @@ impl Database
     }
 
     /// Return a list of all unique tags found in the database
+    ///
     /// Return an Error if the database was unreachable
     pub fn list_tags(&self) -> Result<Vec<String>, Error>
     {
@@ -200,6 +201,24 @@ impl Database
             for tag in str_to_vec(&tags) {
                 results.push(tag);
             }
+        }
+        results.par_sort();
+        results.dedup();
+        Ok(results)
+    }
+
+    /// Return a list of all unique project names found in the database
+    ///
+    /// Return an Error if the database was unreachable
+    pub fn list_projects(&self) -> Result<Vec<String>, Error>
+    {
+        let mut stmt = self.conn.prepare("SELECT project FROM zettelkasten")?;
+        let mut rows = stmt.query([])?;
+
+        let mut results: Vec<String> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let project: String = row.get(0)?;
+            results.push(project);
         }
         results.par_sort();
         results.dedup();
