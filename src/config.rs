@@ -46,13 +46,13 @@ impl ConfigOptions
 {
     pub fn load() -> ConfigOptions
     {
-        let xdg_cfg_dir = env!("XDG_CONFIG_HOME");
-        let config_path = if xdg_cfg_dir.is_empty() {
+        let xdg_cfg_dir = option_env!("XDG_CONFIG_HOME");
+        let config_path = if xdg_cfg_dir.is_none() {
             // Use $HOME/.config/settle/settle.yaml if XDG_CONFIG_HOME isn't set
             format!( "{}/.config/settle/settle.yaml", env!("HOME"))
         } else {
             // Use $XDG_CONFIG_HOME/settle/settle.yaml otherwise
-            format!( "{}/settle/settle.yaml", env!("XDG_CONFIG_HOME"))
+            format!( "{}/settle/settle.yaml", xdg_cfg_dir.unwrap())
         };
 
         // If the file doesn't exist, create it
