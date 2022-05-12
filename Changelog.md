@@ -2,6 +2,11 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.36.4 - 2022-05-12
+
+- reformulate a vague section in the README file
+- fix: don't panic when compiling if `XDG_CONFIG_HOME` isn't set
+
 ## v0.36.3 - 2022-04-11
 
 - add the 'projects' command for listing existing projects
