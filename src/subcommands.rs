@@ -10,13 +10,21 @@ use crate::config::ConfigOptions;
 use crate::io::file_exists;
 use crate::cli;
 
-/// Print all Zettel in the given vector with the format: `[i] <TITLE>` if in inbox, and `[p]
-/// <TITLE>` if in outbox.
+/// Print `[<PROJECT>] <TITLE>` for every given zettel.
 fn print_zettel_info(zettel: &[Zettel])
 {
-    zettel.par_iter()
+    zettel.iter()
         .for_each(|z| {
             println!("[{}] {}", z.project, z.title);
+        })
+}
+
+/// Print every element in the list of Strings on an individual line, if they're not empty
+fn print_list_of_strings(elems: &Vec<String>)
+{
+    elems.iter()
+        .for_each(|e| {
+            println!("{}", e);
         })
 }
 
@@ -131,12 +139,7 @@ pub fn tags(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
 
     let tags = db.list_tags()?;
-    tags.into_par_iter()
-        .for_each(|t|
-            if !t.is_empty() {
-                println!("{}", t)
-            }
-        );
+    print_list_of_strings(&tags);
 
     Ok(())
 }
@@ -147,12 +150,7 @@ pub fn projects(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
 
     let projects = db.list_projects()?;
-    projects.into_par_iter()
-        .for_each(|p|
-            if !p.is_empty() {
-                println!("{}", p)
-            }
-        );
+    print_list_of_strings(&projects);
 
     Ok(())
 }
@@ -161,15 +159,12 @@ pub fn projects(cfg: &ConfigOptions) -> Result<(), Error>
 /// Zettel it links to under the following format:
 ///
 /// ```
-/// [<i>] <TITLE>
+/// [<PROJECT>] <TITLE>
 ///     | <LINK_1>
 ///     | <LINK_2>
 ///     | ...
 ///     | <LINK_N>
 /// ```
-///
-/// ...where `<i>` is the inbox status, `<TITLE>` is the title of the Zettel matching the pattern,
-/// and `LINK_N` is the title of a Zettel linked to by `<TITLE>`
 pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let title = matches.value_of("TITLE").unwrap_or_default();
@@ -236,9 +231,7 @@ pub fn ghosts(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
 
     let results = db.zettel_not_yet_created()?;
-    for title in results {
-        println!("{}", title);
-    }
+    print_list_of_strings(&results);
 
     Ok(())
 }
