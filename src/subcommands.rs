@@ -19,7 +19,7 @@ fn print_zettel_info(zettel: &[Zettel])
         })
 }
 
-/// Print every element in the list of Strings on an individual line, if they're not empty
+/// Print every element in the list of Strings on an individual line
 fn print_list_of_strings(elems: &Vec<String>)
 {
     elems.iter()

@@ -218,7 +218,9 @@ impl Database
         let mut results: Vec<String> = Vec::new();
         while let Some(row) = rows.next()? {
             let project: String = row.get(0)?;
-            results.push(project);
+            if ! project.is_empty() {
+                results.push(project);
+            }
         }
         results.par_sort();
         results.dedup();
