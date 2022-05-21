@@ -2,6 +2,10 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.36.5 - 2022-05-21
+
+- fix: print things synchronously instead of asynchronously to stdout
+
 ## v0.36.4 - 2022-05-12
 
 - reformulate a vague section in the README file
