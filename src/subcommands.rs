@@ -7,7 +7,7 @@ use crate::Database;
 use crate::Zettel;
 use crate::config::ConfigOptions;
 
-use crate::io::file_exists;
+use crate::io::{file_exists, rename};
 use crate::cli;
 
 /// Print `[<PROJECT>] <TITLE>` for every given zettel.
@@ -83,6 +83,49 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         print_zettel_info(&[zettel.clone()]); // confirm that the Zettel was created
     }
     db.save(&zettel)?;
+
+    Ok(())
+}
+
+/// Move all matching notes into a project
+pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+    let pattern = matches.value_of("PATTERN").unwrap();
+    let project = matches.value_of("PROJECT").unwrap();
+
+    let notes = db.find_by_title(pattern)?;
+
+    print_zettel_info(&notes);
+
+    let mut dial = dialoguer::Confirm::new();
+    let prompt = dial.with_prompt(
+        format!(
+            ">> These notes will be transferred to the {}. Proceed?",
+            if project.is_empty() {
+                "main zettelkasten".to_string()
+            } else {
+                format!("'{}' project", project)
+            }
+            ));
+
+    // If the user confirms, change the notes' projects, both the system path and in database
+    if prompt.interact().unwrap_or_default() {
+        let new_notes = notes.iter()
+            .map(|z|
+                 Zettel {
+                    title: z.title.clone(),
+                    project: project.to_string(),
+                    links: z.links.clone(),
+                    tags: z.tags.clone(),
+                 }
+            );
+        let pairs = notes.iter().zip(new_notes);
+        pairs.for_each(|(old,new)| {
+            rename(&old.filename(cfg), &new.filename(cfg));
+            db.change_project(old, project).unwrap();
+        });
+    }
 
     Ok(())
 }
