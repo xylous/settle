@@ -23,3 +23,4 @@ serde = { version = "1.0.136", features = [ "derive" ] }
 serde_yaml = { version = "0.8.23" }
 shellexpand = { version = "2.1.0" }
 chrono = { version = "0.4.19" }
+dialoguer = { version = "0.10.1" }
