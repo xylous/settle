@@ -319,4 +319,13 @@ impl Database
             ).map(|z| z.clone())
             .collect())
     }
+
+    /// Change the project of the given Zettel within the database
+    pub fn change_project(&self, zettel: &Zettel, project: &str) -> Result<(), Error>
+    {
+        self.conn.execute(
+            "UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
+            &[ project, &zettel.title, &zettel.project ])?;
+        Ok(())
+    }
 }
