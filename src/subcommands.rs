@@ -1,3 +1,4 @@
+use regex::Regex;
 use rusqlite::Error;
 use clap::ArgMatches;
 use clap_complete::Shell::*;
@@ -91,10 +92,10 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
-    let title = matches.value_of("TITLE").unwrap();
+    let old_title = matches.value_of("TITLE").unwrap();
     let new_title = matches.value_of("NEW_TITLE").unwrap();
 
-    let results = db.find_by_title(title)?;
+    let results = db.find_by_title(old_title)?;
 
     let old_zettel = if results.first().is_none() {
         eprintln!("error: no Zettel with that title");
@@ -106,12 +107,24 @@ pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let mut dial = dialoguer::Confirm::new();
     let prompt = dial.with_prompt(
-        format!("{} --> {}", title, new_title));
+        format!("{} --> {}", old_title, new_title));
 
-    // If the user confirms, change the note's title
+    // If the user confirms, change the note's title, and update the links to this Zettel
     if prompt.interact().unwrap_or_default() {
         crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
         db.change_title(old_zettel, new_title).unwrap();
+        // It's not enough that we renamed the file. We need to update all references to it!
+        let backlinks = db.find_by_links_to(old_title)?;
+        backlinks.iter()
+            .for_each(|bl| {
+                let contents = crate::io::file_to_string(&bl.filename(cfg));
+                // The link might span over multiple lines. We must account for that
+                let regex_string = &format!(r"\[\[{}\]\]", old_title).replace(" ", r"[\n\t ]");
+                let old_title_reg = Regex::new(regex_string).unwrap();
+                let new_contents = old_title_reg.replace_all(&contents, format!(r"[[{}]]", new_title));
+                crate::io::write_to_file(&bl.filename(cfg), &new_contents);
+                db.update(cfg, bl).unwrap();
+            })
     }
 
     Ok(())
