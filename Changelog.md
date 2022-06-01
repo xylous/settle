@@ -2,6 +2,13 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.37.0 - 2022-06-01
+
+- add `mv` command, for moving Zettel between projects
+- add `rename` command, for renaming Zettel obviously
+    - after a file is renamed, all links to it are updated
+- fix: properly recognise links spanning multiple lines
+
 ## v0.36.5 - 2022-05-21
 
 - fix: print things synchronously instead of asynchronously to stdout
