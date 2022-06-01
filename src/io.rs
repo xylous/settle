@@ -34,6 +34,12 @@ pub fn write_to_file(path: &str, data: &str)
     write(path, data).expect("Unable to write file")
 }
 
+/// Rename `from` to `to`
+pub fn rename(from: &str, to: &str)
+{
+    std::fs::rename(from, to).unwrap();
+}
+
 /// Given a filename, replace its extension with `new_ext`
 pub fn replace_extension(file: &str, new_ext: &str) -> String
 {
