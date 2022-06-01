@@ -321,11 +321,20 @@ impl Database
     }
 
     /// Change the project of the given Zettel within the database
-    pub fn change_project(&self, zettel: &Zettel, project: &str) -> Result<(), Error>
+    pub fn change_project(&self, zettel: &Zettel, new_project: &str) -> Result<(), Error>
     {
         self.conn.execute(
             "UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
-            &[ project, &zettel.title, &zettel.project ])?;
+            &[ new_project, &zettel.title, &zettel.project ])?;
+        Ok(())
+    }
+
+    /// Change the title of the given Zettel within the database
+    pub fn change_title(&self, zettel: &Zettel, new_title: &str) -> Result<(), Error>
+    {
+        self.conn.execute(
+            "UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
+            &[ new_title, &zettel.title, &zettel.project ])?;
         Ok(())
     }
 }
