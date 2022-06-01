@@ -7,7 +7,7 @@ use crate::Database;
 use crate::Zettel;
 use crate::config::ConfigOptions;
 
-use crate::io::{file_exists, rename};
+use crate::io::file_exists;
 use crate::cli;
 
 /// Print `[<PROJECT>] <TITLE>` for every given zettel.
@@ -87,6 +87,36 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Rename a note, but keep it in the same project
+pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+    let title = matches.value_of("TITLE").unwrap();
+    let new_title = matches.value_of("NEW_TITLE").unwrap();
+
+    let results = db.find_by_title(title)?;
+
+    let old_zettel = if results.first().is_none() {
+        eprintln!("error: no Zettel with that title");
+        return Ok(());
+    } else {
+        results.first().unwrap()
+    };
+    let new_zettel = Zettel::new(new_title, &old_zettel.project);
+
+    let mut dial = dialoguer::Confirm::new();
+    let prompt = dial.with_prompt(
+        format!("{} --> {}", title, new_title));
+
+    // If the user confirms, change the note's title
+    if prompt.interact().unwrap_or_default() {
+        crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
+        db.change_title(old_zettel, new_title).unwrap();
+    }
+
+    Ok(())
+}
+
 /// Move all matching notes into a project
 pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
@@ -122,7 +152,7 @@ pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
             );
         let pairs = notes.iter().zip(new_notes);
         pairs.for_each(|(old,new)| {
-            rename(&old.filename(cfg), &new.filename(cfg));
+            crate::io::rename(&old.filename(cfg), &new.filename(cfg));
             db.change_project(old, project).unwrap();
         });
     }
