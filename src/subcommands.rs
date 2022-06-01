@@ -97,6 +97,13 @@ pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let results = db.find_by_title(old_title)?;
 
+    // check if there's already a note with this title
+    let overwrite_failsafe = db.find_by_title(new_title)?;
+    if overwrite_failsafe.first().is_some() {
+        eprintln!("error: a note with the new title already exists: won't overwrite");
+        return Ok(());
+    }
+
     let old_zettel = if results.first().is_none() {
         eprintln!("error: no Zettel with that title");
         return Ok(());
