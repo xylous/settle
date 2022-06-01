@@ -73,9 +73,9 @@ user myself. If you write a wrapper around settle, contact me at
     - [x] add notes to projects
     - [x] generate the database with projects included
     - [x] start with an 'inbox' project by default
-    - [ ] move notes from project to project
-- [ ] rename notes
-    - [ ] update all links to the renamed note
+    - [x] move notes from project to project
+- [x] rename notes
+    - [x] update all links to the renamed note
 
 ##### Meta
 
