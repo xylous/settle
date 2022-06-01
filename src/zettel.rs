@@ -9,10 +9,14 @@ use crate::io::*;
 // wiki-style links are of the form `[[LINK]]`
 fn find_links(contents: &str) -> Vec<String>
 {
-    let re = Regex::new(r#"\[\[(.*?)\]\]"#).unwrap();
+    let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
     re.captures_iter(contents).par_bridge()
         .map(|cap| {
-            let title = cap.get(1).map_or("", |m| m.as_str()).to_string();
+            let title = cap.get(1)
+                .map_or("", |m| m.as_str())
+                .to_string()
+                .replace("\n", " ")
+                .replace("\t", " ");
             title
         })
         .collect()
