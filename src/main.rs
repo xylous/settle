@@ -14,13 +14,6 @@ const SQL_ARRAY_SEPARATOR: &str = "::";
 
 /// Join a vector of `String`s, and return a string starting and ending with `SQL_ARRAY_SEPARATOR`,
 /// and with the elements of the vector separated by `SQL_ARRAY_SEPARATOR`
-///
-/// # Examples
-///
-/// ```
-/// let v = vec!["foo", "bar", "baz"];
-/// assert_eq!(vec_to_str(v), String::from(",foo,bar,baz,"));
-/// ```
 fn vec_to_str(vec: &[String]) -> String
 {
     format!(

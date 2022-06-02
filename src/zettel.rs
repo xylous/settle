@@ -92,13 +92,6 @@ impl Zettel
     }
 
     /// Return a string with the format "`Zettel.title`.md"
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let zettel = Zettel::new("Structs in rust");
-    /// assert_eq!(zettel.filename(), "Structs in rust.md");
-    /// ```
     pub fn filename(&self, cfg: &ConfigOptions) -> String
     {
         let dir = format!("{}/{}", cfg.zettelkasten, &self.project);
