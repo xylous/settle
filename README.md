@@ -2,6 +2,19 @@
 
 `settle` is a CLI tool that helps you manage your digital Zettelkasten.
 
+First, a little bit of history. I learned about the Zettelkasten method back in
+the summer of 2021. I looked at a few programs for it, and I settled on Obsidian
+MD. But I didn't like the experience: I was an avid Vim user, and the vim
+compatibility mode wasn't usable in the least. I had alreay written quite a few
+notes, and I didn't want to change them to make the links and tags work with
+other programs.
+
+So there I was, in early August, with the idea of writing a CLI program that I
+could easily use with Vim (or any editor, for that matter), and at the same time
+use Obsidian-style links and tags. In the meantime, I've read Sonke Ahrens's
+*How to take smart notes* and have been adding features to settle. Almost a year
+later, and I can confidently say that it's pretty good.
+
 ## Getting started
 
 ### Requirements
@@ -62,7 +75,6 @@ user myself. If you write a wrapper around settle, contact me at
     - [x] custom database file path
     - [x] be able to use templates
 - [x] list mentioned but non-existent Zettel
-- [x] ~~use an inbox~~
 - [x] search for text inside notes
 - [x] support matching titles with wildcards
 - [x] update Zettel metadata individually
@@ -71,6 +83,7 @@ user myself. If you write a wrapper around settle, contact me at
     - [x] backlinks (to a Zettel from other Zettel)
 - [x] projects (subdirectories within the main Zettelkasten folder)
     - [x] add notes to projects
+    - [x] create an inbox project by default
     - [x] generate the database with projects included
     - [x] start with an 'inbox' project by default
     - [x] move notes from project to project
@@ -87,7 +100,7 @@ user myself. If you write a wrapper around settle, contact me at
 - [x] write a proper `man` page
 - [ ] logo (pixel art?)
 - [x] publish to crates.io
-- [ ] describe the design choices of settle-rs
+- [x] describe the design choices of settle-rs
 
 ## Contributing
 
