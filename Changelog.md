@@ -2,6 +2,11 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.37.2 - 2022-06-12
+
+- fix: when moving a note from a project to another, create the project
+    directory if it doesn't exist
+
 ## v0.37.1 - 2022-06-12
 
 - remove `db_file` as a configuration option
