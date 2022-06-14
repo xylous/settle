@@ -15,6 +15,36 @@ use Obsidian-style links and tags. In the meantime, I've read Sonke Ahrens's
 *How to take smart notes* and have been adding features to settle. Almost a year
 later, and I can confidently say that it's pretty good.
 
+There are several core principles in the design:
+
+- ***plain and simple***: notes are stored locally and written in markdown
+
+- ***manage notes, not editors***: it's the same Zettelkasten everywhere you go.
+    The editor you use doesn't matter. Integration is done through (editor)
+    plugins (e.g. settle.vim).
+
+- ***database mirrors notes***: metadata is determined by what's on the file
+    system, not by commands. The only way to add or remove links and tags is to
+    write, then tell `settle` to update the note(s).
+
+- ***you can use projects, but take care***: instead of using tags and putting
+    things in the main Zettelkasten, notes like those containing games' lore or
+    chapters of a book you're writing can be put in a *project*.
+
+    The root of your Zettelkasten is a project, your inbox is a project, etc.
+    However, the separation is only formal, since links can reference notes in
+    any project. It's really easy to misuse them, unfortunately: they're meant
+    to be discarded after the project is done, or incorporated into the main
+    Zettelkasten. Either way, they're *not* supposed to be permanent.
+
+- ***add, change, but never remove***: notes may be created, but never destroyed
+    by the program. At most, they can be renamed or moved from project to
+    project.
+
+- ***made by humans, for humans***: no YAML metadata; links and tags are
+    embedded within text, allowing you to give context to connections between
+    ideas
+
 ## Getting started
 
 ### Requirements
