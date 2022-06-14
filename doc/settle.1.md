@@ -116,10 +116,6 @@ zettelkasten
     your Zettelkasten to be at `~/notes`. You can also use paths containing
     environment variables or paths starting with a tilde (`~`)
 
-db_file
-
-:   Database file Settle uses
-
 template
 
 :   Path to Zettel template

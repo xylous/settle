@@ -81,8 +81,6 @@ The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
     your Zettelkasten to be at `~/notes`. You can also use paths containing
     environment variables or paths starting with a tilde (`~`)
 
-- `db_file` - name of the database file settle uses
-
 - `template` - Path to Zettel template
 
     If empty, or if the path is invalid, then templates won't be used. You can
