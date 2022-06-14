@@ -157,10 +157,11 @@ pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
             } else {
                 format!("'{}' project", project)
             }
-            ));
+        ));
 
     // If the user confirms, change the notes' projects, both the system path and in database
     if prompt.interact().unwrap_or_default() {
+        crate::io::mkdir(&format!("{}/{}", cfg.zettelkasten, project));
         let new_notes = notes.iter()
             .map(|z|
                  Zettel {
