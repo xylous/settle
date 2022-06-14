@@ -2,6 +2,12 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.37.1 - 2022-06-12
+
+- remove `db_file` as a configuration option
+- add a 'core principles' section to the README
+- briefly describe the project's history in the README
+
 ## v0.37.0 - 2022-06-01
 
 - add `mv` command, for moving Zettel between projects
