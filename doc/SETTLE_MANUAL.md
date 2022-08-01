@@ -70,6 +70,9 @@ settle [-h | --help | -V | --version]
 
 - `zk` - Print the absolute path to the directory Settle uses
 
+- `isolated` - Print the list of all Zettel (in the main Zettelkasten!) that
+    aren't linked with others
+
 ## Configuration
 
 The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if

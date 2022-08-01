@@ -1,4 +1,4 @@
-% SETTLE(1) Settle 0.36.0 | Settle Manual
+% SETTLE(1) Settle 0.38.0 | Settle Manual
 
 # NAME
 
@@ -105,6 +105,11 @@ Vim and Neovim.
 *zk*
 
 :   Print the absolute path to the directory Settle uses
+
+*isolated*
+
+:   Print the list of all Zettel (in the main Zettelkasten!) that aren't linked
+    with others
 
 # CONFIGURATION
 
