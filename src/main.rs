@@ -66,6 +66,7 @@ fn main() -> Result<(), rusqlite::Error>
         "ghosts" => ghosts(&cfg)?,
         "ls" => ls(&cfg)?,
         "zk" => zk(&cfg)?,
+        "isolated" => isolated(&cfg)?,
         _ => (),
     };
 
