@@ -292,7 +292,7 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Print the list of Zettel IN THE MAIN ZETTELKASTEN that don't have any links pointing to them
+/// Print the list of Zettel IN THE MAIN ZETTELKASTEN that aren't linked with other notes
 pub fn isolated(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;

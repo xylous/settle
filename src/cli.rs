@@ -78,5 +78,5 @@ pub fn build() -> Command<'static>
         .subcommand(Command::new("zk")
             .about("return the path to the Zettelkasten"))
         .subcommand(Command::new("isolated")
-            .about("list all Zettel (in the main zettelkasten) that don't have links pointing to and from them"))
+            .about("list all Zettel (in the main zettelkasten) that aren't linked with other notes"))
 }
