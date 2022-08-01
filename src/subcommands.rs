@@ -292,6 +292,28 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Print the list of Zettel IN THE MAIN ZETTELKASTEN that don't have any links pointing to them
+pub fn isolated(cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+    let all = db.find_by_title("*")?;
+    let isolated_zettel = all.iter()
+        .filter(|z| {
+            // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
+            // it has "forward" links
+            if z.project != "" || z.links.len() != 0 {
+                return false
+            }
+            let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
+            backlinks.len() == 0
+        })
+        .cloned()
+        .collect::<Vec<Zettel>>();
+
+    print_zettel_info(&isolated_zettel);
+    Ok(())
+}
+
 /// Print all Zettel that contain the text provided in the CLI argument matches
 pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
