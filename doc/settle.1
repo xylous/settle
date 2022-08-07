@@ -99,6 +99,15 @@ Return a list of Zettel that contain the specified text
 \f[I]zk\f[R]
 Print the absolute path to the directory Settle uses
 .TP
+\f[I]rename\f[R]
+Rename a Zettel.
+Regex is not allowed.
+.TP
+\f[I]mv\f[R]
+Move all matching Zettel (by regex) into a project.
+If the project name is none/empty (i.e.\ \f[C]\[aq]\[aq]\f[R]), then the
+note is moved to the main Zettelkasten.
+.TP
 \f[I]isolated\f[R]
 Print the list of all Zettel (in the main Zettelkasten!) that aren\[cq]t
 linked with others

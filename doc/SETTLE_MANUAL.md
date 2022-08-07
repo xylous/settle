@@ -70,6 +70,11 @@ settle [-h | --help | -V | --version]
 
 - `zk` - Print the absolute path to the directory Settle uses
 
+- `rename` - Rename a Zettel. Regex is not allowed.
+
+- `mv` - Move all matching Zettel (by regex) into a project. If the project name
+    is none/empty (i.e. `''`), then the note is moved to the main Zettelkasten.
+
 - `isolated` - Print the list of all Zettel (in the main Zettelkasten!) that
     aren't linked with others
 
