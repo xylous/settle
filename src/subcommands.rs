@@ -1,32 +1,30 @@
-use regex::Regex;
-use rusqlite::Error;
 use clap::ArgMatches;
 use clap_complete::Shell::*;
 use rayon::prelude::*;
+use regex::Regex;
+use rusqlite::Error;
 
+use crate::config::ConfigOptions;
 use crate::Database;
 use crate::Zettel;
-use crate::config::ConfigOptions;
 
-use crate::io::file_exists;
 use crate::cli;
+use crate::io::file_exists;
 
 /// Print `[<PROJECT>] <TITLE>` for every given zettel.
 fn print_zettel_info(zettel: &[Zettel])
 {
-    zettel.iter()
-        .for_each(|z| {
-            println!("[{}] {}", z.project, z.title);
-        })
+    zettel.iter().for_each(|z| {
+                     println!("[{}] {}", z.project, z.title);
+                 })
 }
 
 /// Print every element in the list of Strings on an individual line
 fn print_list_of_strings(elems: &Vec<String>)
 {
-    elems.iter()
-        .for_each(|e| {
-            println!("{}", e);
-        })
+    elems.iter().for_each(|e| {
+                    println!("{}", e);
+                })
 }
 
 /// Generate completions for a shell
@@ -43,12 +41,7 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 
     if let Some(sh) = sh {
         let app = &mut cli::build();
-        clap_complete::generate(
-            sh,
-            app,
-            app.get_name().to_string(),
-            &mut std::io::stdout()
-        );
+        clap_complete::generate(sh, app, app.get_name().to_string(), &mut std::io::stdout());
     } else {
         eprintln!("error: '{}' isn't a (supported) shell", shell);
     }
@@ -113,8 +106,7 @@ pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let new_zettel = Zettel::new(new_title, &old_zettel.project);
 
     let mut dial = dialoguer::Confirm::new();
-    let prompt = dial.with_prompt(
-        format!("{} --> {}", old_title, new_title));
+    let prompt = dial.with_prompt(format!("{} --> {}", old_title, new_title));
 
     // If the user confirms, change the note's title, and update the links to this Zettel
     if prompt.interact().unwrap_or_default() {
@@ -122,16 +114,17 @@ pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         db.change_title(old_zettel, new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
         let backlinks = db.find_by_links_to(old_title)?;
-        backlinks.iter()
-            .for_each(|bl| {
-                let contents = crate::io::file_to_string(&bl.filename(cfg));
-                // The link might span over multiple lines. We must account for that
-                let regex_string = &format!(r"\[\[{}\]\]", old_title).replace(" ", r"[\n\t ]");
-                let old_title_reg = Regex::new(regex_string).unwrap();
-                let new_contents = old_title_reg.replace_all(&contents, format!(r"[[{}]]", new_title));
-                crate::io::write_to_file(&bl.filename(cfg), &new_contents);
-                db.update(cfg, bl).unwrap();
-            })
+        backlinks.iter().for_each(|bl| {
+                            let contents = crate::io::file_to_string(&bl.filename(cfg));
+                            // The link might span over multiple lines. We must account for that
+                            let regex_string =
+                                &format!(r"\[\[{}\]\]", old_title).replace(" ", r"[\n\t ]");
+                            let old_title_reg = Regex::new(regex_string).unwrap();
+                            let new_contents =
+                                old_title_reg.replace_all(&contents, format!(r"[[{}]]", new_title));
+                            crate::io::write_to_file(&bl.filename(cfg), &new_contents);
+                            db.update(cfg, bl).unwrap();
+                        })
     }
 
     Ok(())
@@ -149,33 +142,26 @@ pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     print_zettel_info(&notes);
 
     let mut dial = dialoguer::Confirm::new();
-    let prompt = dial.with_prompt(
-        format!(
-            ">> These notes will be transferred to the {}. Proceed?",
-            if project.is_empty() {
-                "main zettelkasten".to_string()
-            } else {
-                format!("'{}' project", project)
-            }
-        ));
+    let prompt =
+        dial.with_prompt(format!(">> These notes will be transferred to the {}. Proceed?",
+                                 if project.is_empty() {
+                                     "main zettelkasten".to_string()
+                                 } else {
+                                     format!("'{}' project", project)
+                                 }));
 
     // If the user confirms, change the notes' projects, both the system path and in database
     if prompt.interact().unwrap_or_default() {
         crate::io::mkdir(&format!("{}/{}", cfg.zettelkasten, project));
-        let new_notes = notes.iter()
-            .map(|z|
-                 Zettel {
-                    title: z.title.clone(),
-                    project: project.to_string(),
-                    links: z.links.clone(),
-                    tags: z.tags.clone(),
-                 }
-            );
+        let new_notes = notes.iter().map(|z| Zettel { title: z.title.clone(),
+                                                      project: project.to_string(),
+                                                      links: z.links.clone(),
+                                                      tags: z.tags.clone() });
         let pairs = notes.iter().zip(new_notes);
-        pairs.for_each(|(old,new)| {
-            crate::io::rename(&old.filename(cfg), &new.filename(cfg));
-            db.change_project(old, project).unwrap();
-        });
+        pairs.for_each(|(old, new)| {
+                 crate::io::rename(&old.filename(cfg), &new.filename(cfg));
+                 db.change_project(old, project).unwrap();
+             });
     }
 
     Ok(())
@@ -298,17 +284,17 @@ pub fn isolated(cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
     let all = db.find_by_title("*")?;
     let isolated_zettel = all.iter()
-        .filter(|z| {
-            // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
-            // it has "forward" links
-            if z.project != "" || z.links.len() != 0 {
-                return false
-            }
-            let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
-            backlinks.len() == 0
-        })
-        .cloned()
-        .collect::<Vec<Zettel>>();
+                             .filter(|z| {
+                                 // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
+                                 // it has "forward" links
+                                 if z.project != "" || z.links.len() != 0 {
+                                     return false;
+                                 }
+                                 let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
+                                 backlinks.len() == 0
+                             })
+                             .cloned()
+                             .collect::<Vec<Zettel>>();
 
     print_zettel_info(&isolated_zettel);
     Ok(())
@@ -336,7 +322,8 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
     mem_db.generate(cfg);
     mem_db.write_to(&cfg.db_file())?;
 
-    println!("database generated successfully, took {}ms", start.elapsed().as_millis());
+    println!("database generated successfully, took {}ms",
+             start.elapsed().as_millis());
 
     Ok(())
 }

@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use crate::io::{dir_exists, file_exists, file_to_string, mkdir, write_to_file};
+use serde::{Deserialize, Serialize};
 
 /// The location of the database file. Unchangeable: the user doesn't need to know the location of
 /// this file
@@ -16,10 +16,8 @@ impl ::std::default::Default for ConfigOptions
 {
     fn default() -> ConfigOptions
     {
-        ConfigOptions {
-            zettelkasten: format!("{}/zettelkasten", env!("HOME")),
-            template: String::from(""),
-        }
+        ConfigOptions { zettelkasten: format!("{}/zettelkasten", env!("HOME")),
+                        template: String::from("") }
     }
 }
 
@@ -73,9 +71,7 @@ impl ConfigOptions
 
         // The paths inside the config file may not be absolute, and so we need to expand them
         let tmp: ConfigOptions = serde_yaml::from_str(&file_to_string(&config_file)).unwrap();
-        ConfigOptions {
-            zettelkasten: expand_path(&tmp.zettelkasten),
-            template: expand_path(&tmp.template),
-        }
+        ConfigOptions { zettelkasten: expand_path(&tmp.zettelkasten),
+                        template: expand_path(&tmp.template) }
     }
 }

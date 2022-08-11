@@ -1,6 +1,6 @@
+use chrono::prelude::*;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::Regex;
-use chrono::prelude::*;
 
 use crate::config::ConfigOptions;
 use crate::io::*;
@@ -10,16 +10,17 @@ use crate::io::*;
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
-    re.captures_iter(contents).par_bridge()
-        .map(|cap| {
-            let title = cap.get(1)
-                .map_or("", |m| m.as_str())
-                .to_string()
-                .replace("\n", " ")
-                .replace("\t", " ");
-            title
-        })
-        .collect()
+    re.captures_iter(contents)
+      .par_bridge()
+      .map(|cap| {
+          let title = cap.get(1)
+                         .map_or("", |m| m.as_str())
+                         .to_string()
+                         .replace("\n", " ")
+                         .replace("\t", " ");
+          title
+      })
+      .collect()
 }
 
 // Find tags inside of `contents` string and return them
@@ -27,12 +28,13 @@ fn find_links(contents: &str) -> Vec<String>
 fn find_tags(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r"#([\w/_-]+?)\s+").unwrap();
-    re.captures_iter(contents).par_bridge()
-        .map(|cap| {
-            let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
-            tag
-        })
-        .collect()
+    re.captures_iter(contents)
+      .par_bridge()
+      .map(|cap| {
+          let tag = cap.get(1).map_or("", |m| m.as_str()).to_string();
+          tag
+      })
+      .collect()
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -49,13 +51,10 @@ impl Zettel
     /// Create a Zettel with specified `title`
     pub fn new(title: &str, project: &str) -> Self
     {
-        Zettel
-        {
-            title: title.to_string(),
-            project: project.to_string(),
-            links: vec![],
-            tags: vec![],
-        }
+        Zettel { title: title.to_string(),
+                 project: project.to_string(),
+                 links: vec![],
+                 tags: vec![] }
     }
 
     /// Create a Zettel from a file, provided a path
@@ -113,6 +112,7 @@ impl Zettel
         let re_title = Regex::new(r"\$\{TITLE\}").unwrap();
         let c1 = re_title.replace_all(contents, &self.title).to_string();
         let re_date = Regex::new(r"\$\{DATE\}").unwrap();
-        re_date.replace_all(&c1, Utc::today().format("%Y-%m-%d").to_string()).to_string()
+        re_date.replace_all(&c1, Utc::today().format("%Y-%m-%d").to_string())
+               .to_string()
     }
 }

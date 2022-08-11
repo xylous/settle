@@ -1,6 +1,6 @@
-use std::fs::{read_to_string, write};
-use std::path::{PathBuf, Path};
 use glob::glob;
+use std::fs::{read_to_string, write};
+use std::path::{Path, PathBuf};
 
 /// Read `path` and return the contents
 pub fn file_to_string(path: &str) -> String
@@ -31,7 +31,7 @@ pub fn basename(path: &str) -> String
 pub fn dirname(path: &str) -> String
 {
     let pieces: Vec<&str> = path.split('/').collect();
-    pieces[0..pieces.len()-1].join("/")
+    pieces[0..pieces.len() - 1].join("/")
 }
 
 /// Write `data` to `path`
@@ -57,10 +57,9 @@ pub fn replace_extension(file: &str, new_ext: &str) -> String
 /// List all markdown files in the specified directory
 pub fn list_md_files(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*.md", dir))
-        .expect("failed to read directory")
-        .map(|f| f.unwrap().to_string_lossy().to_string())
-        .collect()
+    glob(&format!("{}/*.md", dir)).expect("failed to read directory")
+                                  .map(|f| f.unwrap().to_string_lossy().to_string())
+                                  .collect()
 }
 
 /// Create specified `path` as a directory
@@ -72,8 +71,7 @@ pub fn mkdir(path: &str)
 /// List all subdirectories in the specified directory
 pub fn list_subdirectories(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*/", dir))
-        .expect("failed to read directory")
-        .map(|f| f.unwrap().to_string_lossy().to_string())
-        .collect()
+    glob(&format!("{}/*/", dir)).expect("failed to read directory")
+                                .map(|f| f.unwrap().to_string_lossy().to_string())
+                                .collect()
 }

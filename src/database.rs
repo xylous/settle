@@ -1,10 +1,11 @@
-use regex::{Regex, Captures};
-use rusqlite::{Connection, DatabaseName, Error, Result, Row, named_params};
+use regex::{Captures, Regex};
+use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
 
-use crate::{SQL_ARRAY_SEPARATOR, config::ConfigOptions, str_to_vec, zettel::Zettel};
+use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel, SQL_ARRAY_SEPARATOR};
 use rayon::prelude::*;
 
-impl Zettel {
+impl Zettel
+{
     /// Construct a Zettel from an entry in the database metadata
     /// Return an Error if the `row` was invalid
     fn from_db(row: &Row) -> Result<Zettel, rusqlite::Error>
@@ -43,18 +44,17 @@ pub struct Database
 fn cli_input_to_db_input(inp: &str) -> String
 {
     let re = Regex::new(r"(\\\\|%|\*|\\\*|_|\.|\\\.|\\)").unwrap();
-    re.replace_all(inp, |cap: &Captures| {
-        match &cap[0] {
-            r"\\" => r"\",
-            r"%" => r"\%",
-            r"*" => r"%",
-            r"\*" => r"*",
-            r"_" => r"\_",
-            r"." => r"_",
-            r"\." => r".",
-            _ => r"",
-        }
-    }).to_string()
+    re.replace_all(inp, |cap: &Captures| match &cap[0] {
+          r"\\" => r"\",
+          r"%" => r"\%",
+          r"*" => r"%",
+          r"\*" => r"*",
+          r"_" => r"\_",
+          r"." => r"_",
+          r"\." => r".",
+          _ => r"",
+      })
+      .to_string()
 }
 
 impl Database
@@ -63,10 +63,8 @@ impl Database
     /// Return an Error if the connection couldn't be made
     pub fn new(name: &str) -> Result<Self, Error>
     {
-        Ok(Database {
-            name: name.to_string(),
-            conn: Connection::open(name)?,
-        })
+        Ok(Database { name: name.to_string(),
+                      conn: Connection::open(name)? })
     }
 
     /// Create a `Database` interface to a named SQLite database, opened in memory
@@ -74,10 +72,8 @@ impl Database
     pub fn in_memory(name: &str) -> Result<Self, Error>
     {
         let uri = &format!("file:{}?mode=memory&cache=shared", name);
-        Ok(Database {
-            name: name.to_string(),
-            conn: Connection::open(uri)?,
-        })
+        Ok(Database { name: name.to_string(),
+                      conn: Connection::open(uri)? })
     }
 
     /// Initialise the current Database with a `zettelkasten` table that holds the properties of
@@ -86,14 +82,15 @@ impl Database
     pub fn init(&self) -> Result<(), Error>
     {
         self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS zettelkasten (
+                           "CREATE TABLE IF NOT EXISTS zettelkasten (
                 title       TEXT NOT NULL,
                 project     TEXT,
                 links       TEXT,
                 tags        TEXT,
                 UNIQUE(title, project)
             )",
-            [])?;
+                           [],
+        )?;
         Ok(())
     }
 
@@ -112,16 +109,17 @@ impl Database
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
             "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
-            &[ &zettel.title, &zettel.project, &links, &tags ])?;
+            &[&zettel.title, &zettel.project, &links, &tags],
+        )?;
         Ok(())
     }
 
     /// Delete a Zettel's metadata from the database
     pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
-        self.conn.execute(
-            "DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
-            &[&zettel.title, &zettel.project ])?;
+        self.conn
+            .execute("DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
+                     &[&zettel.title, &zettel.project])?;
         Ok(())
     }
 
@@ -150,7 +148,8 @@ impl Database
     pub fn find_by_title(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
         let req_pattern = cli_input_to_db_input(pattern);
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE title LIKE :req_pattern")?;
+        let mut stmt = self.conn
+                           .prepare("SELECT * FROM zettelkasten WHERE title LIKE :req_pattern")?;
         let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
@@ -169,13 +168,12 @@ impl Database
     /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_tag(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
-        let req_pattern = format!(
-            "%{}{}{}%",
-            SQL_ARRAY_SEPARATOR,
-            cli_input_to_db_input(pattern),
-            SQL_ARRAY_SEPARATOR,
-        );
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE tags LIKE :req_pattern")?;
+        let req_pattern = format!("%{}{}{}%",
+                                  SQL_ARRAY_SEPARATOR,
+                                  cli_input_to_db_input(pattern),
+                                  SQL_ARRAY_SEPARATOR,);
+        let mut stmt = self.conn
+                           .prepare("SELECT * FROM zettelkasten WHERE tags LIKE :req_pattern")?;
         let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
@@ -218,7 +216,7 @@ impl Database
         let mut results: Vec<String> = Vec::new();
         while let Some(row) = rows.next()? {
             let project: String = row.get(0)?;
-            if ! project.is_empty() {
+            if !project.is_empty() {
                 results.push(project);
             }
         }
@@ -234,13 +232,12 @@ impl Database
     /// `title` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_links_to(&self, pattern: &str) -> Result<Vec<Zettel>>
     {
-        let req_pattern = format!(
-            "%{}{}{}%",
-            SQL_ARRAY_SEPARATOR,
-            cli_input_to_db_input(pattern),
-            SQL_ARRAY_SEPARATOR,
-        );
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten WHERE links LIKE :req_pattern")?;
+        let req_pattern = format!("%{}{}{}%",
+                                  SQL_ARRAY_SEPARATOR,
+                                  cli_input_to_db_input(pattern),
+                                  SQL_ARRAY_SEPARATOR,);
+        let mut stmt = self.conn
+                           .prepare("SELECT * FROM zettelkasten WHERE links LIKE :req_pattern")?;
         let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
@@ -271,12 +268,12 @@ impl Database
         unique_links.dedup();
 
         Ok(unique_links.into_iter()
-            .filter(|link| {
-                // if the response was empty, then nothing has been found, meaning it doesn't exist
-                // in the database
-                self.find_by_title(link).unwrap().is_empty()
-            })
-            .collect())
+                       .filter(|link| {
+                           // if the response was empty, then nothing has been found, meaning it doesn't exist
+                           // in the database
+                           self.find_by_title(link).unwrap().is_empty()
+                       })
+                       .collect())
     }
 
     /// Look for Markdown files in the Zettelkasten directory and populate the database with their
@@ -287,16 +284,16 @@ impl Database
 
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
         directories.push(cfg.zettelkasten.clone());
-        directories.par_iter()
-            .for_each(|dir| {
-                let notes = crate::io::list_md_files(dir);
-                notes.par_iter()
-                    .for_each(|note| {
-                        let thread_db = Self::in_memory(db_name).unwrap();
-                        let thread_zettel = Zettel::from_file(cfg, note);
-                        thread_db.save(&thread_zettel).unwrap();
-                    });
-            });
+        directories.par_iter().for_each(|dir| {
+                                  let notes = crate::io::list_md_files(dir);
+                                  notes.par_iter().for_each(|note| {
+                                                      let thread_db =
+                                                          Self::in_memory(db_name).unwrap();
+                                                      let thread_zettel =
+                                                          Zettel::from_file(cfg, note);
+                                                      thread_db.save(&thread_zettel).unwrap();
+                                                  });
+                              });
     }
 
     /// Update the metadata for a given Zettel. The specified path *must* exist
@@ -314,27 +311,26 @@ impl Database
     {
         let zettel = self.all()?;
         Ok(zettel.par_iter()
-            .filter(|z|
-                z.has_text(cfg, text)
-            ).map(|z| z.clone())
-            .collect())
+                 .filter(|z| z.has_text(cfg, text))
+                 .map(|z| z.clone())
+                 .collect())
     }
 
     /// Change the project of the given Zettel within the database
     pub fn change_project(&self, zettel: &Zettel, new_project: &str) -> Result<(), Error>
     {
-        self.conn.execute(
-            "UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
-            &[ new_project, &zettel.title, &zettel.project ])?;
+        self.conn
+            .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
+                     &[new_project, &zettel.title, &zettel.project])?;
         Ok(())
     }
 
     /// Change the title of the given Zettel within the database
     pub fn change_title(&self, zettel: &Zettel, new_title: &str) -> Result<(), Error>
     {
-        self.conn.execute(
-            "UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
-            &[ new_title, &zettel.title, &zettel.project ])?;
+        self.conn
+            .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
+                     &[new_title, &zettel.title, &zettel.project])?;
         Ok(())
     }
 }
