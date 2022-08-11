@@ -14,6 +14,12 @@ pub fn file_exists(path: &str) -> bool
     Path::new(path).is_file()
 }
 
+/// Return true if the path specified exists and is a dir
+pub fn dir_exists(path: &str) -> bool
+{
+    Path::new(path).is_dir()
+}
+
 /// Return the last segment of a path
 pub fn basename(path: &str) -> String
 {
