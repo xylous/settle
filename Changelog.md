@@ -2,6 +2,15 @@
 
 NOTE: This Changelog is incomplete.
 
+## v0.38.1 - 2022-08-11
+
+- fix panics on a completely fresh environment (credit: irandms)
+
+## v0.38.0 - 2022-08-01
+
+- add `isolated` command, for returning all Zettel that have no links pointing
+    to or from them
+
 ## v0.37.2 - 2022-06-12
 
 - fix: when moving a note from a project to another, create the project
