@@ -183,46 +183,71 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// Query various things in the database, based on the provided ArgMatches arguments.
+/// The queries for `--title`, `--text`, `--isolated`, and `--by_tag` compound - that is to say,
+/// the Zettel filtered for have to pass all the provided criteria in order to pass. All other
+/// queries have their own use case, printing different things
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     if matches.is_present("PROJECTS") {
-        let result = db.list_projects()?;
-        print_list_of_strings(&result);
+        let query = db.list_projects()?;
+        print_list_of_strings(&query);
+        return Ok(());
     } else if matches.is_present("TAGS") {
-        let result = db.list_tags()?;
-        print_list_of_strings(&result);
-    } else if matches.is_present("BY_TAG") {
-        let query = matches.value_of("BY_TAG").unwrap_or("*");
-        by_tag(&db, query)?;
-    } else if matches.is_present("TEXT") {
-        let query = matches.value_of("TEXT").unwrap_or("*");
-        let results = db.search_text(cfg, query)?;
-        print_zettel_info(&results);
-    } else if matches.is_present("FWLINKS") {
+        let query = db.list_tags()?;
+        print_list_of_strings(&query);
+        return Ok(());
+    }
+    if matches.is_present("GHOSTS") {
+        let query = db.zettel_not_yet_created()?;
+        print_list_of_strings(&query);
+        return Ok(());
+    }
+
+    if matches.is_present("FWLINKS") {
         let query = matches.value_of("FWLINKS").unwrap_or("*");
         fwlinks(&db, query)?;
-    } else if matches.is_present("BACKLINKS") {
+        return Ok(());
+    }
+    if matches.is_present("BACKLINKS") {
         let query = matches.value_of("BACKLINKS").unwrap_or("*");
         backlinks(&db, query)?;
-    } else if matches.is_present("ISOLATED") {
-        isolated(&db)?;
-    } else if matches.is_present("GHOSTS") {
-        let result = db.zettel_not_yet_created()?;
-        print_list_of_strings(&result);
-    } else if matches.is_present("TITLE") {
-        let query = matches.value_of("TITLE").unwrap_or("*");
-        let results = db.find_by_title(query)?;
-        print_zettel_info(&results);
-    } else {
-        let results = db.all()?;
-        print_zettel_info(&results);
+        return Ok(());
     }
+
+    let mut zs: Vec<Zettel> = db.all()?;
+
+    if matches.is_present("TITLE") {
+        let query = matches.value_of("TITLE").unwrap_or("*");
+        let crit = db.find_by_title(query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("TEXT") {
+        let query = matches.value_of("TEXT").unwrap_or("*");
+        let crit = db.search_text(cfg, query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("BY_TAG") {
+        let query = matches.value_of("BY_TAG").unwrap_or("*");
+        let crit = by_tag(&db, query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("ISOLATED") {
+        zs = filter(zs, isolated(&db)?);
+    }
+    print_zettel_info(&zs);
     Ok(())
 }
 
+/// Keep only those elements of `old` that are also in `criteria`
+fn filter(old: Vec<Zettel>, criteria: Vec<Zettel>) -> Vec<Zettel>
+{
+    old.into_iter().filter(|z| criteria.contains(z)).collect()
+}
+
 /// Print all Zettel whose tags contain the pattern specified in the CLI args
-pub fn by_tag(db: &Database, query: &str) -> Result<(), Error>
+pub fn by_tag(db: &Database, query: &str) -> Result<Vec<Zettel>, Error>
 {
     let mut zettel = db.find_by_tag(query)?;
     let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", query))?;
@@ -230,9 +255,7 @@ pub fn by_tag(db: &Database, query: &str) -> Result<(), Error>
     zettel.par_sort();
     zettel.dedup();
 
-    print_zettel_info(&zettel);
-
-    Ok(())
+    Ok(zettel)
 }
 
 /// Print the titles of the Zettel matching the pattern provided in the CLI arguments and the other
@@ -273,24 +296,22 @@ pub fn backlinks(db: &Database, query: &str) -> Result<(), Error>
 }
 
 /// Print the list of Zettel IN THE MAIN ZETTELKASTEN that aren't linked with other notes
-pub fn isolated(db: &Database) -> Result<(), Error>
+pub fn isolated(db: &Database) -> Result<Vec<Zettel>, Error>
 {
     let all = db.find_by_title("*")?;
-    let isolated_zettel = all.iter()
-                             .filter(|z| {
-                                 // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
-                                 // it has "forward" links
-                                 if z.project != "" || z.links.len() != 0 {
-                                     return false;
-                                 }
-                                 let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
-                                 backlinks.len() == 0
-                             })
-                             .cloned()
-                             .collect::<Vec<Zettel>>();
-
-    print_zettel_info(&isolated_zettel);
-    Ok(())
+    let isolated = all.iter()
+                      .filter(|z| {
+                          // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
+                          // it has "forward" links
+                          if z.project != "" || z.links.len() != 0 {
+                              return false;
+                          }
+                          let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
+                          backlinks.len() == 0
+                      })
+                      .cloned()
+                      .collect::<Vec<Zettel>>();
+    Ok(isolated)
 }
 
 /// (Re)generate the database file
