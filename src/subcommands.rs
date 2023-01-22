@@ -189,19 +189,17 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// queries have their own use case, printing different things
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
+    // TODO: fix the gross repetition of return statements
     let db = Database::new(&cfg.db_file())?;
+
     if matches.is_present("PROJECTS") {
-        let query = db.list_projects()?;
-        print_list_of_strings(&query);
+        print_list_of_strings(&db.list_projects()?);
         return Ok(());
     } else if matches.is_present("TAGS") {
-        let query = db.list_tags()?;
-        print_list_of_strings(&query);
+        print_list_of_strings(&db.list_tags()?);
         return Ok(());
-    }
-    if matches.is_present("GHOSTS") {
-        let query = db.zettel_not_yet_created()?;
-        print_list_of_strings(&query);
+    } else if matches.is_present("GHOSTS") {
+        print_list_of_strings(&db.zettel_not_yet_created()?);
         return Ok(());
     }
 
@@ -209,8 +207,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         let query = matches.value_of("FWLINKS").unwrap_or("*");
         fwlinks(&db, query)?;
         return Ok(());
-    }
-    if matches.is_present("BACKLINKS") {
+    } else if matches.is_present("BACKLINKS") {
         let query = matches.value_of("BACKLINKS").unwrap_or("*");
         backlinks(&db, query)?;
         return Ok(());

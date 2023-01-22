@@ -51,40 +51,34 @@ pub fn build() -> Command<'static>
     )
     .subcommand(
         Command::new("query")
-            .about("query various things in the database")
-            .arg(
-                Arg::new("PROJECTS")
-                    .short('p')
-                    .long("projects")
-                    .takes_value(false)
-                    .help("list all projects"),
-            )
-            .arg(
-                Arg::new("TAGS")
-                    //.short('t')
-                    .long("tags")
-                    .takes_value(false)
-                    .help("list all tags"),
-            )
+            .about("query (filter/list) various things in the database")
             .arg(
                 Arg::new("TITLE")
+                    .short('t')
                     .long("title")
                     .takes_value(true)
-                    .help("list matching titles"),
+                    .help("FILTER Zettel with a matching title"),
             )
             .arg(
                 Arg::new("BY_TAG")
-                    .short('t')
-                    .long("by_tag")
+                    .short('g')
+                    .long("tag")
                     .takes_value(true)
-                    .help("list Zettel by tag"),
+                    .help("FILTER Zettel that have a specific tag"),
             )
             .arg(
                 Arg::new("TEXT")
                     .short('s')
                     .long("text")
                     .takes_value(true)
-                    .help("list Zettel by tag"),
+                    .help("FILTER Zettel that contain a specific text"),
+            )
+            .arg(
+                Arg::new("ISOLATED")
+                    .short('i')
+                    .long("isolated")
+                    .takes_value(false)
+                    .help("FILTER Zettel that don't have any links to and fro"),
             )
             .arg(
                 Arg::new("FWLINKS")
@@ -101,15 +95,19 @@ pub fn build() -> Command<'static>
                     .help("list backlinks"),
             )
             .arg(
-                Arg::new("ISOLATED")
-                    .short('i')
-                    .long("isolated")
+                Arg::new("PROJECTS")
+                    .long("projects")
                     .takes_value(false)
-                    .help("list Zettel that don't have any links to and fro"),
+                    .help("list all projects"),
+            )
+            .arg(
+                Arg::new("TAGS")
+                    .long("tags")
+                    .takes_value(false)
+                    .help("list all tags"),
             )
             .arg(
                 Arg::new("GHOSTS")
-                    .short('g')
                     .long("ghosts")
                     .takes_value(false)
                     .help("list 'Ghost' Zettel, that have been mentioned, but not created"),
