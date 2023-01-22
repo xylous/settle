@@ -183,27 +183,49 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Print all Zettel matching the pattern from the CLI
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
-
-    let pattern = matches.value_of("PATTERN").unwrap_or_default();
-    let result = db.find_by_title(pattern)?;
-    print_zettel_info(&result);
-
+    if matches.is_present("PROJECTS") {
+        let result = db.list_projects()?;
+        print_list_of_strings(&result);
+    } else if matches.is_present("TAGS") {
+        let result = db.list_tags()?;
+        print_list_of_strings(&result);
+    } else if matches.is_present("BY_TAG") {
+        let query = matches.value_of("BY_TAG").unwrap_or("*");
+        by_tag(&db, query)?;
+    } else if matches.is_present("TEXT") {
+        let query = matches.value_of("TEXT").unwrap_or("*");
+        let results = db.search_text(cfg, query)?;
+        print_zettel_info(&results);
+    } else if matches.is_present("FWLINKS") {
+        let query = matches.value_of("FWLINKS").unwrap_or("*");
+        fwlinks(&db, query)?;
+    } else if matches.is_present("BACKLINKS") {
+        let query = matches.value_of("BACKLINKS").unwrap_or("*");
+        backlinks(&db, query)?;
+    } else if matches.is_present("ISOLATED") {
+        isolated(&db)?;
+    } else if matches.is_present("GHOSTS") {
+        let result = db.zettel_not_yet_created()?;
+        print_list_of_strings(&result);
+    } else if matches.is_present("TITLE") {
+        let query = matches.value_of("TITLE").unwrap_or("*");
+        let results = db.find_by_title(query)?;
+        print_zettel_info(&results);
+    } else {
+        let results = db.all()?;
+        print_zettel_info(&results);
+    }
     Ok(())
 }
 
 /// Print all Zettel whose tags contain the pattern specified in the CLI args
-pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+pub fn by_tag(db: &Database, query: &str) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file())?;
-
-    let input = matches.value_of("TAG").unwrap_or_default();
-
-    let mut zettel = db.find_by_tag(input)?;
-    let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", input))?;
+    let mut zettel = db.find_by_tag(query)?;
+    let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", query))?;
     zettel.append(&mut zettel_with_subtag);
     zettel.par_sort();
     zettel.dedup();
@@ -213,29 +235,7 @@ pub fn find(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Print all tags used inside the Zettelkasten
-pub fn tags(cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    let tags = db.list_tags()?;
-    print_list_of_strings(&tags);
-
-    Ok(())
-}
-
-/// Print all tags used inside the Zettelkasten
-pub fn projects(cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    let projects = db.list_projects()?;
-    print_list_of_strings(&projects);
-
-    Ok(())
-}
-
-/// Print the titles of the Zettel matching the pattern provided in the CLi arguments and the other
+/// Print the titles of the Zettel matching the pattern provided in the CLI arguments and the other
 /// Zettel it links to under the following format:
 ///
 /// ```
@@ -245,12 +245,9 @@ pub fn projects(cfg: &ConfigOptions) -> Result<(), Error>
 ///     | ...
 ///     | <LINK_N>
 /// ```
-pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+pub fn fwlinks(db: &Database, query: &str) -> Result<(), Error>
 {
-    let title = matches.value_of("TITLE").unwrap_or_default();
-    let db = Database::new(&cfg.db_file())?;
-
-    let zettel = db.find_by_title(title)?;
+    let zettel = db.find_by_title(query)?;
     for z in zettel {
         print_zettel_info(&[z.clone()]);
         for link in &z.links {
@@ -261,12 +258,9 @@ pub fn links(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Print all Zettel that match the one specified in the CLI argument matches
-pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+pub fn backlinks(db: &Database, query: &str) -> Result<(), Error>
 {
-    let title = matches.value_of("TITLE").unwrap_or_default();
-    let db = Database::new(&cfg.db_file())?;
-
-    let zettel = db.find_by_title(title)?;
+    let zettel = db.find_by_title(query)?;
     for z in zettel {
         print_zettel_info(&[z.clone()]);
         let res = db.find_by_links_to(&z.title)?;
@@ -279,9 +273,8 @@ pub fn backlinks(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Print the list of Zettel IN THE MAIN ZETTELKASTEN that aren't linked with other notes
-pub fn isolated(cfg: &ConfigOptions) -> Result<(), Error>
+pub fn isolated(db: &Database) -> Result<(), Error>
 {
-    let db = Database::new(&cfg.db_file())?;
     let all = db.find_by_title("*")?;
     let isolated_zettel = all.iter()
                              .filter(|z| {
@@ -297,18 +290,6 @@ pub fn isolated(cfg: &ConfigOptions) -> Result<(), Error>
                              .collect::<Vec<Zettel>>();
 
     print_zettel_info(&isolated_zettel);
-    Ok(())
-}
-
-/// Print all Zettel that contain the text provided in the CLI argument matches
-pub fn search(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let text = matches.value_of("TEXT").unwrap();
-
-    let db = Database::new(&cfg.db_file())?;
-    let results = db.search_text(cfg, text)?;
-    print_zettel_info(&results);
-
     Ok(())
 }
 
@@ -328,29 +309,6 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Print a list of Zettel that haven't yet been created
-pub fn ghosts(cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    let results = db.zettel_not_yet_created()?;
-    print_list_of_strings(&results);
-
-    Ok(())
-}
-
-/// List all files in the Zettelkasten
-pub fn ls(cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-    let results = db.all()?;
-
-    print_zettel_info(&results);
-
-    Ok(())
-}
-
-/// Print the directory used as Zettelkasten
 pub fn zk(cfg: &ConfigOptions) -> Result<(), Error>
 {
     println!("{}", cfg.zettelkasten);

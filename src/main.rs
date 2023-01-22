@@ -49,22 +49,13 @@ fn main() -> Result<(), rusqlite::Error>
 
     match cmd {
         "compl" => compl(cmd_matches)?,
+        "query" => query(cmd_matches, &cfg)?,
         "new" => new(cmd_matches, &cfg)?,
         "update" => update(cmd_matches, &cfg)?,
-        "query" => query(cmd_matches, &cfg)?,
-        "find" => find(cmd_matches, &cfg)?,
-        "links" => links(cmd_matches, &cfg)?,
-        "backlinks" => backlinks(cmd_matches, &cfg)?,
-        "search" => search(cmd_matches, &cfg)?,
         "mv" => mv(cmd_matches, &cfg)?,
         "rename" => rename(cmd_matches, &cfg)?,
-        "tags" => tags(&cfg)?,
-        "projects" => projects(&cfg)?,
         "generate" => generate(&cfg)?,
-        "ghosts" => ghosts(&cfg)?,
-        "ls" => ls(&cfg)?,
         "zk" => zk(&cfg)?,
-        "isolated" => isolated(&cfg)?,
         _ => (),
     };
 
