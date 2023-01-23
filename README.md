@@ -9,11 +9,11 @@ compatibility mode wasn't usable in the least. I had alreay written quite a few
 notes, and I didn't want to change them to make the links and tags work with
 other programs.
 
-So there I was, in early August, with the idea of writing a CLI program that I
-could easily use with Vim (or any editor, for that matter), and at the same time
-use Obsidian-style links and tags. In the meantime, I've read Sonke Ahrens's
-*How to take smart notes* and have been adding features to settle. Almost a year
-later, and I can confidently say that it's pretty good.
+So there, in early August, I had the idea of writing a CLI program that I could
+easily use with vim (or any editor, for that matter), and at the same time use
+Obsidian-style links and tags. In the meantime, I've read Sonke Ahrens's *How to
+take smart notes* and have added many features to settle. Personally, I'm
+content.
 
 There are several core principles in the design:
 
@@ -28,22 +28,25 @@ There are several core principles in the design:
     write, then tell `settle` to update the note(s).
 
 - ***you can use projects, but take care***: instead of using tags and putting
-    things in the main Zettelkasten, notes like those containing games' lore or
-    chapters of a book you're writing can be put in a *project*.
+    things in the main Zettelkasten, completely unrelated notes like those
+    containing games' lore or chapters of a book you're writing can be put in a
+    *project*. Actually, the root of your Zettelkasten is a project, and your
+    inbox is also a project, and any other sub-"box" (like one for
+    literature/book notes) you'd want could be shaped as a project.
 
-    The root of your Zettelkasten is a project, your inbox is a project, etc.
-    However, the separation is only formal, since links can reference notes in
-    any project. It's really easy to misuse them, unfortunately: they're meant
-    to be discarded after the project is done, or incorporated into the main
-    Zettelkasten. Either way, they're *not* supposed to be permanent.
+    However, the separation into projects is only formal, since links can
+    reference notes in any project. It's really easy to misuse them:
+    from what I understood in Sonke Ahrens' book, they're meant to be discarded
+    after the project is done, or incorporated into the main Zettelkasten.
+    Either way, they're *not* supposed to be permanent.
 
 - ***add, change, but never remove***: notes may be created, but never destroyed
     by the program. At most, they can be renamed or moved from project to
     project.
 
-- ***made by humans, for humans***: no YAML metadata; links and tags are
-    embedded within text, allowing you to give context to connections between
-    ideas
+- ***made for humans***: zero YAML metadata. Titles are plain text. Links and tags
+    are directly embedded within your note's contents, allowing you to give
+    context to connections between ideas.
 
 ## Getting started
 
@@ -65,12 +68,16 @@ cargo install settle
 For the commands, options, configuration, and setting up autocompletion, read
 [the manual](./doc/SETTLE_MANUAL.md)
 
-If you prefer, there's also a groff document inside the `doc/` dirctory which
-can be read with `man`. On the command line, of course.
+~~If you prefer, there's also a groff document inside the `doc/` dirctory which
+can be read with `man`. On the command line, of course.~~ The `man` document
+inside the `doc/` directory has been deprecated since I can't be bothered
+to change it. Plus, Markdown is a lot more accessible.
 
 ### The note-taking system
 
-`settle` just stores and manages a database of Zettel metadata. That's it.
+`settle` just stores and manages a database of Zettel metadata. A simple record
+of the note's title, the project it's in, what other notes it links to, and what
+tags it has. That's all.
 
 There are two important things to remember when writing:
 
@@ -82,14 +89,13 @@ There are two important things to remember when writing:
     `#biology/anatomy/humans` are supported, if you want to stay more organised.
     You can also put these everywhere.
 
-Besides, how do you actually start writing, if there are no explicit commands to
-invoke an editor? It'd have been hard trying to write code so that it works
-smoothly with vim or emacs and their many quirks. Instead, editor-side code is
-written to act as a settle plugin.
+`settle` wasn't designed to work with any editor in particular. Which means that
+you can use it practically everywhere! I wrote
+[settle.vim](https://github.com/xylous/settle.vim) since I'm a (neo)vim user
+myself. Who knows? If I ever switch editors, I may write another.
 
-I wrote [settle.vim](https://github.com/xylous/settle.vim) since I'm a (neo)vim
-user myself. If you write a wrapper around settle, contact me at
-`xylous.e@gmail.com` and I'll make a list or something.
+Although plugins aren't necessary, they make things easier, by automating some
+functions, such as telling `settle` to update a note's metadata.
 
 ## Roadmap
 
@@ -104,9 +110,8 @@ user myself. If you write a wrapper around settle, contact me at
     - [x] custom Zettelkasten directory
     - [x] custom database file path
     - [x] be able to use templates
-- [x] list mentioned but non-existent Zettel
+- [x] list mentioned but non-existent Zettel ("ghosts")
 - [x] search for text inside notes
-- [x] support matching titles with wildcards
 - [x] update Zettel metadata individually
 - [x] print links
     - [x] forward links (from a Zettel to other Zettel)
@@ -119,18 +124,11 @@ user myself. If you write a wrapper around settle, contact me at
     - [x] move notes from project to project
 - [x] rename notes
     - [x] update all links to the renamed note
-
-##### Meta
-
-- [x] configure `Cargo.toml` properties
-- [x] shell autocompletion
-    - [x] zsh
-    - [x] bash
-    - [x] fish
-- [x] write a proper `man` page
-- [ ] logo (pixel art?)
-- [x] publish to crates.io
-- [x] describe the design choices of settle-rs
+(early 2023)
+- [x] query: filter notes based on various criteria (title, tags, etc.)
+    - [x] support regex
+- [ ] generate an image of a directed graph representing all links between notes
+- [ ] suggest random notes for you to read, to help deal with writer's block
 
 ## Contributing
 

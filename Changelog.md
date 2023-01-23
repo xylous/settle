@@ -1,6 +1,19 @@
 # Changelog
 
-NOTE: This Changelog is incomplete.
+NOTE: This Changelog is partially incomplete.
+
+## v0.39.0 - 2023-01-22
+
+- change command line interface entirely:
+    - remove all listing-related commands
+    - add `query` command for querying the database, with the ability to to
+        apply several filter parameters, at your choice
+    - remove all commands that were related to changing the database
+    - add `sync` command, which deals with everything related to changing the
+        database
+    - replace misc commands (like `zk`, `tags`) with `ls`
+- [internal] instead of using SQL queries to get stuff, load the entire
+    database into memory and then apply various filters
 
 ## v0.38.1 - 2022-08-11
 
