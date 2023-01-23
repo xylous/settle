@@ -161,30 +161,6 @@ impl Database
         Ok(results)
     }
 
-    /// Search in the database for the Zettels whose `tags` property includes `pattern`, and return
-    /// them
-    /// Return an Error if the database was unreachable
-    ///
-    /// `tag` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_tag(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
-    {
-        let req_pattern = format!("%{}{}{}%",
-                                  SQL_ARRAY_SEPARATOR,
-                                  cli_input_to_db_input(pattern),
-                                  SQL_ARRAY_SEPARATOR,);
-        let mut stmt = self.conn
-                           .prepare("SELECT * FROM zettelkasten WHERE tags LIKE :req_pattern")?;
-        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
-
-        let mut results: Vec<Zettel> = Vec::new();
-        while let Some(row) = rows.next()? {
-            let zettel = Zettel::from_db(row)?;
-            results.push(zettel);
-        }
-
-        Ok(results)
-    }
-
     /// Return a list of all unique tags found in the database
     ///
     /// Return an Error if the database was unreachable
@@ -222,30 +198,6 @@ impl Database
         }
         results.par_sort();
         results.dedup();
-        Ok(results)
-    }
-
-    /// Search in the database for the Zettel whose `links` property includes `pattern`, and
-    /// return them
-    /// Return an Error if the database was unreachable
-    ///
-    /// `title` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
-    pub fn find_by_links_to(&self, pattern: &str) -> Result<Vec<Zettel>>
-    {
-        let req_pattern = format!("%{}{}{}%",
-                                  SQL_ARRAY_SEPARATOR,
-                                  cli_input_to_db_input(pattern),
-                                  SQL_ARRAY_SEPARATOR,);
-        let mut stmt = self.conn
-                           .prepare("SELECT * FROM zettelkasten WHERE links LIKE :req_pattern")?;
-        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
-
-        let mut results: Vec<Zettel> = Vec::new();
-        while let Some(row) = rows.next()? {
-            let zettel = Zettel::from_db(row)?;
-            results.push(zettel);
-        }
-
         Ok(results)
     }
 
@@ -304,16 +256,6 @@ impl Database
         let z = &Zettel::from_file(cfg, &zettel.filename(cfg));
         self.save(z)?;
         Ok(())
-    }
-
-    /// Return titles of Zettel that contain `text`
-    pub fn search_text(&self, cfg: &ConfigOptions, text: &str) -> Result<Vec<Zettel>, Error>
-    {
-        let zettel = self.all()?;
-        Ok(zettel.par_iter()
-                 .filter(|z| z.has_text(cfg, text))
-                 .map(|z| z.clone())
-                 .collect())
     }
 
     /// Change the project of the given Zettel within the database

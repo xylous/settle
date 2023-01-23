@@ -258,7 +258,7 @@ fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
         db.change_title(old_zettel, new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
-        let backlinks = db.find_by_links_to(old_title)?;
+        let backlinks = backlinks(&db.all()?, old_title);
         backlinks.iter().for_each(|bl| {
                             let contents = crate::io::file_to_string(&bl.filename(cfg));
                             // The link might span over multiple lines. We must account for that
