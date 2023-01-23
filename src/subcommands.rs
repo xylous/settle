@@ -16,46 +16,126 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Query various things in the database, based on the provided ArgMatches arguments.
-/// The queries for `--title`, `--text`, `--isolated`, and `--by_tag` compound - that is to say,
-/// the Zettel filtered for have to pass all the provided criteria in order to pass. All other
-/// queries have their own use case, printing different things
+/// Query the database, applying various filters if proivded
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    if matches.is_present("FWLINKS") {
-        let query = matches.value_of("FWLINKS").unwrap_or("*");
-        fwlinks(&db, query)?;
-        return Ok(());
-    } else if matches.is_present("BACKLINKS") {
-        let query = matches.value_of("BACKLINKS").unwrap_or("*");
-        backlinks(&db, query)?;
-        return Ok(());
-    }
-
     let mut zs: Vec<Zettel> = db.all()?;
 
-    if matches.is_present("TITLE") {
-        let query = matches.value_of("TITLE").unwrap_or("*");
-        let crit = db.find_by_title(query)?;
-        zs = filter(zs, crit);
+    if let Some(title) = matches.value_of("TITLE") {
+        zs = filter_title(zs, title);
     }
-    if matches.is_present("TEXT") {
-        let query = matches.value_of("TEXT").unwrap_or("*");
-        let crit = db.search_text(cfg, query)?;
-        zs = filter(zs, crit);
+    if let Some(project) = matches.value_of("PROJECT") {
+        zs = filter_project(zs, project);
     }
-    if matches.is_present("TAG") {
-        let query = matches.value_of("TAG").unwrap_or("*");
-        let crit = by_tag(&db, query)?;
-        zs = filter(zs, crit);
+    if let Some(text) = matches.value_of("TEXT_REGEX") {
+        zs = filter_text(zs, text, cfg);
+    }
+    if let Some(tag) = matches.value_of("TAG") {
+        zs = filter_tag(zs, tag);
+    }
+    if let Some(linked_from) = matches.value_of("LINKS") {
+        zs = intersect(&zs, &fwlinks(&db.all()?, &linked_from));
+    }
+    if let Some(links_to) = matches.value_of("BACKLINKS") {
+        zs = intersect(&zs, &backlinks(&zs, &links_to));
     }
     if matches.is_present("ISOLATED") {
-        zs = filter(zs, isolated(&db)?);
+        zs = filter_isolated(zs);
     }
+
     print_zettel_info(&zs);
     Ok(())
+}
+
+/// Keep only those Zettel whose title matches the provided regex
+fn filter_title(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+{
+    let re = Regex::new(&format!("^{}$", pattern)).unwrap();
+    zs.into_iter().filter(|z| re.is_match(&z.title)).collect()
+}
+
+/// Keep only those Zettel whose project matches the provided regex
+fn filter_project(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+{
+    let re = Regex::new(&format!("^{}$", pattern)).unwrap();
+    zs.into_iter().filter(|z| re.is_match(&z.project)).collect()
+}
+
+/// Keep only those Zettel that contain the pattern in their text
+fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<Zettel>
+{
+    zs.into_iter()
+      .filter(|z| z.has_text(cfg, pattern))
+      .collect()
+}
+
+/// Keep only those Zettel that have at least one tag that matches the regex
+fn filter_tag(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+{
+    let re = Regex::new(&format!("^{}$", pattern)).unwrap();
+    zs.into_iter()
+      .filter(|z| {
+          for t in &z.tags {
+              if re.is_match(t) {
+                  return true;
+              }
+          }
+          false
+      })
+      .collect()
+}
+
+/// Keep only those Zettel that neither link to other notes, nor have links pointing to them
+fn filter_isolated(zs: Vec<Zettel>) -> Vec<Zettel>
+{
+    zs.clone()
+      .into_iter()
+      .filter(|z| (z.links.len() == 0) && (backlinks(&zs, &z.title).len() == 0))
+      .collect()
+}
+
+/// Keep only the Zettel that are both in A and B
+fn intersect(a: &Vec<Zettel>, b: &Vec<Zettel>) -> Vec<Zettel>
+{
+    a.clone().into_iter().filter(|z| b.contains(z)).collect()
+}
+
+/// Return all the Zettel that are linked to by the pattern-matched zettel
+fn fwlinks(all: &Vec<Zettel>, linked_from: &str) -> Vec<Zettel>
+{
+    // first find the Zettel that match the query, then find the notes that have been linked to by
+    // them
+    let fwlinks = &filter_title(all.clone(), linked_from);
+    all.clone()
+       .into_iter()
+       .filter(|z| {
+           for fw in fwlinks {
+               if fw.links.contains(&z.title) {
+                   return true;
+               }
+           }
+           false
+       })
+       .collect()
+}
+
+/// Return all the Zettel that link to the given title/pattern, within the provided list of Zettel
+fn backlinks(all: &Vec<Zettel>, links_to: &str) -> Vec<Zettel>
+{
+    let re = Regex::new(&format!("^{}$", links_to)).unwrap();
+    all.clone()
+       .into_iter()
+       .filter(|z| {
+           for l in &z.links {
+               if re.is_match(l) {
+                   return true;
+               }
+           }
+           false
+       })
+       .collect()
 }
 
 /// Print things that aren't directly related to notes.
@@ -112,12 +192,6 @@ fn print_list_of_strings(elems: &Vec<String>)
     elems.iter().for_each(|e| {
                     println!("{}", e);
                 })
-}
-
-/// Keep only those elements of `old` that are also in `criteria`
-fn filter(old: Vec<Zettel>, criteria: Vec<Zettel>) -> Vec<Zettel>
-{
-    old.into_iter().filter(|z| criteria.contains(z)).collect()
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
@@ -252,74 +326,6 @@ fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     }
 
     Ok(())
-}
-
-/// Print all Zettel whose tags contain the pattern specified in the CLI args
-fn by_tag(db: &Database, query: &str) -> Result<Vec<Zettel>, Error>
-{
-    let mut zettel = db.find_by_tag(query)?;
-    let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", query))?;
-    zettel.append(&mut zettel_with_subtag);
-    zettel.par_sort();
-    zettel.dedup();
-
-    Ok(zettel)
-}
-
-/// Print the titles of the Zettel matching the pattern provided in the CLI arguments and the other
-/// Zettel it links to under the following format:
-///
-/// ```
-/// [<PROJECT>] <TITLE>
-///     | <LINK_1>
-///     | <LINK_2>
-///     | ...
-///     | <LINK_N>
-/// ```
-fn fwlinks(db: &Database, query: &str) -> Result<(), Error>
-{
-    let zettel = db.find_by_title(query)?;
-    for z in zettel {
-        print_zettel_info(&[z.clone()]);
-        for link in &z.links {
-            println!("    | {}", link);
-        }
-    }
-    Ok(())
-}
-
-/// Print all Zettel that match the one specified in the CLI argument matches
-fn backlinks(db: &Database, query: &str) -> Result<(), Error>
-{
-    let zettel = db.find_by_title(query)?;
-    for z in zettel {
-        print_zettel_info(&[z.clone()]);
-        let res = db.find_by_links_to(&z.title)?;
-        for blink in res {
-            print!("    | ");
-            print_zettel_info(&[blink]);
-        }
-    }
-    Ok(())
-}
-
-/// Print the list of Zettel IN THE MAIN ZETTELKASTEN that aren't linked with other notes
-fn isolated(db: &Database) -> Result<Vec<Zettel>, Error>
-{
-    let all = db.find_by_title("*")?;
-    let isolated = all.iter()
-                      .filter(|z| {
-                          // skip finding backlinks if the given Zettel isn't in the main Zettelkasten project or
-                          // it has "forward" links
-                          if z.project != "" || z.links.len() != 0 {
-                              return false;
-                          }
-                          let backlinks = db.find_by_links_to(&z.title).unwrap_or_default();
-                          backlinks.len() == 0
-                      })
-                      .cloned()
-                      .collect::<Vec<Zettel>>();
-    Ok(isolated)
 }
 
 /// (Re)generate the database file
