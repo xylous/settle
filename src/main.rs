@@ -40,22 +40,15 @@ fn main() -> Result<(), rusqlite::Error>
     io::mkdir(&format!("{}/inbox", &cfg.zettelkasten));
 
     let cmd = matches.subcommand_name().unwrap_or_default();
-    // If no subcommand was specified, quit
-    let cmd_matches = if cmd.is_empty() {
-        return Ok(());
-    } else {
-        matches.subcommand_matches(cmd).unwrap()
-    };
+    // NOTE: this won't crash on unwrap, because if no subcommand was specified, clap-rs would
+    // print the help message
+    let cmd_matches = matches.subcommand_matches(cmd).unwrap();
 
     match cmd {
-        "compl" => compl(cmd_matches)?,
+        "sync" => sync(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,
-        "new" => new(cmd_matches, &cfg)?,
-        "update" => update(cmd_matches, &cfg)?,
-        "mv" => mv(cmd_matches, &cfg)?,
-        "rename" => rename(cmd_matches, &cfg)?,
-        "generate" => generate(&cfg)?,
-        "zk" => zk(&cfg)?,
+        "ls" => ls(cmd_matches, &cfg)?,
+        "compl" => compl(cmd_matches)?,
         _ => (),
     };
 

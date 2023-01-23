@@ -189,19 +189,7 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// queries have their own use case, printing different things
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    // TODO: fix the gross repetition of return statements
     let db = Database::new(&cfg.db_file())?;
-
-    if matches.is_present("PROJECTS") {
-        print_list_of_strings(&db.list_projects()?);
-        return Ok(());
-    } else if matches.is_present("TAGS") {
-        print_list_of_strings(&db.list_tags()?);
-        return Ok(());
-    } else if matches.is_present("GHOSTS") {
-        print_list_of_strings(&db.zettel_not_yet_created()?);
-        return Ok(());
-    }
 
     if matches.is_present("FWLINKS") {
         let query = matches.value_of("FWLINKS").unwrap_or("*");
@@ -225,8 +213,8 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         let crit = db.search_text(cfg, query)?;
         zs = filter(zs, crit);
     }
-    if matches.is_present("BY_TAG") {
-        let query = matches.value_of("BY_TAG").unwrap_or("*");
+    if matches.is_present("TAG") {
+        let query = matches.value_of("TAG").unwrap_or("*");
         let crit = by_tag(&db, query)?;
         zs = filter(zs, crit);
     }
@@ -241,6 +229,28 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 fn filter(old: Vec<Zettel>, criteria: Vec<Zettel>) -> Vec<Zettel>
 {
     old.into_iter().filter(|z| criteria.contains(z)).collect()
+}
+
+pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    Ok(())
+}
+
+pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+
+    let m = matches.value_of("OBJECT").unwrap_or_default();
+    // TODO: maybe implement word suggestion? actually, that'd be quite useless
+    match m {
+        "tags" => print_list_of_strings(&db.list_tags()?),
+        "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
+        "projects" => print_list_of_strings(&db.list_projects()?),
+        "path" => println!("{}", cfg.zettelkasten),
+        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
+                       m),
+    }
+    Ok(())
 }
 
 /// Print all Zettel whose tags contain the pattern specified in the CLI args
@@ -324,11 +334,5 @@ pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
     println!("database generated successfully, took {}ms",
              start.elapsed().as_millis());
 
-    Ok(())
-}
-
-pub fn zk(cfg: &ConfigOptions) -> Result<(), Error>
-{
-    println!("{}", cfg.zettelkasten);
     Ok(())
 }
