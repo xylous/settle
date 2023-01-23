@@ -13,6 +13,18 @@ use crate::io::file_exists;
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
+    let project = matches.value_of("PROJECT").unwrap_or_default();
+    if let Some(title) = matches.value_of("CREATE") {
+        new(cfg, title, project)?;
+    } else if let Some(path) = matches.value_of("UPDATE") {
+        update(cfg, path)?;
+    } else if let Some(title) = matches.value_of("MOVE") {
+        mv(cfg, title, project)?;
+    } else if let Some(args_arr) = matches.values_of("RENAME") {
+        rename(cfg, args_arr)?;
+    } else if matches.is_present("GENERATE") {
+        generate(cfg)?;
+    }
     Ok(())
 }
 
@@ -195,13 +207,10 @@ fn backlinks(all: &Vec<Zettel>, links_to: &str) -> Vec<Zettel>
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
-fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn new(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     db.init()?;
-
-    let title = matches.value_of("TITLE").unwrap();
-    let project = matches.value_of("PROJECT").unwrap_or_default();
 
     let zettel = Zettel::new(title, project);
 
@@ -227,11 +236,23 @@ fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Rename a note, but keep it in the same project
-fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
-    let old_title = matches.value_of("TITLE").unwrap();
-    let new_title = matches.value_of("NEW_TITLE").unwrap();
+
+    // basically, look thru the values provided by clap, and extract the first Zettel title that
+    // exists and is different from the new title
+    let old_title = arr.clone()
+                       .into_iter()
+                       .find(|x| db.find_by_title(x).unwrap_or(vec![]).len() != 0)
+                       .unwrap_or(&"");
+    let new_title = arr.clone().next_back().unwrap_or_default();
+
+    if old_title == new_title {
+        eprintln!("error: first match is the same as the new title ('{}'), so no rename",
+                  old_title);
+        return Ok(());
+    }
 
     let results = db.find_by_title(old_title)?;
 
@@ -259,6 +280,8 @@ fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         db.change_title(old_zettel, new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
         let backlinks = backlinks(&db.all()?, old_title);
+        // for some reason rustfmt has absolutely cursed formatting here. this is not my fault, I
+        // swear
         backlinks.iter().for_each(|bl| {
                             let contents = crate::io::file_to_string(&bl.filename(cfg));
                             // The link might span over multiple lines. We must account for that
@@ -276,11 +299,9 @@ fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Move all matching notes into a project
-fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
-    let pattern = matches.value_of("PATTERN").unwrap();
-    let project = matches.value_of("PROJECT").unwrap();
 
     let notes = db.find_by_title(pattern)?;
 
@@ -313,11 +334,10 @@ fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Update the metadata of a file
-fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn update(cfg: &ConfigOptions, path: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let path = matches.value_of("FILENAME").unwrap();
     if file_exists(path) {
         let zettel = Zettel::from_file(cfg, path);
         db.update(cfg, &zettel)?;

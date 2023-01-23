@@ -1,7 +1,7 @@
 use regex::{Captures, Regex};
 use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
 
-use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel, SQL_ARRAY_SEPARATOR};
+use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
 
 impl Zettel
