@@ -4,6 +4,8 @@
 
 settle - note manager for the Zettelkasten method
 
+DEPRECATED MANUAL
+
 # SYNOPSIS
 
 | *settle* \<command\> [\<args\>]

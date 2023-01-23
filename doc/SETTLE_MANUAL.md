@@ -11,8 +11,10 @@ Vim and Neovim.
 ## Synopsis
 
 ```
-settle <command> [<args>]
-settle [-h | --help | -V | --version]
+settle [--help | -h | --version | -v]
+settle {sync | -S} [-p | -c | -u | -g | -m | -n]
+settle {query | -Q} [-t | -p | -g | -x | -l | -b | -o]
+settle ls ['tags' | 'projects' | 'ghosts' | 'path']
 ```
 
 ## Options
@@ -26,57 +28,85 @@ settle [-h | --help | -V | --version]
 - `help` - Print usage information broadly or, if a subcommand is given, usage
     information for said subcommand
 
-- `compl` - Generate autocompletion file for a certain shell (currently
+- `compl <SHELL>` - Generate autocompletion file for a certain shell (currently
     supported: zsh, bash, fish) (see: section on autocompletion)
 
-- `generate` - Create and populate the database with all Zettel's metadata
+- `ls <OBJECT>` - list things that are not directly related to notes. The only
+    accepted `<OBJECT>` values are `tags`, `projects`, `ghosts`, and `path`. The
+    first prints all unique tags, the second prints all projects in your
+    Zettelkasten, the third prints all Zettel that have links pointing to them
+    but have not yet been created, and the last one prints the path to the
+    Zettelkasten (as per your configuration options).
 
-    All subdirectories within the Zettelkasten one are treated as "projects"
+### Options for `query` (`-Q`)
 
-    If ran for the first time, creates a directory to hold all your notes (as
-    per your configuration options) and populates it with an 'inbox' project
+Note that the various options listed here all compound - that is to say, every
+option acts as a criteria for querying. `settle query --title "Foo.*" --tag
+"bar"` will only return notes whose titles starts with `Foo` AND have the tag
+`bar`, not notes whose titles start with `Foo` OR have the tag `bar`. By
+default, when no filter parameter is applied (that is to say, `settle query` is
+ran without options), the entire Zettelkasten is returned.
 
-- `ls` - List existing files in Zettelkasten, based on database info
+- `-t | --title <REGEX>` - keep Zettel whose title matches `<REGEX>`
 
-- `new`
+- `-p | --project <REGEX>` - keep Zettel that are in projects that match `<REGEX>`
 
-    Create a new Zettel and add its metadata to the database, but don't
-    overwrite; if the file exists and the metadata entry also exists, abort
+- `-g | --tag <REGEX>` - keep Zettel that have at least one tag that matches `<REGEX>`
 
-    With the `-p` or `--project` option, you can specify a certain project
-    (directory within the zettelkasten) to create your new note in.
+- `-x | --text <REGEX>` - keep Zettel whose text contents match `<REGEX>`
 
-- `update` - Update the metadata for a given path. If the path isn't a file or
-    doesn't exist, print an error message.
+- `-l | --links <REGEX>` - for the Zettel whose title matches `<REGEX>`,
+    keep all the Zettel that they have a link pointing to
 
-- `query` - Return existing Zettel matching the pattern provided as argument
+- `-b | --backlinks <REGEX>` - for the Zettel whose title matches `<REGEX>`,
+    keep all Zettel that have a link pointing to them
 
-- `ghost` - Print a list of Zettel that have links pointing to them, but haven't
-    been created
+- `-o | --loners` - keep Zettel that have no links pointing to other zettel AND
+    have no links pointing to them.
 
-- `tags` - List all unique tags used in the Zettelkasten
+Here are a few concrete examples:
 
-- `projects` - List all projects that the Zettelkasten contains
+- `settle query --text "sample" --loners` returns all notes that contain `sample`
+    in their text and that aren't linked with any other note in the
+    Zettelkasten.
 
-- `find` - Search for Zettel that have the specified tag
+- `settle query --project "" --title ".*word.*"` returns all notes that are in
+    the main Zettelkasten (the empty-string project) and have the word `word`
+    within their title.
 
-- `links` - Print the Zettel that match the query provided and the forward links
-    they contain
+- `settle query --tag "literature" --links "Neurons"` returns all notes that
+    have the `literature` tag and link to a note called *precisely* `Neurons`
+    (note the absence of regex wildcards)
 
-- `backlinks` - Print the Zettel (plural) that match the query provided and the
-    Zettel (also plural) that have links pointing to them
+### Options for `sync` (`-S`)
 
-- `search` - Return a list of Zettel that contain the specified text
+Note that, unlike the query command, the options that do take arguments here
+don't work with regex (except `--move`). Matches here need to be exact, since
+we're dealing with more or less precise database changes. Also, unless
+specified otherwise, most/all options are mutually exclusive.
 
-- `zk` - Print the absolute path to the directory Settle uses
+- `-p | --project <PROJECT>` - this option actually doesn't do anything on its
+    own, instead being used as a helper option to `--create` and `--move`
 
-- `rename` - Rename a Zettel. Regex is not allowed.
+- `-c | --create <TITLE>` - create a new Zettel with the provided title. If the
+    `--project` flag is provided, then make it part of that project
 
-- `mv` - Move all matching Zettel (by regex) into a project. If the project name
-    is none/empty (i.e. `''`), then the note is moved to the main Zettelkasten.
+- `-u | --update <PATH>` - update a note's metadata, given its path on the
+    filesystem
 
-- `isolated` - Print the list of all Zettel (in the main Zettelkasten!) that
-    aren't linked with others
+- `-g | --generate` - (re)generate the entire database based on what's in the
+    Zettelkasten directory
+
+- `-m | --move <REGEX>` - this option requires the `--project` option; all
+    Zettel whose title matches `<REGEX>` are moved to the specified project
+
+- `-n | --rename <ARGS...>` - this option accepts multiple values; however, it
+    only renames the first Zettel whose title it can find in the database, with
+    the name specified by the last argument in the list. If the names coincide,
+    or if there's no valid Zettel title in the list, or if by renaming it would
+    overwrite some files, then it aborts. NOTE: the project of the renamed
+    Zettel is not changed. Also note that all links pointing to the previous
+    Zettel's title are changed, so that the links point to the same file.
 
 ## Configuration
 
@@ -115,17 +145,6 @@ inside said new note, replacing variables.
 
 
 ```
-
-## Wildcards
-
-Settle supports two wildcards that'll come in very handy:
-
-- `*` - matches zero or more characters
-- `.` - matches a single character
-
-If you want a literal `*`, or a literal `.`, you'll need to escape the
-character, i.e. `\*` or `\.`. If you want a literal backslash, you're also going
-to have to escape it, i.e. `\\`. All other text is matched literally.
 
 ## Autocompletion
 
