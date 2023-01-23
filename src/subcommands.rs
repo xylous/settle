@@ -11,20 +11,69 @@ use crate::Zettel;
 use crate::cli;
 use crate::io::file_exists;
 
-/// Print `[<PROJECT>] <TITLE>` for every given zettel.
-fn print_zettel_info(zettel: &[Zettel])
+pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    zettel.iter().for_each(|z| {
-                     println!("[{}] {}", z.project, z.title);
-                 })
+    Ok(())
 }
 
-/// Print every element in the list of Strings on an individual line
-fn print_list_of_strings(elems: &Vec<String>)
+/// Query various things in the database, based on the provided ArgMatches arguments.
+/// The queries for `--title`, `--text`, `--isolated`, and `--by_tag` compound - that is to say,
+/// the Zettel filtered for have to pass all the provided criteria in order to pass. All other
+/// queries have their own use case, printing different things
+pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    elems.iter().for_each(|e| {
-                    println!("{}", e);
-                })
+    let db = Database::new(&cfg.db_file())?;
+
+    if matches.is_present("FWLINKS") {
+        let query = matches.value_of("FWLINKS").unwrap_or("*");
+        fwlinks(&db, query)?;
+        return Ok(());
+    } else if matches.is_present("BACKLINKS") {
+        let query = matches.value_of("BACKLINKS").unwrap_or("*");
+        backlinks(&db, query)?;
+        return Ok(());
+    }
+
+    let mut zs: Vec<Zettel> = db.all()?;
+
+    if matches.is_present("TITLE") {
+        let query = matches.value_of("TITLE").unwrap_or("*");
+        let crit = db.find_by_title(query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("TEXT") {
+        let query = matches.value_of("TEXT").unwrap_or("*");
+        let crit = db.search_text(cfg, query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("TAG") {
+        let query = matches.value_of("TAG").unwrap_or("*");
+        let crit = by_tag(&db, query)?;
+        zs = filter(zs, crit);
+    }
+    if matches.is_present("ISOLATED") {
+        zs = filter(zs, isolated(&db)?);
+    }
+    print_zettel_info(&zs);
+    Ok(())
+}
+
+/// Print things that aren't directly related to notes.
+pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+
+    let m = matches.value_of("OBJECT").unwrap_or_default();
+    // TODO: maybe implement word suggestion? actually, that'd be quite useless
+    match m {
+        "tags" => print_list_of_strings(&db.list_tags()?),
+        "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
+        "projects" => print_list_of_strings(&db.list_projects()?),
+        "path" => println!("{}", cfg.zettelkasten),
+        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
+                       m),
+    }
+    Ok(())
 }
 
 /// Generate completions for a shell
@@ -49,8 +98,30 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     Ok(())
 }
 
+/// Print `[<PROJECT>] <TITLE>` for every given zettel.
+fn print_zettel_info(zettel: &[Zettel])
+{
+    zettel.iter().for_each(|z| {
+                     println!("[{}] {}", z.project, z.title);
+                 })
+}
+
+/// Print every element in the list of Strings on an individual line
+fn print_list_of_strings(elems: &Vec<String>)
+{
+    elems.iter().for_each(|e| {
+                    println!("{}", e);
+                })
+}
+
+/// Keep only those elements of `old` that are also in `criteria`
+fn filter(old: Vec<Zettel>, criteria: Vec<Zettel>) -> Vec<Zettel>
+{
+    old.into_iter().filter(|z| criteria.contains(z)).collect()
+}
+
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
-pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     db.init()?;
@@ -82,7 +153,7 @@ pub fn new(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Rename a note, but keep it in the same project
-pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     let old_title = matches.value_of("TITLE").unwrap();
@@ -131,7 +202,7 @@ pub fn rename(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Move all matching notes into a project
-pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     let pattern = matches.value_of("PATTERN").unwrap();
@@ -168,7 +239,7 @@ pub fn mv(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 }
 
 /// Update the metadata of a file
-pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
@@ -183,78 +254,8 @@ pub fn update(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
-/// Query various things in the database, based on the provided ArgMatches arguments.
-/// The queries for `--title`, `--text`, `--isolated`, and `--by_tag` compound - that is to say,
-/// the Zettel filtered for have to pass all the provided criteria in order to pass. All other
-/// queries have their own use case, printing different things
-pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    if matches.is_present("FWLINKS") {
-        let query = matches.value_of("FWLINKS").unwrap_or("*");
-        fwlinks(&db, query)?;
-        return Ok(());
-    } else if matches.is_present("BACKLINKS") {
-        let query = matches.value_of("BACKLINKS").unwrap_or("*");
-        backlinks(&db, query)?;
-        return Ok(());
-    }
-
-    let mut zs: Vec<Zettel> = db.all()?;
-
-    if matches.is_present("TITLE") {
-        let query = matches.value_of("TITLE").unwrap_or("*");
-        let crit = db.find_by_title(query)?;
-        zs = filter(zs, crit);
-    }
-    if matches.is_present("TEXT") {
-        let query = matches.value_of("TEXT").unwrap_or("*");
-        let crit = db.search_text(cfg, query)?;
-        zs = filter(zs, crit);
-    }
-    if matches.is_present("TAG") {
-        let query = matches.value_of("TAG").unwrap_or("*");
-        let crit = by_tag(&db, query)?;
-        zs = filter(zs, crit);
-    }
-    if matches.is_present("ISOLATED") {
-        zs = filter(zs, isolated(&db)?);
-    }
-    print_zettel_info(&zs);
-    Ok(())
-}
-
-/// Keep only those elements of `old` that are also in `criteria`
-fn filter(old: Vec<Zettel>, criteria: Vec<Zettel>) -> Vec<Zettel>
-{
-    old.into_iter().filter(|z| criteria.contains(z)).collect()
-}
-
-pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    Ok(())
-}
-
-pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    let m = matches.value_of("OBJECT").unwrap_or_default();
-    // TODO: maybe implement word suggestion? actually, that'd be quite useless
-    match m {
-        "tags" => print_list_of_strings(&db.list_tags()?),
-        "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
-        "projects" => print_list_of_strings(&db.list_projects()?),
-        "path" => println!("{}", cfg.zettelkasten),
-        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
-                       m),
-    }
-    Ok(())
-}
-
 /// Print all Zettel whose tags contain the pattern specified in the CLI args
-pub fn by_tag(db: &Database, query: &str) -> Result<Vec<Zettel>, Error>
+fn by_tag(db: &Database, query: &str) -> Result<Vec<Zettel>, Error>
 {
     let mut zettel = db.find_by_tag(query)?;
     let mut zettel_with_subtag = db.find_by_tag(&format!("{}/*", query))?;
@@ -275,7 +276,7 @@ pub fn by_tag(db: &Database, query: &str) -> Result<Vec<Zettel>, Error>
 ///     | ...
 ///     | <LINK_N>
 /// ```
-pub fn fwlinks(db: &Database, query: &str) -> Result<(), Error>
+fn fwlinks(db: &Database, query: &str) -> Result<(), Error>
 {
     let zettel = db.find_by_title(query)?;
     for z in zettel {
@@ -288,7 +289,7 @@ pub fn fwlinks(db: &Database, query: &str) -> Result<(), Error>
 }
 
 /// Print all Zettel that match the one specified in the CLI argument matches
-pub fn backlinks(db: &Database, query: &str) -> Result<(), Error>
+fn backlinks(db: &Database, query: &str) -> Result<(), Error>
 {
     let zettel = db.find_by_title(query)?;
     for z in zettel {
@@ -303,7 +304,7 @@ pub fn backlinks(db: &Database, query: &str) -> Result<(), Error>
 }
 
 /// Print the list of Zettel IN THE MAIN ZETTELKASTEN that aren't linked with other notes
-pub fn isolated(db: &Database) -> Result<Vec<Zettel>, Error>
+fn isolated(db: &Database) -> Result<Vec<Zettel>, Error>
 {
     let all = db.find_by_title("*")?;
     let isolated = all.iter()
@@ -322,7 +323,7 @@ pub fn isolated(db: &Database) -> Result<Vec<Zettel>, Error>
 }
 
 /// (Re)generate the database file
-pub fn generate(cfg: &ConfigOptions) -> Result<(), Error>
+fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let start = std::time::Instant::now();
 
