@@ -13,41 +13,46 @@ pub fn build() -> Command<'static>
             .about("generate completion file for a given shell"),
     )
     .subcommand(
-        Command::new("new")
-            .about("create a new Zettel and print its inbox status and title")
-            .arg(
-                Arg::new("PROJECT")
-                    .short('p')
-                    .long("project")
-                    .takes_value(true)
-                    .help("create the new Zettel in a specified project"),
+        Command::new("sync")
+            .about("sync the database")
+            .subcommand(
+                Command::new("create")
+                    .about("create a new Zettel")
+                    .arg(
+                        Arg::new("PROJECT")
+                            .short('p')
+                            .long("project")
+                            .takes_value(true)
+                            .help("specify project"),
+                    )
+                    .arg(Arg::new("TITLE").required(true).help("title of Zettel")),
             )
-            .arg(Arg::new("TITLE").required(true).help("title of Zettel")),
-    )
-    .subcommand(
-        Command::new("mv")
-            .about("move all matches into the given project")
-            .arg(
-                Arg::new("PATTERN")
-                    .required(true)
-                    .help("a pattern/regex for the Zettel titles"),
+            .subcommand(
+                Command::new("update")
+                    .about("update the metadata of a Zettel")
+                    .arg(Arg::new("FILENAME").required(true).help("path to Zettel")),
             )
-            .arg(
-                Arg::new("PROJECT")
-                    .required(true)
-                    .help("the project into which notes are put"),
-            ),
-    )
-    .subcommand(
-        Command::new("rename")
-            .about("rename a Zettel")
-            .arg(Arg::new("TITLE").required(true))
-            .arg(Arg::new("NEW_TITLE").required(true)),
-    )
-    .subcommand(
-        Command::new("update")
-            .about("update the metadata of a Zettel")
-            .arg(Arg::new("FILENAME").required(true).help("path to Zettel")),
+            .subcommand(
+                Command::new("mv")
+                    .about("move all matches into the given project")
+                    .arg(
+                        Arg::new("PATTERN")
+                            .required(true)
+                            .help("a pattern/regex for the Zettel titles"),
+                    )
+                    .arg(
+                        Arg::new("PROJECT")
+                            .required(true)
+                            .help("the project into which notes are put"),
+                    ),
+            )
+            .subcommand(
+                Command::new("rename")
+                    .about("rename a Zettel")
+                    .arg(Arg::new("TITLE").required(true))
+                    .arg(Arg::new("NEW_TITLE").required(true)),
+            )
+            .subcommand(Command::new("generate").about("generate the database"))
     )
     .subcommand(
         Command::new("query")
@@ -103,11 +108,10 @@ pub fn build() -> Command<'static>
             ))
     .subcommand(
         Command::new("ls")
+            .about("list things in the database")
             .arg(
                 Arg::new("OBJECT")
                     .required(true)
                     .help("object to list (tags, projects, ghosts, path)"),
     ))
-    .subcommand(Command::new("generate").about("(re)generate the database"))
-    .subcommand(Command::new("zk").about("return the path to the Zettelkasten"))
 }
