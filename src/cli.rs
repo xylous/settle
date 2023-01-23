@@ -51,68 +51,63 @@ pub fn build() -> Command<'static>
     )
     .subcommand(
         Command::new("query")
-            .about("query (filter/list) various things in the database")
+            .about("apply filter parameters and return matching Zettel")
             .arg(
                 Arg::new("TITLE")
                     .short('t')
                     .long("title")
                     .takes_value(true)
-                    .help("FILTER Zettel with a matching title"),
+                    .help("keep Zettel with a matching title"),
             )
             .arg(
-                Arg::new("BY_TAG")
+                Arg::new("TAG")
                     .short('g')
                     .long("tag")
                     .takes_value(true)
-                    .help("FILTER Zettel that have a specific tag"),
+                    .help("keep Zettel that have a matching tag name"),
             )
             .arg(
                 Arg::new("TEXT")
                     .short('s')
                     .long("text")
                     .takes_value(true)
-                    .help("FILTER Zettel that contain a specific text"),
+                    .help("keep Zettel that contain some text"),
             )
             .arg(
-                Arg::new("ISOLATED")
-                    .short('i')
-                    .long("isolated")
-                    .takes_value(false)
-                    .help("FILTER Zettel that don't have any links to and fro"),
-            )
-            .arg(
-                Arg::new("FWLINKS")
+                Arg::new("LINKS")
                     .short('l')
                     .long("links")
                     .takes_value(true)
-                    .help("list forward links"),
+                    .help("keep Zettel that have links to the matching Zettel"),
             )
             .arg(
                 Arg::new("BACKLINKS")
                     .short('b')
                     .long("backlinks")
                     .takes_value(true)
-                    .help("list backlinks"),
+                    .help("keep Zettel that have links from the matching Zettel"),
             )
             .arg(
-                Arg::new("PROJECTS")
-                    .long("projects")
-                    .takes_value(false)
-                    .help("list all projects"),
+                Arg::new("PROJECT")
+                    .short('p')
+                    .long("project")
+                    .takes_value(true)
+                    .help("keep Zettel that are in the matching projects"),
             )
             .arg(
-                Arg::new("TAGS")
-                    .long("tags")
+                Arg::new("ISOLATED")
+                    .short('i')
+                    .long("isolated")
                     .takes_value(false)
-                    .help("list all tags"),
-            )
+                    .help("keep Zettel that don't have any links to and fro"),
+            ))
+    .subcommand(
+        Command::new("ls")
             .arg(
-                Arg::new("GHOSTS")
-                    .long("ghosts")
-                    .takes_value(false)
-                    .help("list 'Ghost' Zettel, that have been mentioned, but not created"),
-            )
-    )
+                Arg::new("OBJECT")
+                    .required(true)
+                    .help("object to list (tags, projects, ghosts, path)"),
+    ))
     .subcommand(Command::new("generate").about("(re)generate the database"))
     .subcommand(Command::new("zk").about("return the path to the Zettelkasten"))
 }
