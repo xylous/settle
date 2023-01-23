@@ -41,12 +41,68 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     if let Some(links_to) = matches.value_of("BACKLINKS") {
         zs = intersect(&zs, &backlinks(&zs, &links_to));
     }
-    if matches.is_present("ISOLATED") {
+    if matches.is_present("LONERS") {
         zs = filter_isolated(zs);
     }
 
     print_zettel_info(&zs);
     Ok(())
+}
+
+/// Print things that aren't directly related to notes.
+pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+
+    let m = matches.value_of("OBJECT").unwrap_or_default();
+    // TODO: maybe implement word suggestion? actually, that'd be quite useless
+    match m {
+        "tags" => print_list_of_strings(&db.list_tags()?),
+        "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
+        "projects" => print_list_of_strings(&db.list_projects()?),
+        "path" => println!("{}", cfg.zettelkasten),
+        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
+                       m),
+    }
+    Ok(())
+}
+
+/// Generate completions for a shell
+pub fn compl(matches: &ArgMatches) -> Result<(), Error>
+{
+    let shell = matches.value_of("SHELL").unwrap_or_default();
+
+    let sh = match shell {
+        "zsh" => Some(Zsh),
+        "bash" => Some(Bash),
+        "fish" => Some(Fish),
+        _ => None,
+    };
+
+    if let Some(sh) = sh {
+        let app = &mut cli::build();
+        clap_complete::generate(sh, app, app.get_name().to_string(), &mut std::io::stdout());
+    } else {
+        eprintln!("error: '{}' isn't a (supported) shell", shell);
+    }
+
+    Ok(())
+}
+
+/// Print `[<PROJECT>] <TITLE>` for every given zettel.
+fn print_zettel_info(zettel: &[Zettel])
+{
+    zettel.iter().for_each(|z| {
+                     println!("[{}] {}", z.project, z.title);
+                 })
+}
+
+/// Print every element in the list of Strings on an individual line
+fn print_list_of_strings(elems: &Vec<String>)
+{
+    elems.iter().for_each(|e| {
+                    println!("{}", e);
+                })
 }
 
 /// Keep only those Zettel whose title matches the provided regex
@@ -136,62 +192,6 @@ fn backlinks(all: &Vec<Zettel>, links_to: &str) -> Vec<Zettel>
            false
        })
        .collect()
-}
-
-/// Print things that aren't directly related to notes.
-pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-
-    let m = matches.value_of("OBJECT").unwrap_or_default();
-    // TODO: maybe implement word suggestion? actually, that'd be quite useless
-    match m {
-        "tags" => print_list_of_strings(&db.list_tags()?),
-        "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
-        "projects" => print_list_of_strings(&db.list_projects()?),
-        "path" => println!("{}", cfg.zettelkasten),
-        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
-                       m),
-    }
-    Ok(())
-}
-
-/// Generate completions for a shell
-pub fn compl(matches: &ArgMatches) -> Result<(), Error>
-{
-    let shell = matches.value_of("SHELL").unwrap_or_default();
-
-    let sh = match shell {
-        "zsh" => Some(Zsh),
-        "bash" => Some(Bash),
-        "fish" => Some(Fish),
-        _ => None,
-    };
-
-    if let Some(sh) = sh {
-        let app = &mut cli::build();
-        clap_complete::generate(sh, app, app.get_name().to_string(), &mut std::io::stdout());
-    } else {
-        eprintln!("error: '{}' isn't a (supported) shell", shell);
-    }
-
-    Ok(())
-}
-
-/// Print `[<PROJECT>] <TITLE>` for every given zettel.
-fn print_zettel_info(zettel: &[Zettel])
-{
-    zettel.iter().for_each(|z| {
-                     println!("[{}] {}", z.project, z.title);
-                 })
-}
-
-/// Print every element in the list of Strings on an individual line
-fn print_list_of_strings(elems: &Vec<String>)
-{
-    elems.iter().for_each(|e| {
-                    println!("{}", e);
-                })
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
