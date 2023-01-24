@@ -1,6 +1,6 @@
 [package]
 name = "settle"
-version = "0.39.1"
+version = "0.40.0"
 edition = "2018"
 authors = [ "xylous <xylous.e@gmail.com>" ]
 description = "CLI tool for managing a digital Zettelkasten"
@@ -24,3 +24,4 @@ serde_yaml = { version = "0.8.23" }
 shellexpand = { version = "2.1.0" }
 chrono = { version = "0.4.19" }
 dialoguer = { version = "0.10.1" }
+petgraph = { version = "0.6.2" }
