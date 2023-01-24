@@ -68,11 +68,6 @@ cargo install settle
 For the commands, options, configuration, and setting up autocompletion, read
 [the manual](./doc/SETTLE_MANUAL.md)
 
-~~If you prefer, there's also a groff document inside the `doc/` dirctory which
-can be read with `man`. On the command line, of course.~~ The `man` document
-inside the `doc/` directory has been deprecated since I can't be bothered
-to change it. Plus, Markdown is a lot more accessible.
-
 ### The note-taking system
 
 `settle` just stores and manages a database of Zettel metadata. A simple record
@@ -127,8 +122,10 @@ functions, such as telling `settle` to update a note's metadata.
 (early 2023)
 - [x] query: filter notes based on various criteria (title, tags, etc.)
     - [x] support regex
-- [ ] generate an image of a directed graph representing all links between notes
+    - [x] print according to a format
+    - [x] put custom separator between links, both forward and backward
 - [ ] suggest random notes for you to read, to help deal with writer's block
+- [ ] generate an image of a directed graph representing all links between notes
 
 ## Contributing
 

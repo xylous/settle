@@ -2,6 +2,14 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.1 - 2023-01-24
+
+- add to `query`:
+    - add `--format` option, which supports printing the title, the project, the
+        path, the links and the backlinks for any Zettel.
+    - add `--link_sep` option, which specifies how both links and backlinks
+        should be separated in formatting
+
 ## v0.39.0 - 2023-01-22
 
 - change command line interface entirely:
