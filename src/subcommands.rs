@@ -58,7 +58,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     }
 
     if let Some(format) = matches.value_of("FORMAT") {
-        let link_sep = matches.value_of("LINK_SEP").unwrap_or_default();
+        let link_sep = matches.value_of("LINK_SEP").unwrap_or(" | ");
         zettelkasten_format(cfg,
                             &zs,
                             &replace_literals(format),
@@ -127,8 +127,8 @@ fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str, link_sep: 
 //  %t - title
 //  %p - project
 //  %P - path
-//  %l - forward links
-//  %b - backward links
+//  %l - (forward) links
+//  %b - backlinks
 fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str, link_sep: &str)
 {
     let mut result = fmt.to_string();
