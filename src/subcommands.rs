@@ -59,11 +59,19 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     if let Some(format) = matches.value_of("FORMAT") {
         let link_sep = matches.value_of("LINK_SEP").unwrap_or_default();
-        zettelkasten_format(cfg, &zs, format, link_sep)
+        zettelkasten_format(cfg,
+                            &zs,
+                            &replace_literals(format),
+                            &replace_literals(link_sep))
     } else {
         zettelkasten_format(cfg, &zs, "[%p] %t", "")
     }
     Ok(())
+}
+
+fn replace_literals(s: &str) -> String
+{
+    s.replace(r"\n", "\n").replace(r"\t", "\t")
 }
 
 /// Print things that aren't directly related to notes.
