@@ -105,12 +105,25 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     Ok(())
 }
 
-/// Print `[<PROJECT>] <TITLE>` for every given zettel.
+// Print according to a certain format
+fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
+{
+    let title = Regex::new(r"(%t)").unwrap();
+    let path = Regex::new(r"(%P)").unwrap();
+    let project = Regex::new(r"(%p)").unwrap();
+
+    let fmt_title = title.replace_all(fmt, &z.title).to_owned();
+    let fmt_path = path.replace_all(&fmt_title, &z.filename(cfg));
+    let fmt_project = project.replace_all(&fmt_path, &z.project);
+
+    println!("{}", fmt_project);
+}
+
+/// Print infromation for every given Zettel
 fn print_zettel_info(zettel: &[Zettel])
 {
-    zettel.iter().for_each(|z| {
-                     println!("[{}] {}", z.project, z.title);
-                 })
+    zettel.iter()
+          .for_each(|z| zettel_format(&ConfigOptions::default(), z, "[%p] %t"));
 }
 
 fn zettel_info_abs_paths(cfg: &ConfigOptions, zs: &[Zettel])
