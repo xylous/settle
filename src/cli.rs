@@ -124,6 +124,13 @@ pub fn build() -> Command<'static>
             .takes_value(false)
             .help("keep Zettel that don't have any links to and fro")
         )
+        .arg(Arg::new("ABSOLUTE_PATHS")
+            .display_order(8)
+            .short('a')
+            .long("paths")
+            .takes_value(false)
+            .help("print results using absolute paths")
+        )
     )
 
     .subcommand(Command::new("ls")

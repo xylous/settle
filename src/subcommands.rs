@@ -57,7 +57,11 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_isolated(zs);
     }
 
-    print_zettel_info(&zs);
+    if matches.is_present("ABSOLUTE_PATHS") {
+        zettel_info_abs_paths(cfg, &zs);
+    } else {
+        print_zettel_info(&zs);
+    }
     Ok(())
 }
 
@@ -107,6 +111,13 @@ fn print_zettel_info(zettel: &[Zettel])
     zettel.iter().for_each(|z| {
                      println!("[{}] {}", z.project, z.title);
                  })
+}
+
+fn zettel_info_abs_paths(cfg: &ConfigOptions, zs: &[Zettel])
+{
+    zs.iter().for_each(|z| {
+                 println!("{}", z.filename(cfg));
+             })
 }
 
 /// Print every element in the list of Strings on an individual line
