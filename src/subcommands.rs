@@ -131,35 +131,26 @@ fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str, link_sep: 
 //  %b - backward links
 fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str, link_sep: &str)
 {
-    let title = Regex::new(r"(%t)").unwrap();
-    let path = Regex::new(r"(%P)").unwrap();
-    let project = Regex::new(r"(%p)").unwrap();
-    let links = Regex::new(r"(%l)").unwrap();
-    let re_bk = Regex::new(r"(%b)").unwrap();
+    let mut result = fmt.to_string();
 
-    let fmt_title = title.replace_all(fmt, &z.title).to_owned();
-    let fmt_path = path.replace_all(&fmt_title, &z.filename(cfg));
-    let fmt_project = project.replace_all(&fmt_path, &z.project);
-    let fmt_links = links.replace_all(&fmt_project, &z.links.join(link_sep));
+    result = result.replace("%t", &z.title);
+    result = result.replace("%p", &z.project);
+    result = result.replace("%P", &z.filename(cfg));
+    result = result.replace("%l", &z.links.join(link_sep));
     // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
     // Zettel, so if we don't, we just consume the `%b` token and move on
-    let fmt_bk = if re_bk.is_match(&fmt_links) {
-        let maybe_get_backlinks = || -> Result<_, Error> {
+    if result.contains("%b") {
+        let maybe_get_backlinks = || -> Result<Vec<String>, Error> {
             let all = Database::new(&cfg.db_file())?.all()?;
             let bks = backlinks(&all, &z.title);
-            let bks_titles: Vec<String> = bks.iter().map(|z| z.title.clone()).collect();
-            Ok(re_bk.replace_all(&fmt_links, bks_titles.join(link_sep)))
+            Ok(bks.iter().map(|z| z.title.clone()).collect())
         };
-        if let Ok(fmt_bk) = maybe_get_backlinks() {
-            fmt_bk
-        } else {
-            re_bk.replace_all(&fmt_links, "")
+        if let Ok(bks) = maybe_get_backlinks() {
+            result = result.replace("%b", &bks.join(link_sep));
         }
-    } else {
-        re_bk.replace_all(&fmt_links, "")
-    };
+    }
 
-    println!("{}", fmt_bk);
+    println!("{}", result);
 }
 
 /// Print every element in the list of Strings on an individual line
