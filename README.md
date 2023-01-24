@@ -94,6 +94,8 @@ functions, such as telling `settle` to update a note's metadata.
 
 ## Roadmap
 
+#### Before 2023
+
 - [x] generate database from existing files
 - [x] create Zettel
 - [x] list Zettel
@@ -119,7 +121,9 @@ functions, such as telling `settle` to update a note's metadata.
     - [x] move notes from project to project
 - [x] rename notes
     - [x] update all links to the renamed note
-(early 2023)
+
+#### After/During 2023
+
 - [x] query: filter notes based on various criteria (title, tags, etc.)
     - [x] support regex
     - [x] print according to a format
