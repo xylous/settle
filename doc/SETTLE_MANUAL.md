@@ -78,6 +78,17 @@ ran without options), the entire Zettelkasten is returned.
     which case it specifies the separator used between both forward links and
     backlinks.
 
+- `--graph` - transform the output into [DOT
+    format](https://en.wikipedia.org/wiki/DOT_(graph_description_language),
+    where the nodes are the individual Zettel titles and the edges, are, well,
+    links. You can then run the file through e.g. Graphviz or `xdot` (or
+    anything that can read DOT for that matter) to render the graph into an
+    image, or, rather, explore the graph interactively.
+
+    NOTE: even if a note didn't appear in the results-proper, it may appear in
+    the graph. Thus, it's worth mentioning that all direct (immediate) links
+    that the notes in the query results have *will appear* on the graph.
+
 Here are a few concrete examples:
 
 - `settle query --text "sample" --loners` returns all notes that contain `sample`
@@ -99,6 +110,8 @@ Here are a few concrete examples:
 - `settle query --format "[%P]\t%l" --link_sep "\t" --title "Note.*"` takes
     every Zettel whose title starts with `Note`, printing their absolute path
     between square brackets, separating links with tabs.
+
+- `settle query --graph` prints a DOT file of the entire Zettelkasten to stdout
 
 ### Options for `sync` (`-S`)
 
