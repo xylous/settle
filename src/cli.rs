@@ -11,12 +11,6 @@ pub fn build() -> Command<'static>
     .subcommand_required(true)
     .arg_required_else_help(true)
 
-    .subcommand(Command::new("compl")
-        .display_order(4)
-        .arg(Arg::new("SHELL").required(true))
-        .about("generate completion file for a given shell")
-    )
-
     .subcommand(Command::new("sync")
         .display_order(1)
         .short_flag('S')
@@ -146,7 +140,18 @@ pub fn build() -> Command<'static>
         .about("list things not related to notes")
         .arg(Arg::new("OBJECT")
             .required(true)
-            .help("object to list (tags, projects, ghosts, path)"
+            .help("object to list (tags, projects, ghosts, path)")
         )
-    ))
+    )
+
+    .subcommand(Command::new("graph")
+        .display_order(4)
+        .about("generate a .dot graph from the Zettelkasten")
+    )
+
+    .subcommand(Command::new("compl")
+        .display_order(5)
+        .arg(Arg::new("SHELL").required(true))
+        .about("generate completion file for a given shell")
+    )
 }

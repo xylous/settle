@@ -5,11 +5,20 @@ use regex::Regex;
 use rusqlite::Error;
 
 use crate::config::ConfigOptions;
+use crate::graph::zk_graph_dot_output;
 use crate::Database;
 use crate::Zettel;
 
 use crate::cli;
 use crate::io::file_exists;
+
+pub fn graph(_matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    let db = Database::new(&cfg.db_file())?;
+    let zs = db.all()?;
+    zk_graph_dot_output(&zs);
+    Ok(())
+}
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {

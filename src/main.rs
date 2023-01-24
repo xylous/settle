@@ -1,6 +1,7 @@
 mod cli;
 mod config;
 mod database;
+mod graph;
 mod io;
 mod subcommands;
 mod zettel;
@@ -48,6 +49,7 @@ fn main() -> Result<(), rusqlite::Error>
         "sync" => sync(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,
         "ls" => ls(cmd_matches, &cfg)?,
+        "graph" => graph(cmd_matches, &cfg)?,
         "compl" => compl(cmd_matches)?,
         _ => (),
     };
