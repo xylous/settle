@@ -105,6 +105,14 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     Ok(())
 }
 
+/// Print every given Zettel according to the specified ormat
+fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
+{
+    zs.iter().for_each(|z| {
+                 zettel_format(cfg, z, fmt);
+             });
+}
+
 // Print according to a certain format, replacing the following placeholder tokens
 //
 //  %t - title
@@ -143,20 +151,6 @@ fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
     };
 
     println!("{}", fmt_bk);
-}
-
-/// Print every zs according to the given format
-fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
-{
-    zs.iter().for_each(|z| {
-                 zettel_format(cfg, z, fmt);
-             });
-}
-
-/// Print infromation for every given Zettel
-fn print_zettel_info(zs: &[Zettel])
-{
-    zettelkasten_format(&ConfigOptions::default(), zs, "[%p] %t");
 }
 
 /// Print every element in the list of Strings on an individual line
@@ -282,7 +276,7 @@ fn new(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
         // saved outside of the loop
     } else {
         zettel.create(cfg);
-        print_zettel_info(&[zettel.clone()]); // confirm that the Zettel was created
+        zettel_format(cfg, &zettel, "[%p] %t")
     }
     db.save(&zettel)?;
 
@@ -357,9 +351,9 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let notes = db.find_by_title(pattern)?;
+    let zs = db.find_by_title(pattern)?;
 
-    print_zettel_info(&notes);
+    zettelkasten_format(cfg, &zs, "[%p] %t");
 
     let mut dial = dialoguer::Confirm::new();
     let prompt =
@@ -373,11 +367,11 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
     // If the user confirms, change the notes' projects, both the system path and in database
     if prompt.interact().unwrap_or_default() {
         crate::io::mkdir(&format!("{}/{}", cfg.zettelkasten, project));
-        let new_notes = notes.iter().map(|z| Zettel { title: z.title.clone(),
-                                                      project: project.to_string(),
-                                                      links: z.links.clone(),
-                                                      tags: z.tags.clone() });
-        let pairs = notes.iter().zip(new_notes);
+        let new_notes = zs.iter().map(|z| Zettel { title: z.title.clone(),
+                                                   project: project.to_string(),
+                                                   links: z.links.clone(),
+                                                   tags: z.tags.clone() });
+        let pairs = zs.iter().zip(new_notes);
         pairs.for_each(|(old, new)| {
                  crate::io::rename(&old.filename(cfg), &new.filename(cfg));
                  db.change_project(old, project).unwrap();
