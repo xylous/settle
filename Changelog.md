@@ -2,6 +2,10 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.2 - 2023-01-24
+
+- add `--graph` option to `query`, for making a graph out of the results
+
 ## v0.39.1 - 2023-01-24
 
 - add to `query`:

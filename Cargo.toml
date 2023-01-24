@@ -1,6 +1,6 @@
 [package]
 name = "settle"
-version = "0.40.0"
+version = "0.39.2"
 edition = "2018"
 authors = [ "xylous <xylous.e@gmail.com>" ]
 description = "CLI tool for managing a digital Zettelkasten"

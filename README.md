@@ -128,8 +128,12 @@ functions, such as telling `settle` to update a note's metadata.
     - [x] support regex
     - [x] print according to a format
     - [x] put custom separator between links, both forward and backward
-- [ ] suggest random notes for you to read, to help deal with writer's block
-- [ ] generate an image of a directed graph representing all links between notes
+- [x] graph
+    - [x] DOT output
+    - [ ] ~~render DOT as image~~
+- [ ] writing experience (help deal with writer's block)
+    - [ ] find related notes
+    - [ ] suggest random notes
 
 ## Contributing
 
