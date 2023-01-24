@@ -105,25 +105,58 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     Ok(())
 }
 
-// Print according to a certain format
+// Print according to a certain format, replacing the following placeholder tokens
+//
+//  %t - title
+//  %p - project
+//  %P - path
+//  %l - forward links
+//  %b - backward links
 fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
 {
     let title = Regex::new(r"(%t)").unwrap();
     let path = Regex::new(r"(%P)").unwrap();
     let project = Regex::new(r"(%p)").unwrap();
+    let links = Regex::new(r"(%l)").unwrap();
+    let re_bk = Regex::new(r"(%b)").unwrap();
 
     let fmt_title = title.replace_all(fmt, &z.title).to_owned();
     let fmt_path = path.replace_all(&fmt_title, &z.filename(cfg));
     let fmt_project = project.replace_all(&fmt_path, &z.project);
+    let fmt_links = links.replace_all(&fmt_project, &z.links.join(" | "));
+    // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
+    // Zettel, so if we don't, we just consume the `%b` token and move on
+    let fmt_bk = if re_bk.is_match(&fmt_links) {
+        let maybe_get_backlinks = || -> Result<_, Error> {
+            let all = Database::new(&cfg.db_file())?.all()?;
+            let bks = backlinks(&all, &z.title);
+            let bks_titles: Vec<String> = bks.iter().map(|z| z.title.clone()).collect();
+            Ok(re_bk.replace_all(&fmt_links, bks_titles.join(" | ")))
+        };
+        if let Ok(fmt_bk) = maybe_get_backlinks() {
+            fmt_bk
+        } else {
+            re_bk.replace_all(&fmt_links, "")
+        }
+    } else {
+        re_bk.replace_all(&fmt_links, "")
+    };
 
-    println!("{}", fmt_project);
+    println!("{}", fmt_bk);
+}
+
+/// Print every zs according to the given format
+fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
+{
+    zs.iter().for_each(|z| {
+                 zettel_format(cfg, z, fmt);
+             });
 }
 
 /// Print infromation for every given Zettel
-fn print_zettel_info(zettel: &[Zettel])
+fn print_zettel_info(zs: &[Zettel])
 {
-    zettel.iter()
-          .for_each(|z| zettel_format(&ConfigOptions::default(), z, "[%p] %t"));
+    zettelkasten_format(&ConfigOptions::default(), zs, "[%p] %t");
 }
 
 fn zettel_info_abs_paths(cfg: &ConfigOptions, zs: &[Zettel])
