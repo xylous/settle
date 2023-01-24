@@ -133,6 +133,13 @@ pub fn build() -> Command<'static>
             .requires("FORMAT")
             .help("specify separator for links and backlinks in formatted output")
         )
+        .arg(Arg::new("GRAPH")
+            .conflicts_with_all(&["FORMAT", "LINK_SEP"])
+            .display_order(10)
+            .long("graph")
+            .takes_value(false)
+            .help("generate a .dot graph from the query results")
+        )
     )
 
     .subcommand(Command::new("ls")
@@ -142,11 +149,6 @@ pub fn build() -> Command<'static>
             .required(true)
             .help("object to list (tags, projects, ghosts, path)")
         )
-    )
-
-    .subcommand(Command::new("graph")
-        .display_order(4)
-        .about("generate a .dot graph from the Zettelkasten")
     )
 
     .subcommand(Command::new("compl")

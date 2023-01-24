@@ -12,14 +12,6 @@ use crate::Zettel;
 use crate::cli;
 use crate::io::file_exists;
 
-pub fn graph(_matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    let db = Database::new(&cfg.db_file())?;
-    let zs = db.all()?;
-    zk_graph_dot_output(&zs);
-    Ok(())
-}
-
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let project = matches.value_of("PROJECT").unwrap_or_default();
@@ -66,7 +58,9 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_isolated(zs);
     }
 
-    if let Some(format) = matches.value_of("FORMAT") {
+    if matches.is_present("GRAPH") {
+        zk_graph_dot_output(&zs);
+    } else if let Some(format) = matches.value_of("FORMAT") {
         let link_sep = matches.value_of("LINK_SEP").unwrap_or(" | ");
         zettelkasten_format(cfg,
                             &zs,

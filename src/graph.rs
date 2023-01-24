@@ -3,6 +3,12 @@ use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::Graph;
 
+/// Print the dot format obtained from the graph made from the given Zettelkasten
+pub fn zk_graph_dot_output(zs: &[Zettel])
+{
+    dot_output(gen_graph(zs));
+}
+
 /// Turn a Zettelkasten into a directed graph, using petgraph
 fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
 {
@@ -36,22 +42,18 @@ fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
     graph
 }
 
-fn find_seen_by_name(idxs: Vec<(&str, NodeIndex)>, name: &str) -> (String, NodeIndex)
+/// Given a list of seen names and their index in the graph, return the pair that matches the name
+/// of the node
+fn find_seen_by_name(seen: Vec<(&str, NodeIndex)>, name: &str) -> (String, NodeIndex)
 {
-    let (n, k) = idxs.into_iter()
+    let (n, i) = seen.into_iter()
                      .find(|(v, _)| v == &name)
                      .unwrap_or_default();
-    (n.to_string(), k)
+    (n.to_string(), i)
 }
 
 /// Turn a graph into its dot format, printing it to stdout
 fn dot_output(g: Graph<&str, &str>)
 {
     println!("{}", Dot::with_config(&g, &[Config::EdgeNoLabel]));
-}
-
-/// Print the dot format obtained from the graph made from the given Zettelkasten
-pub fn zk_graph_dot_output(zs: &[Zettel])
-{
-    dot_output(gen_graph(zs));
 }
