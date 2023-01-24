@@ -64,6 +64,20 @@ ran without options), the entire Zettelkasten is returned.
 - `-o | --loners` - keep Zettel that have no links pointing to other zettel AND
     have no links pointing to them.
 
+- `-f | --format <FORMAT>` - every Zettel is printed according to `<FORMAT>`.
+    Several formatting flags are supported, such as:
+    - `%t` - replaced with the title
+    - `%p` - replaced with the project name
+    - `%P` - replaced with the absolute path to the Zettel
+    - `%l` - replaced with the (forward) links of the Zettel
+    - `%b` - replaced with the backlinks of the Zettel; note that since `settle`
+        only stores forward links in the database, fetching backlinks is a
+        little bit more time consuming
+
+- `-s | --link_sep <SEPARATOR>` - can only be used together with `--format`, in
+    which case it specifies the separator used between both forward links and
+    backlinks.
+
 Here are a few concrete examples:
 
 - `settle query --text "sample" --loners` returns all notes that contain `sample`
@@ -74,9 +88,17 @@ Here are a few concrete examples:
     the main Zettelkasten (the empty-string project) and have the word `word`
     within their title.
 
+- `settle query --formatting "[%p] %t" --link_sep " | "` is the same as the
+    default format. Note that, since no links are printed, the separator is
+    actually never used for this format.
+
 - `settle query --tag "literature" --links "Neurons"` returns all notes that
     have the `literature` tag and link to a note called *precisely* `Neurons`
     (note the absence of regex wildcards)
+
+- `settle query --format "[%P]\t%l" --link_sep "\t" --title "Note.*"` takes
+    every Zettel whose title starts with `Note`, printing their absolute path
+    between square brackets, separating links with tabs.
 
 ### Options for `sync` (`-S`)
 
