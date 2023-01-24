@@ -30,7 +30,7 @@ fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
             } else {
                 seen_idx
             };
-            graph.extend_with_edges(&[(t_idx, l_idx)]);
+            graph.add_edge(t_idx, l_idx, "");
         }
     }
     graph
@@ -47,11 +47,11 @@ fn find_seen_by_name(idxs: Vec<(&str, NodeIndex)>, name: &str) -> (String, NodeI
 /// Turn a graph into its dot format, printing it to stdout
 fn dot_output(g: Graph<&str, &str>)
 {
-    println!("{:?}", Dot::with_config(&g, &[Config::EdgeNoLabel]));
+    println!("{}", Dot::with_config(&g, &[Config::EdgeNoLabel]));
 }
 
 /// Print the dot format obtained from the graph made from the given Zettelkasten
 pub fn zk_graph_dot_output(zs: &[Zettel])
 {
-    dot_output(gen_graph(zs))
+    dot_output(gen_graph(zs));
 }
