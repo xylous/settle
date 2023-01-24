@@ -58,9 +58,10 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     }
 
     if let Some(format) = matches.value_of("FORMAT") {
-        zettelkasten_format(cfg, &zs, format)
+        let link_sep = matches.value_of("LINK_SEP").unwrap_or_default();
+        zettelkasten_format(cfg, &zs, format, link_sep)
     } else {
-        zettelkasten_format(cfg, &zs, "[%p] %t")
+        zettelkasten_format(cfg, &zs, "[%p] %t", "")
     }
     Ok(())
 }
@@ -106,10 +107,10 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 }
 
 /// Print every given Zettel according to the specified ormat
-fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
+fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str, link_sep: &str)
 {
     zs.iter().for_each(|z| {
-                 zettel_format(cfg, z, fmt);
+                 zettel_format(cfg, z, fmt, link_sep);
              });
 }
 
@@ -120,7 +121,7 @@ fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
 //  %P - path
 //  %l - forward links
 //  %b - backward links
-fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
+fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str, link_sep: &str)
 {
     let title = Regex::new(r"(%t)").unwrap();
     let path = Regex::new(r"(%P)").unwrap();
@@ -131,7 +132,7 @@ fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
     let fmt_title = title.replace_all(fmt, &z.title).to_owned();
     let fmt_path = path.replace_all(&fmt_title, &z.filename(cfg));
     let fmt_project = project.replace_all(&fmt_path, &z.project);
-    let fmt_links = links.replace_all(&fmt_project, &z.links.join(" | "));
+    let fmt_links = links.replace_all(&fmt_project, &z.links.join(link_sep));
     // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
     // Zettel, so if we don't, we just consume the `%b` token and move on
     let fmt_bk = if re_bk.is_match(&fmt_links) {
@@ -139,7 +140,7 @@ fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str)
             let all = Database::new(&cfg.db_file())?.all()?;
             let bks = backlinks(&all, &z.title);
             let bks_titles: Vec<String> = bks.iter().map(|z| z.title.clone()).collect();
-            Ok(re_bk.replace_all(&fmt_links, bks_titles.join(" | ")))
+            Ok(re_bk.replace_all(&fmt_links, bks_titles.join(link_sep)))
         };
         if let Ok(fmt_bk) = maybe_get_backlinks() {
             fmt_bk
@@ -276,7 +277,7 @@ fn new(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
         // saved outside of the loop
     } else {
         zettel.create(cfg);
-        zettel_format(cfg, &zettel, "[%p] %t")
+        zettel_format(cfg, &zettel, "[%p] %t", "")
     }
     db.save(&zettel)?;
 
@@ -353,7 +354,7 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 
     let zs = db.find_by_title(pattern)?;
 
-    zettelkasten_format(cfg, &zs, "[%p] %t");
+    zettelkasten_format(cfg, &zs, "[%p] %t", "");
 
     let mut dial = dialoguer::Confirm::new();
     let prompt =
