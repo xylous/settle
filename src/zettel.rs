@@ -90,11 +90,19 @@ impl Zettel
         }
     }
 
-    /// Return a string with the format "`Zettel.title`.md"
+    /// Return the absolute path to the Zettel
     pub fn filename(&self, cfg: &ConfigOptions) -> String
     {
-        let dir = format!("{}/{}", cfg.zettelkasten, &self.project);
-        format!("{}/{}.md", dir, &self.title)
+        let dir = format!("{}/{}",
+                          cfg.zettelkasten,
+                          // if the project is empty then it's the main Zettelkasten project, and
+                          // so we don't want to introduce two forward slashes one after the other
+                          if self.project.is_empty() {
+                              self.project.clone()
+                          } else {
+                              format!("{}/", &self.project)
+                          });
+        format!("{}{}.md", dir, &self.title)
     }
 
     /// Check if the current Zettel file contains `text`
