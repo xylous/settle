@@ -57,10 +57,10 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_isolated(zs);
     }
 
-    if matches.is_present("ABSOLUTE_PATHS") {
-        zettel_info_abs_paths(cfg, &zs);
+    if let Some(format) = matches.value_of("FORMAT") {
+        zettelkasten_format(cfg, &zs, format)
     } else {
-        print_zettel_info(&zs);
+        zettelkasten_format(cfg, &zs, "[%p] %t")
     }
     Ok(())
 }
@@ -157,13 +157,6 @@ fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str)
 fn print_zettel_info(zs: &[Zettel])
 {
     zettelkasten_format(&ConfigOptions::default(), zs, "[%p] %t");
-}
-
-fn zettel_info_abs_paths(cfg: &ConfigOptions, zs: &[Zettel])
-{
-    zs.iter().for_each(|z| {
-                 println!("{}", z.filename(cfg));
-             })
 }
 
 /// Print every element in the list of Strings on an individual line
