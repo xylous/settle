@@ -1,4 +1,3 @@
-use regex::{Captures, Regex};
 use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
 
 use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel};
@@ -25,36 +24,6 @@ pub struct Database
 {
     name: String,
     conn: Connection,
-}
-
-/// Turn command line input pattern into database request string equivalent
-///
-/// ### Rules
-///
-/// [characters in input] -> [characters in output]
-///
-/// - '\\' -> '\'
-/// - '%' -> '\%'
-/// - '*' -> '%'
-/// - '\*' -> '*'
-/// - '_' -> '\_'
-/// - '.' -> '_'
-/// - '\.' -> '.'
-/// - '\' -> ''
-fn cli_input_to_db_input(inp: &str) -> String
-{
-    let re = Regex::new(r"(\\\\|%|\*|\\\*|_|\.|\\\.|\\)").unwrap();
-    re.replace_all(inp, |cap: &Captures| match &cap[0] {
-          r"\\" => r"\",
-          r"%" => r"\%",
-          r"*" => r"%",
-          r"\*" => r"*",
-          r"_" => r"\_",
-          r"." => r"_",
-          r"\." => r".",
-          _ => r"",
-      })
-      .to_string()
 }
 
 impl Database
@@ -147,10 +116,9 @@ impl Database
     /// `pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_title(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
-        let req_pattern = cli_input_to_db_input(pattern);
         let mut stmt = self.conn
-                           .prepare("SELECT * FROM zettelkasten WHERE title LIKE :req_pattern")?;
-        let mut rows = stmt.query(named_params! {":req_pattern": req_pattern})?;
+                           .prepare("SELECT * FROM zettelkasten WHERE title LIKE :pattern")?;
+        let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
