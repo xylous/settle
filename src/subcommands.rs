@@ -186,10 +186,10 @@ fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<Zette
       .collect()
 }
 
-/// Keep only those Zettel that have at least one tag that matches the regex
+/// Keep only those Zettel that have at least one tag (or subtag) that matches the regex
 fn filter_tag(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
 {
-    let re = Regex::new(&format!("^{}$", pattern)).unwrap();
+    let re = Regex::new(&format!("^{}(/.*)?$", pattern)).unwrap();
     zs.into_iter()
       .filter(|z| {
           for t in &z.tags {
