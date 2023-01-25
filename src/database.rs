@@ -205,7 +205,14 @@ impl Database
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
         directories.push(cfg.zettelkasten.clone());
         directories.par_iter().for_each(|dir| {
-                                  let notes = crate::io::list_md_files(dir);
+                                  let notes: Vec<String> =
+                                      // don't add markdown file that starts with a dot (which
+                                      // includes the empty title file, the '.md')
+                                      crate::io::list_md_files(dir).into_iter()
+                                                                   .filter(|f| {
+                                                                       !crate::io::basename(f).starts_with('.')
+                                                                   })
+                                                                   .collect();
                                   notes.par_iter().for_each(|note| {
                                                       let thread_db =
                                                           Self::in_memory(db_name).unwrap();
