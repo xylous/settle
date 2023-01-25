@@ -13,7 +13,7 @@ Vim and Neovim.
 ```
 settle [--help | -h | --version | -v]
 settle {sync | -S} [-p | -c | -u | -g | -m | -n]
-settle {query | -Q} [-t | -p | -g | -x | -l | -b | -o]
+settle {query | -Q} [-t | -p | -g | -x | -l | -b | -o | -f | -s | --graph]
 settle ls ['tags' | 'projects' | 'ghosts' | 'path']
 ```
 
@@ -37,6 +37,10 @@ settle ls ['tags' | 'projects' | 'ghosts' | 'path']
     Zettelkasten, the third prints all Zettel that have links pointing to them
     but have not yet been created, and the last one prints the path to the
     Zettelkasten (as per your configuration options).
+
+- `query | -Q` (described below)
+
+- `sync | -S` (described below)
 
 ### Options for `query` (`-Q`)
 
@@ -129,8 +133,9 @@ specified otherwise, most/all options are mutually exclusive.
 - `-u | --update <PATH>` - update a note's metadata, given its path on the
     filesystem
 
-- `-g | --generate` - (re)generate the entire database based on what's in the
-    Zettelkasten directory
+- `-g | --generate` - generate the entire database; that is to say, every
+    Zettel's metadata is updated (or stored, if they weren't in the database
+    already)
 
 - `-m | --move <REGEX>` - this option requires the `--project` option; all
     Zettel whose title matches `<REGEX>` are moved to the specified project
