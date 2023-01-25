@@ -45,6 +45,12 @@ fn main() -> Result<(), rusqlite::Error>
     // print the help message
     let cmd_matches = matches.subcommand_matches(cmd).unwrap();
 
+    // If the database isn't initialised, the program would likely panic, complaining that it isn't
+    // able to find SQL tables.
+    // Yes, it's kind of lazy to put this here, but putting it in every function that accesses the
+    // database, just to make sure that the database exists in the first place, is worse.
+    Database::new(&cfg.db_file())?.init()?;
+
     match cmd {
         "sync" => sync(cmd_matches, &cfg)?,
         "query" => query(cmd_matches, &cfg)?,

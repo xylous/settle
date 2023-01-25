@@ -261,7 +261,6 @@ fn backlinks(all: &[Zettel], links_to: &str) -> Vec<Zettel>
 fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
-    db.init()?;
 
     let zettel = Zettel::new(title, project);
 
