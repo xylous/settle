@@ -399,7 +399,11 @@ fn update(cfg: &ConfigOptions, path: &str) -> Result<(), Error>
 
     if file_exists(&path_abs) {
         let zettel = Zettel::from_file(cfg, &path_abs);
-        db.update(cfg, &zettel)?;
+        if file_exists(&zettel.filename(cfg)) {
+            db.update(cfg, &zettel)?;
+        } else {
+            eprintln!("error: file is not in the Zettelkasten");
+        }
     } else {
         eprintln!("error: provided path isn't a file");
     }
