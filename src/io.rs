@@ -1,5 +1,5 @@
 use glob::glob;
-use std::fs::{read_to_string, write};
+use std::fs::{canonicalize, read_to_string, write};
 use std::path::{Path, PathBuf};
 
 /// Read `path` and return the contents
@@ -74,4 +74,12 @@ pub fn list_subdirectories(dir: &str) -> Vec<String>
     glob(&format!("{}/*/", dir)).expect("failed to read directory")
                                 .map(|f| f.unwrap().to_string_lossy().to_string())
                                 .collect()
+}
+
+/// Given a relative path, return an absolute path, or nothing (empty string) if it failed
+pub fn abs_path(path: &str) -> String
+{
+    canonicalize(path).unwrap_or_default()
+                      .to_string_lossy()
+                      .to_string()
 }

@@ -10,7 +10,7 @@ use crate::Database;
 use crate::Zettel;
 
 use crate::cli;
-use crate::io::file_exists;
+use crate::io::{abs_path, file_exists};
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
@@ -395,8 +395,10 @@ fn update(cfg: &ConfigOptions, path: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    if file_exists(path) {
-        let zettel = Zettel::from_file(cfg, path);
+    let path_abs = abs_path(path);
+
+    if file_exists(&path_abs) {
+        let zettel = Zettel::from_file(cfg, &path_abs);
         db.update(cfg, &zettel)?;
     } else {
         eprintln!("error: provided path isn't a file");

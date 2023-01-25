@@ -58,7 +58,7 @@ impl Zettel
                  tags: vec![] }
     }
 
-    /// Create a Zettel from a file, provided a path
+    /// Create a Zettel from a file, provided the ABSOLUTE path to the Zettel
     pub fn from_file(cfg: &ConfigOptions, path: &str) -> Self
     {
         let title = basename(&replace_extension(path, ""));
