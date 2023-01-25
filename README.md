@@ -85,12 +85,11 @@ There are two important things to remember when writing:
     You can also put these everywhere.
 
 `settle` wasn't designed to work with any editor in particular. Which means that
-you can use it practically everywhere! I wrote
+you can use it practically everywhere! However, having an editor plugin does
+make things a lot easier, but they're not really necessary. I wrote
 [settle.vim](https://github.com/xylous/settle.vim) since I'm a (neo)vim user
-myself. Who knows? If I ever switch editors, I may write another.
-
-Although plugins aren't necessary, they make things easier, by automating some
-functions, such as telling `settle` to update a note's metadata.
+myself. Who knows? If I ever switch editors, I may write another. Nay, if you
+want to write a wrapper for your favourite editor, you're more than welcome!
 
 ## Roadmap
 
