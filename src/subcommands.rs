@@ -266,7 +266,7 @@ fn new(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
     let zettel = Zettel::new(title, project);
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
-    let exists_in_db = db.all().unwrap().into_par_iter().any(|z| z == zettel);
+    let exists_in_db = db.all()?.into_par_iter().any(|z| z == zettel);
 
     // If the corresponding file exists and there's an entry in the database, abort.
     // If there's a file but there's no entry in the database, create an entry.
