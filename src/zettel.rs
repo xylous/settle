@@ -24,10 +24,11 @@ fn find_links(contents: &str) -> Vec<String>
 }
 
 // Find tags inside of `contents` string and return them
-// Tags are hashtag-tags, e.g. `#gardening`, `#note-taking`
+// Tags are hashtag-tags, e.g. `#gardening`, `#note-taking`, but they MUST be delimited by any kind
+// of whitespace
 fn find_tags(contents: &str) -> Vec<String>
 {
-    let re = Regex::new(r"#([\w/_-]+?)\s+").unwrap();
+    let re = Regex::new(r"\s#([\w/_-]+?)\s").unwrap();
     re.captures_iter(contents)
       .par_bridge()
       .map(|cap| {
