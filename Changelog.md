@@ -2,6 +2,15 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.3 - 2023-01-25
+
+- fix: detected tags must be delimited by whitespace on both sides, so that for
+    example it doesn't think that a reference in a link is a tag (e.g.
+    `https://example.com/hello#About`; formerly, it would take `#About` as a
+    tag)
+- fix: `query --tag <TAG>` also returns the subtags of `<TAG>`
+- fix: `sync --rename` would never work since it never found the correct title
+
 ## v0.39.2 - 2023-01-24
 
 - add `--graph` option to `query`, for making a graph out of the results
@@ -13,6 +22,7 @@ NOTE: This Changelog is partially incomplete.
         path, the links and the backlinks for any Zettel.
     - add `--link_sep` option, which specifies how both links and backlinks
         should be separated in formatting
+- remove groff/man document inside `doc/`
 
 ## v0.39.0 - 2023-01-22
 
