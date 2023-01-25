@@ -16,7 +16,7 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let project = matches.value_of("PROJECT").unwrap_or_default();
     if let Some(title) = matches.value_of("CREATE") {
-        new(cfg, title, project)?;
+        create(cfg, title, project)?;
     } else if let Some(path) = matches.value_of("UPDATE") {
         update(cfg, path)?;
     } else if let Some(title) = matches.value_of("MOVE") {
@@ -258,12 +258,18 @@ fn backlinks(all: &[Zettel], links_to: &str) -> Vec<Zettel>
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
-fn new(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
+fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
     db.init()?;
 
     let zettel = Zettel::new(title, project);
+
+    // reject bad formats
+    if zettel.title.is_empty() || zettel.title.starts_with('.') {
+        eprintln!("error: empty/dotfile titles are not accepted");
+        return Ok(());
+    }
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
     let exists_in_db = db.all()?.into_par_iter().any(|z| z == zettel);
