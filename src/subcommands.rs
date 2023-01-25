@@ -295,7 +295,7 @@ fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
     // exists and is different from the new title
     let old_title = arr.clone()
                        .into_iter()
-                       .find(|x| db.find_by_title(x).unwrap_or_default().is_empty())
+                       .find(|x| !db.find_by_title(x).unwrap_or_default().is_empty())
                        .unwrap_or("");
     let new_title = arr.clone().next_back().unwrap_or_default();
 
