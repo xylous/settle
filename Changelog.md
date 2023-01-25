@@ -2,6 +2,21 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.4 - 2023-01-25
+
+- fix: `settle sync --create` no longer permits empty titles and titles starting
+    with a dot (which would be, as per regular Unix behaviour, hidden files)
+- fix: `settle sync --generate` now ignores files starting with a dot, and
+    likewise, empty titles
+- fix: `settle sync --update` no longer panics when given certain relative
+    paths, notably when the current working directory is the main Zettelkasten
+    directory
+- fix: `settle sync --update` returns an error on files that are not in the
+    Zettelkasten
+- fix: if the database file doesn't exist or the database hasn't been
+    initialised, `settle` no longer panics complaining that it can't find SQL
+    tables
+
 ## v0.39.3 - 2023-01-25
 
 - fix: detected tags must be delimited by whitespace on both sides, so that for
