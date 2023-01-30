@@ -36,23 +36,25 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     let mut zs: Vec<Zettel> = db.all()?;
 
+    let exact = matches.is_present("EXACT_MATCH");
+
     if let Some(title) = matches.value_of("TITLE") {
-        zs = filter_title(zs, title);
+        zs = filter_title(zs, title, exact);
     }
     if let Some(project) = matches.value_of("PROJECT") {
-        zs = filter_project(zs, project);
+        zs = filter_project(zs, project, exact);
     }
     if let Some(text) = matches.value_of("TEXT_REGEX") {
         zs = filter_text(zs, text, cfg);
     }
     if let Some(tag) = matches.value_of("TAG") {
-        zs = filter_tag(zs, tag);
+        zs = filter_tag(zs, tag, exact);
     }
     if let Some(linked_from) = matches.value_of("LINKS") {
-        zs = intersect(&zs, &fwlinks(&db.all()?, linked_from));
+        zs = intersect(&zs, &fwlinks(&db.all()?, linked_from, exact));
     }
     if let Some(links_to) = matches.value_of("BACKLINKS") {
-        zs = intersect(&zs, &backlinks(&zs, links_to));
+        zs = intersect(&zs, &backlinks(&zs, links_to, exact));
     }
     if matches.is_present("LONERS") {
         zs = filter_isolated(zs);
@@ -145,7 +147,7 @@ fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str, link_sep: &str)
     if result.contains("%b") {
         let maybe_get_backlinks = || -> Result<Vec<String>, Error> {
             let all = Database::new(&cfg.db_file())?.all()?;
-            let bks = backlinks(&all, &z.title);
+            let bks = backlinks(&all, &z.title, true);
             Ok(bks.iter().map(|z| z.title.clone()).collect())
         };
         if let Ok(bks) = maybe_get_backlinks() {
@@ -165,17 +167,33 @@ fn print_list_of_strings(elems: &[String])
 }
 
 /// Keep only those Zettel whose title matches the provided regex
-fn filter_title(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+fn filter_title(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", pattern)).unwrap();
-    zs.into_iter().filter(|z| re.is_match(&z.title)).collect()
+    zs.into_iter()
+      .filter(|z| {
+          if exact {
+              pattern == &z.title
+          } else {
+              re.is_match(&z.title)
+          }
+      })
+      .collect()
 }
 
 /// Keep only those Zettel whose project matches the provided regex
-fn filter_project(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+fn filter_project(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", pattern)).unwrap();
-    zs.into_iter().filter(|z| re.is_match(&z.project)).collect()
+    zs.into_iter()
+      .filter(|z| {
+          if exact {
+              pattern == &z.project
+          } else {
+              re.is_match(&z.project)
+          }
+      })
+      .collect()
 }
 
 /// Keep only those Zettel that contain the pattern in their text
@@ -187,15 +205,13 @@ fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<Zette
 }
 
 /// Keep only those Zettel that have at least one tag (or subtag) that matches the regex
-fn filter_tag(zs: Vec<Zettel>, pattern: &str) -> Vec<Zettel>
+fn filter_tag(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}(/.*)?$", pattern)).unwrap();
     zs.into_iter()
       .filter(|z| {
           for t in &z.tags {
-              if re.is_match(t) {
-                  return true;
-              }
+              return if exact { pattern == t } else { re.is_match(t) };
           }
           false
       })
@@ -207,7 +223,7 @@ fn filter_isolated(zs: Vec<Zettel>) -> Vec<Zettel>
 {
     zs.clone()
       .into_iter()
-      .filter(|z| z.links.is_empty() && backlinks(&zs, &z.title).is_empty())
+      .filter(|z| z.links.is_empty() && backlinks(&zs, &z.title, true).is_empty())
       .collect()
 }
 
@@ -222,11 +238,11 @@ fn intersect<T: Eq + Clone>(a: &[T], b: &[T]) -> Vec<T>
 }
 
 /// Return all the Zettel that are linked to by the pattern-matched zettel
-fn fwlinks(all: &[Zettel], linked_from: &str) -> Vec<Zettel>
+fn fwlinks(all: &[Zettel], linked_from: &str, exact: bool) -> Vec<Zettel>
 {
     // first find the Zettel that match the query, then find the notes that have been linked to by
     // them
-    let fwlinks = &filter_title(all.to_owned(), linked_from);
+    let fwlinks = &filter_title(all.to_owned(), linked_from, exact);
     all.iter()
        .cloned()
        .filter(|z| {
@@ -241,16 +257,14 @@ fn fwlinks(all: &[Zettel], linked_from: &str) -> Vec<Zettel>
 }
 
 /// Return all the Zettel that link to the given title/pattern, within the provided list of Zettel
-fn backlinks(all: &[Zettel], links_to: &str) -> Vec<Zettel>
+fn backlinks(all: &[Zettel], links_to: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", links_to)).unwrap();
     all.iter()
        .cloned()
        .filter(|z| {
            for l in &z.links {
-               if re.is_match(l) {
-                   return true;
-               }
+               return if exact { links_to == l } else { re.is_match(l) };
            }
            false
        })
@@ -335,7 +349,7 @@ fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
         crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
         db.change_title(old_zettel, new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
-        let backlinks = backlinks(&db.all()?, old_title);
+        let backlinks = backlinks(&db.all()?, old_title, true);
         // for some reason rustfmt has absolutely cursed formatting here. this is not my fault, I
         // swear
         backlinks.iter().for_each(|bl| {

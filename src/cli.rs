@@ -140,6 +140,13 @@ pub fn build() -> Command<'static>
             .takes_value(false)
             .help("generate a .dot graph from the query results")
         )
+        .arg(Arg::new("EXACT_MATCH")
+            .display_order(11)
+            .short('e')
+            .long("exact")
+            .takes_value(false)
+            .help("match everything exactly, disabling regex")
+        )
     )
 
     .subcommand(Command::new("ls")
