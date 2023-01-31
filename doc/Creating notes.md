@@ -26,6 +26,7 @@ However, based on certain conditions, this operation may have three outcomes:
 
 ### Templates
 
-If you have a template, then its contents are going to be used for the newly
-created note. If you don't, an empty file is created. In either case, you'll
-have to edit the file on your own.
+If you have a [template](./Templates.md) file set (see:
+[configuration](./Configuration.md)), then its contents are going to be used for
+the newly created note. If you don't, an empty file is created. In either case,
+you'll have to edit the file on your own.
