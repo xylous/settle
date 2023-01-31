@@ -1,6 +1,6 @@
 # Keeping the database up to date
 
-Since [note editing isn't done with `settle`](./Manage notes, not editors.md),
+Since [note editing isn't done with `settle`](./manage-notes-not-editors.md),
 the database needs to be updated quite frequently to always have the correct
 metadata.
 

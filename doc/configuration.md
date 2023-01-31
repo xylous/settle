@@ -11,6 +11,6 @@ tilde.
     If you don't specify an absolute path, e.g. `notes`, it's assumed you want
     your Zettelkasten to be at `~/notes`.
 
-- `template` - path to the [template for new Zettel](./Templates.md)
+- `template` - path to the [template for new Zettel](./templates.md)
 
     If empty, or if the path is invalid, then templates won't be used.

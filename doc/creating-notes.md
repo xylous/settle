@@ -11,7 +11,7 @@ For example:
 - `settle sync --create 'My second note' --project inbox` would create a note
     with 'My second note' as title, but in the 'inbox' project.
 
-NOTE: if you specify a [project](./Projects.md) that doesn't exist yet, then
+NOTE: if you specify a [project](./projects.md) that doesn't exist yet, then
 it's automatically created.
 
 However, based on certain conditions, this operation may have three outcomes:
@@ -29,7 +29,7 @@ However, based on certain conditions, this operation may have three outcomes:
 
 ### Templates
 
-If you have a [template](./Templates.md) file set (see:
-[configuration](./Configuration.md)), then its contents are going to be used for
+If you have a [template](./templates.md) file set (see:
+[configuration](./configuration.md)), then its contents are going to be used for
 the newly created note. If you don't, an empty file is created. In either case,
 you'll have to edit the file on your own.
