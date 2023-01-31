@@ -11,6 +11,9 @@ For example:
 - `settle sync --create 'My second note' --project inbox` would create a note
     with 'My second note' as title, but in the 'inbox' project.
 
+NOTE: if you specify a [project](./Projects.md) that doesn't exist yet, then
+it's automatically created.
+
 However, based on certain conditions, this operation may have three outcomes:
 
 - if you try to create a new note but one with the same title in the same
