@@ -16,6 +16,9 @@ project.
 The reason for this design choice is that, with subprojects like this, it would
 become a hierarchical nightmare extremely fast.
 
+NOTE: the root of the Zettelkasten has the empty string (`""`) as its project
+name.
+
 ### The role of projects
 
 Projects provide only a formal separation between notes, since any note can
