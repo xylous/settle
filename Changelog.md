@@ -2,6 +2,14 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.5 - 2023-01-30
+
+- add `--exact` option to `settle query`, for disabling regex and at the same
+    time avoiding any possible [internal] errors due to regex-specific
+    characters in Zettel titles
+- re-write documentation entirely, add a bunch of files to `doc/` and link to
+    them in the README.md "Overview" section
+
 ## v0.39.4 - 2023-01-25
 
 - fix: `settle sync --create` no longer permits empty titles and titles starting
