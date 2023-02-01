@@ -37,7 +37,7 @@ cargo install settle
 
 #### Before 2023
 
-- [x] generate database from existing files
+- [x] generate the database from existing files
 - [x] create Zettel
 - [x] list Zettel
 - [x] tags
@@ -51,9 +51,6 @@ cargo install settle
 - [x] list mentioned but non-existent Zettel ("ghosts")
 - [x] search for text inside notes
 - [x] update Zettel metadata individually
-- [x] print links
-    - [x] forward links (from a Zettel to other Zettel)
-    - [x] backlinks (to a Zettel from other Zettel)
 - [x] projects (subdirectories within the main Zettelkasten folder)
     - [x] add notes to projects
     - [x] create an inbox project by default
