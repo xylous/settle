@@ -48,27 +48,27 @@ struct Printer
 
 impl Printer
 {
-    fn set_zettelkasten(self: &mut Self, new_zettel: Vec<Zettel>)
+    fn set_zettelkasten(&mut self, new_zettel: Vec<Zettel>)
     {
         self.zettel = new_zettel;
     }
 
-    fn set_single_zettel(self: &mut Self, new_zettel: Zettel)
+    fn set_single_zettel(&mut self, new_zettel: Zettel)
     {
         self.zettel = vec![new_zettel];
     }
 
-    fn set_additional(self: &mut Self, new_additional: Vec<String>)
+    fn set_additional(&mut self, new_additional: Vec<String>)
     {
         self.additional = new_additional;
     }
 
-    fn set_format(self: &mut Self, new_format: String)
+    fn set_format(&mut self, new_format: String)
     {
         self.format = new_format;
     }
 
-    fn set_link_separator(self: &mut Self, new_separator: String)
+    fn set_link_separator(&mut self, new_separator: String)
     {
         self.link_separator = new_separator;
     }
@@ -79,7 +79,7 @@ impl Printer
         // basically. since there's a `zip()` call, if the `additional` vector is smaller in length
         // than the `zettel` vector, then some things won't get printed.
         // this really only makes sure that everything gets printed
-        let len_diff = &self.zettel.len() - &self.additional.len();
+        let len_diff = self.zettel.len() - self.additional.len();
         let mut empty_diff = vec!["".to_string(); len_diff];
         self.additional.append(&mut empty_diff);
 
@@ -90,7 +90,7 @@ impl Printer
             result = result.replace("%p", &z.project);
             result = result.replace("%P", &z.filename(cfg));
             result = result.replace("%l", &z.links.join(&self.link_separator));
-            result = result.replace("%a", &a);
+            result = result.replace("%a", a);
             // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
             // Zettel, so if we don't, we just consume the `%b` token and move on
             if result.contains("%b") {
@@ -170,7 +170,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     printer.set_zettelkasten(zs);
 
-    printer.print(&cfg);
+    printer.print(cfg);
 
     Ok(())
 }
@@ -235,7 +235,7 @@ fn filter_title(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
     zs.into_iter()
       .filter(|z| {
           if exact {
-              pattern == &z.title
+              pattern == z.title
           } else {
               re.is_match(&z.title)
           }
@@ -250,7 +250,7 @@ fn filter_project(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
     zs.into_iter()
       .filter(|z| {
           if exact {
-              pattern == &z.project
+              pattern == z.project
           } else {
               re.is_match(&z.project)
           }
@@ -273,7 +273,7 @@ fn filter_tag(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
     let re = Regex::new(&format!("^{}(/.*)?$", pattern)).unwrap();
     zs.into_iter()
       .filter(|z| {
-          for t in &z.tags {
+          if let Some(t) = z.tags.first() {
               return if exact { pattern == t } else { re.is_match(t) };
           }
           false
@@ -326,7 +326,7 @@ fn backlinks(all: &[Zettel], links_to: &str, exact: bool) -> Vec<Zettel>
     all.iter()
        .cloned()
        .filter(|z| {
-           for l in &z.links {
+           if let Some(l) = z.links.first() {
                return if exact { links_to == l } else { re.is_match(l) };
            }
            false
@@ -363,7 +363,7 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
         zettel.create(cfg);
         let mut printer = Printer::default();
         printer.set_single_zettel(zettel.clone());
-        printer.print(&cfg);
+        printer.print(cfg);
     }
     db.save(&zettel)?;
 
@@ -442,7 +442,7 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 
     let mut printer = Printer::default();
     printer.set_zettelkasten(zs.clone());
-    printer.print(&cfg);
+    printer.print(cfg);
 
     let mut dial = dialoguer::Confirm::new();
     let prompt =
