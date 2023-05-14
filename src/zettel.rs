@@ -106,13 +106,22 @@ impl Zettel
         format!("{}{}.md", dir, &self.title)
     }
 
-    /// Check if the current Zettel file contains `text`
-    pub fn has_text(&self, cfg: &ConfigOptions, text: &str) -> bool
+    /// Return an empty string if the given Zettel doesn't contain the given pattern, otherwise
+    /// return the first match
+    pub fn find_pattern(&self, cfg: &ConfigOptions, pattern: &str) -> String
     {
         let contents = file_to_string(&self.filename(cfg));
-        let re = Regex::new(&format!(r"(?i){}", text)).unwrap();
+        let re = Regex::new(&format!(r"(?i){}", pattern)).unwrap();
 
-        re.is_match(&contents)
+        if let Some(first) = re.captures(&contents) {
+            if let Some(second) = first.get(0) {
+                second.as_str()
+            } else {
+                ""
+            }
+        } else {
+            ""
+        }.to_string()
     }
 
     /// Given the contents of a template file, replace all placeholders with their proper value
