@@ -29,6 +29,48 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+struct Printer
+{
+    zettel: Vec<Zettel>,
+    additional: Vec<String>,
+    format: String,
+    link_separator: String,
+}
+
+impl Printer
+{
+    fn set_zettel(self: &mut Self, new_zettel: Vec<Zettel>)
+    {
+        self.zettel = new_zettel;
+    }
+
+    fn set_additional(self: &mut Self, new_additional: Vec<String>)
+    {
+        self.additional = new_additional;
+    }
+
+    fn set_format(self: &mut Self, new_format: String)
+    {
+        self.format = new_format;
+    }
+
+    fn set_link_separator(self: &mut Self, new_separator: String)
+    {
+        self.link_separator = new_separator;
+    }
+}
+
+impl Default for Printer
+{
+    fn default() -> Printer
+    {
+        Printer { zettel: vec![],
+                  additional: vec![],
+                  format: "[%p] %t".to_string(),
+                  link_separator: "|".to_string() }
+    }
+}
+
 /// Query the database, applying various filters if proivded
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
