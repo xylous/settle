@@ -2,6 +2,13 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.6 - 2023-05-14
+
+- `settle query`: add `%a` format flag, which, when used in combination with the
+    `--text` option, prints the patterns matched by the latter option. This is
+    especially useful for giving context to a search, since enclosing it with a
+    `.*` at the start and end (such as `.*search.*`) returns an entire line.
+
 ## v0.39.5 - 2023-01-30
 
 - add `--exact` option to `settle query`, for disabling regex and at the same
