@@ -41,6 +41,7 @@ struct Printer
     //  %P - path
     //  %l - (forward) links
     //  %b - backlinks
+    //  %a - contents of the `additional` field (--text flag fills this with the matched pattern)
     format: String,
     link_separator: String,
 }
@@ -72,15 +73,24 @@ impl Printer
         self.link_separator = new_separator;
     }
 
-    fn print(&self, cfg: &ConfigOptions)
+    /// Abracadabra, yadda yadda. Print everything properly.
+    fn print(&mut self, cfg: &ConfigOptions)
     {
-        for z in &self.zettel {
+        // basically. since there's a `zip()` call, if the `additional` vector is smaller in length
+        // than the `zettel` vector, then some things won't get printed.
+        // this really only makes sure that everything gets printed
+        let len_diff = &self.zettel.len() - &self.additional.len();
+        let mut empty_diff = vec!["".to_string(); len_diff];
+        self.additional.append(&mut empty_diff);
+
+        for (z, a) in self.zettel.iter().zip(&self.additional) {
             let mut result = self.format.to_string();
 
             result = result.replace("%t", &z.title);
             result = result.replace("%p", &z.project);
             result = result.replace("%P", &z.filename(cfg));
             result = result.replace("%l", &z.links.join(&self.link_separator));
+            result = result.replace("%a", &a);
             // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
             // Zettel, so if we don't, we just consume the `%b` token and move on
             if result.contains("%b") {
@@ -127,7 +137,15 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_project(zs, project, exact);
     }
     if let Some(text) = matches.value_of("TEXT_REGEX") {
-        zs = filter_text(zs, text, cfg);
+        let vs = filter_text(zs.clone(), text, cfg);
+        let mut texts: Vec<String> = vec![];
+        zs = vec![]; // reset Zettel vector and append indiivdually
+                     // maybe speed this up by using unzip? I digress
+        for (z, t) in vs {
+            zs.push(z);
+            texts.push(t);
+        }
+        printer.set_additional(texts);
     }
     if let Some(tag) = matches.value_of("TAG") {
         zs = filter_tag(zs, tag, exact);
@@ -241,10 +259,11 @@ fn filter_project(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 }
 
 /// Keep only those Zettel that contain the pattern in their text
-fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<Zettel>
+fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<(Zettel, String)>
 {
     zs.into_iter()
-      .filter(|z| z.has_text(cfg, pattern))
+      .map(|z| (z.clone(), z.find_pattern(cfg, pattern)))
+      .filter(|(_, t)| !t.is_empty())
       .collect()
 }
 
