@@ -29,19 +29,32 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Ok(())
 }
 
+/// A printer that prints. Because it's convenient.
 struct Printer
 {
     zettel: Vec<Zettel>,
     additional: Vec<String>,
+    // Print according to a certain format, replacing the following placeholder tokens
+    //
+    //  %t - title
+    //  %p - project
+    //  %P - path
+    //  %l - (forward) links
+    //  %b - backlinks
     format: String,
     link_separator: String,
 }
 
 impl Printer
 {
-    fn set_zettel(self: &mut Self, new_zettel: Vec<Zettel>)
+    fn set_zettelkasten(self: &mut Self, new_zettel: Vec<Zettel>)
     {
         self.zettel = new_zettel;
+    }
+
+    fn set_single_zettel(self: &mut Self, new_zettel: Zettel)
+    {
+        self.zettel = vec![new_zettel];
     }
 
     fn set_additional(self: &mut Self, new_additional: Vec<String>)
@@ -57,6 +70,32 @@ impl Printer
     fn set_link_separator(self: &mut Self, new_separator: String)
     {
         self.link_separator = new_separator;
+    }
+
+    fn print(&self, cfg: &ConfigOptions)
+    {
+        for z in &self.zettel {
+            let mut result = self.format.to_string();
+
+            result = result.replace("%t", &z.title);
+            result = result.replace("%p", &z.project);
+            result = result.replace("%P", &z.filename(cfg));
+            result = result.replace("%l", &z.links.join(&self.link_separator));
+            // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
+            // Zettel, so if we don't, we just consume the `%b` token and move on
+            if result.contains("%b") {
+                let maybe_get_backlinks = || -> Result<Vec<String>, Error> {
+                    let all = Database::new(&cfg.db_file())?.all()?;
+                    let bks = backlinks(&all, &z.title, true);
+                    Ok(bks.iter().map(|z| z.title.clone()).collect())
+                };
+                if let Ok(bks) = maybe_get_backlinks() {
+                    result = result.replace("%b", &bks.join(&self.link_separator));
+                }
+            }
+
+            println!("{}", result);
+        }
     }
 }
 
@@ -77,6 +116,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
 
     let mut zs: Vec<Zettel> = db.all()?;
+    let mut printer = Printer::default();
 
     let exact = matches.is_present("EXACT_MATCH");
 
@@ -106,13 +146,14 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zk_graph_dot_output(&zs);
     } else if let Some(format) = matches.value_of("FORMAT") {
         let link_sep = matches.value_of("LINK_SEP").unwrap_or(" | ");
-        zettelkasten_format(cfg,
-                            &zs,
-                            &replace_literals(format),
-                            &replace_literals(link_sep))
-    } else {
-        zettelkasten_format(cfg, &zs, "[%p] %t", "")
+        printer.set_format(replace_literals(format));
+        printer.set_link_separator(replace_literals(link_sep));
     }
+
+    printer.set_zettelkasten(zs);
+
+    printer.print(&cfg);
+
     Ok(())
 }
 
@@ -159,45 +200,6 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
     }
 
     Ok(())
-}
-
-/// Print every given Zettel according to the specified ormat
-fn zettelkasten_format(cfg: &ConfigOptions, zs: &[Zettel], fmt: &str, link_sep: &str)
-{
-    zs.iter().for_each(|z| {
-                 zettel_format(cfg, z, fmt, link_sep);
-             });
-}
-
-// Print according to a certain format, replacing the following placeholder tokens
-//
-//  %t - title
-//  %p - project
-//  %P - path
-//  %l - (forward) links
-//  %b - backlinks
-fn zettel_format(cfg: &ConfigOptions, z: &Zettel, fmt: &str, link_sep: &str)
-{
-    let mut result = fmt.to_string();
-
-    result = result.replace("%t", &z.title);
-    result = result.replace("%p", &z.project);
-    result = result.replace("%P", &z.filename(cfg));
-    result = result.replace("%l", &z.links.join(link_sep));
-    // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
-    // Zettel, so if we don't, we just consume the `%b` token and move on
-    if result.contains("%b") {
-        let maybe_get_backlinks = || -> Result<Vec<String>, Error> {
-            let all = Database::new(&cfg.db_file())?.all()?;
-            let bks = backlinks(&all, &z.title, true);
-            Ok(bks.iter().map(|z| z.title.clone()).collect())
-        };
-        if let Ok(bks) = maybe_get_backlinks() {
-            result = result.replace("%b", &bks.join(link_sep));
-        }
-    }
-
-    println!("{}", result);
 }
 
 /// Print every element in the list of Strings on an individual line
@@ -340,7 +342,9 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
         // saved outside of the loop
     } else {
         zettel.create(cfg);
-        zettel_format(cfg, &zettel, "[%p] %t", "")
+        let mut printer = Printer::default();
+        printer.set_single_zettel(zettel.clone());
+        printer.print(&cfg);
     }
     db.save(&zettel)?;
 
@@ -417,7 +421,9 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 
     let zs = db.find_by_title(pattern)?;
 
-    zettelkasten_format(cfg, &zs, "[%p] %t", "");
+    let mut printer = Printer::default();
+    printer.set_zettelkasten(zs.clone());
+    printer.print(&cfg);
 
     let mut dial = dialoguer::Confirm::new();
     let prompt =
