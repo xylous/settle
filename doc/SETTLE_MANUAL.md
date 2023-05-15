@@ -57,7 +57,8 @@ ran without options), the entire Zettelkasten is returned.
 
 - `-g | --tag <REGEX>` - keep Zettel that have at least one tag that matches `<REGEX>`
 
-- `-x | --text <REGEX>` - keep Zettel whose text contents match `<REGEX>`
+- `-x | --text <REGEX>` - keep Zettel whose text contents match `<REGEX>`. Note
+    that this unlocks the `%a` format option (see below)
 
 - `-l | --links <REGEX>` - for the Zettel whose title matches `<REGEX>`,
     keep all the Zettel that they have a link pointing to
@@ -74,6 +75,12 @@ ran without options), the entire Zettelkasten is returned.
     - `%p` - replaced with the project name
     - `%P` - replaced with the absolute path to the Zettel
     - `%l` - replaced with the (forward) links of the Zettel
+    - `%a` - when used together with the `--text` option, replaced by the matches
+        that `settle` found while filtering the Zettel. This may not be that useful
+        for exact matches, but it's extremely useful when using regex. Note that,
+        when your query is enclosed with two `.*` on both ends, such as
+        `".*example.*"`, the entire line is printed; the practical application is
+        giving your queries a (somewhat limited) context.
     - `%b` - replaced with the backlinks of the Zettel; note that since `settle`
         only stores forward links in the database, fetching backlinks is a
         little bit more time consuming
@@ -116,6 +123,10 @@ Here are a few concrete examples:
     between square brackets, separating links with tabs.
 
 - `settle query --graph` prints a DOT file of the entire Zettelkasten to stdout
+
+- `settle query --text ".*search.*" --format "%t (%a)"` not only prints every
+    Zettel that contains the word `search` in it, but it also prints every line
+    containing that word.
 
 ### Options for `sync` (`-S`)
 
