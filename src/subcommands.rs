@@ -162,7 +162,10 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     if matches.is_present("GRAPH") {
         zk_graph_dot_output(&zs);
-    } else if let Some(format) = matches.value_of("FORMAT") {
+        return Ok(());
+    }
+
+    if let Some(format) = matches.value_of("FORMAT") {
         let link_sep = matches.value_of("LINK_SEP").unwrap_or(" | ");
         printer.set_format(replace_literals(format));
         printer.set_link_separator(replace_literals(link_sep));
