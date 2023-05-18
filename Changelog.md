@@ -2,6 +2,12 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.7 - 2023-05-19
+
+- `settle query`: fix bad output of `--graph` command, which (due to the v0.39.6
+    update) printed not only its intended output, but also the regular query
+    output.
+
 ## v0.39.6 - 2023-05-14
 
 - `settle query`: add `%a` format flag, which, when used in combination with the
