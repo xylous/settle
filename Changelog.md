@@ -2,6 +2,13 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.8 - 2023-05-21
+
+- add `main` as an alias for the main Zettelkasten project, i.e. the empty
+    string project, for all commands that may reference it
+- fix `settle sync --move`: use regular regex instead of SQL regex to match
+    notes
+
 ## v0.39.7 - 2023-05-19
 
 - `settle query`: fix bad output of `--graph` command, which (due to the v0.39.6
