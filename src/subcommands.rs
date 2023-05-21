@@ -441,7 +441,11 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let zs = db.find_by_title(pattern)?;
+    let re = Regex::new(pattern).unwrap();
+    let zs: Vec<Zettel> = db.all()?
+                            .into_iter()
+                            .filter(|z| re.is_match(&z.title))
+                            .collect();
 
     let mut printer = Printer::default();
     printer.set_zettelkasten(zs.clone());
