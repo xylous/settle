@@ -69,34 +69,34 @@ ran without options), the entire Zettelkasten is returned.
 - `-o | --loners` - keep Zettel that have no links pointing to other zettel AND
     have no links pointing to them.
 
-- `-f | --format <FORMAT>` - every Zettel is printed according to `<FORMAT>`.
-    Several formatting flags are supported, such as:
-    - `%t` - replaced with the title
-    - `%p` - replaced with the project name
-    - `%P` - replaced with the absolute path to the Zettel
-    - `%l` - replaced with the (forward) links of the Zettel
-    - `%a` - when used together with the `--text` option, replaced by the matches
-        that `settle` found while filtering the Zettel. This may not be that useful
-        for exact matches, but it's extremely useful when using regex. Note that,
-        when your query is enclosed with two `.*` on both ends, such as
-        `".*example.*"`, the entire line is printed; the practical application is
-        giving your queries a (somewhat limited) context.
-    - `%b` - replaced with the backlinks of the Zettel; note that since `settle`
-        only stores forward links in the database, fetching backlinks is a
-        little bit more time consuming
+- `-f | --format <FORMAT>` - print according to `<FORMAT>`, which has the
+    following flags:
+    - `%t` - the title of the note
+    - `%p` - the project [name] of the note
+    - `%P` - the absolute path to the Zettel
+    - `%l` - the (forward) links of the Zettel
+    - `%b` - the backlinks of the Zettel; note that since `settle` only stores
+        forward links in the database, fetching backlinks is a little bit more
+        time consuming
+    - `%a` - the first match that `settle` found while filtering the Zettel with
+        the `--text` option. This may not be that useful for exact matches, but
+        it's extremely useful when using regex. Note that, when your query is
+        enclosed with two `.*` on both ends, such as `".*example.*"`, the entire
+        matched line is printed; the practical application is giving your
+        queries a (somewhat limited) context.
 
-- `-s | --link_sep <SEPARATOR>` - can only be used together with `--format`, in
-    which case it specifies the separator used between both forward links and
-    backlinks.
+- `-s | --link_sep <SEPARATOR>` - specify the separator used between both forward
+    links and backlinks, when several have to be printed consequently. Default
+    value is ` | `
 
 - `--graph` - transform the output into [DOT
     format](https://en.wikipedia.org/wiki/DOT_(graph_description_language),
-    where the nodes are the individual Zettel titles and the edges, are, well,
-    links. You can then run the file through e.g. Graphviz or `xdot` (or
-    anything that can read DOT for that matter) to render the graph into an
-    image, or, rather, explore the graph interactively.
+    where the nodes are the individual Zettel titles and the edges are links.
+    You can then run the file through e.g. Graphviz or `xdot` (or anything that
+    can read DOT for that matter) to render the graph into an image, or, rather,
+    explore the graph interactively.
 
-    NOTE: even if a note didn't appear in the results-proper, it may appear in
+    NOTE: Even if a note doesn't appear in the results-proper, it may appear in
     the graph. Thus, it's worth mentioning that all direct (immediate) links
     that the notes in the query results have *will appear* on the graph.
 
@@ -109,6 +109,9 @@ Here are a few concrete examples:
 - `settle query --project "" --title ".*word.*"` returns all notes that are in
     the main Zettelkasten (the empty-string project) and have the word `word`
     within their title.
+
+- `settle query --project main --title ".*word.*"` is exactly the same as above,
+    but uses the project-alias `main`.
 
 - `settle query --formatting "[%p] %t" --link_sep " | "` is the same as the
     default format. Note that, since no links are printed, the separator is
@@ -135,8 +138,9 @@ don't work with regex (except `--move`). Matches here need to be exact, since
 we're dealing with more or less precise database changes. Also, unless
 specified otherwise, most/all options are mutually exclusive.
 
-- `-p | --project <PROJECT>` - this option actually doesn't do anything on its
-    own, instead being used as a helper option to `--create` and `--move`
+- `-p | --project <PROJECT>` - specify project. NOTE: This option actually
+    doesn't do anything on its own, and is instead used as a helper option to
+    `--create` and `--move`
 
 - `-c | --create <TITLE>` - create a new Zettel with the provided title. If the
     `--project` flag is provided, then make it part of that project
@@ -148,8 +152,8 @@ specified otherwise, most/all options are mutually exclusive.
     Zettel's metadata is updated (or stored, if they weren't in the database
     already)
 
-- `-m | --move <REGEX>` - this option requires the `--project` option; all
-    Zettel whose title matches `<REGEX>` are moved to the specified project
+- `-m | --move <REGEX>` - all Zettel whose title matches `<REGEX>` are moved to
+    the specified project. NOTE: this requires the `--project` option
 
 - `-n | --rename <ARGS...>` - this option accepts multiple values; however, it
     only renames the first Zettel whose title it can find in the database, with

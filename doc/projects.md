@@ -6,8 +6,8 @@
 directory that contains at least one note, i.e. at least one Markdown file.
 
 The catch is that only the root of your Zettelkasten directory and only the
-subdirectories it contains can count as projects. That is to say, if the root of
-your Zettelkasten is at `~/docs/zettelkasten`, then
+*direct* subdirectories it contains can count as projects. That is to say, if
+the root of your Zettelkasten is at `~/docs/zettelkasten`, then
 `~/docs/zettelkasten/myproject` can be a project, but
 `~/docs/zettelkasten/myproject/mysubproject` cannot. Likewise, since `~/docs`
 isn't a subdirectory of your Zettelkasten's root, it can't can't count as a
@@ -16,8 +16,8 @@ project.
 The reason for this design choice is that, with subprojects like this, it would
 become a hierarchical nightmare extremely fast.
 
-NOTE: the root of the Zettelkasten has the empty string (`""`) as its project
-name.
+NOTE: the root of the Zettelkasten can be referenced by two names: `"main"`, or
+an empty string (`""`).
 
 ### The role of projects
 
