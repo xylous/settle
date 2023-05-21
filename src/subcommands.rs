@@ -14,7 +14,7 @@ use crate::io::{abs_path, file_exists};
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let project = matches.value_of("PROJECT").unwrap_or_default();
+    let project = realproject(matches.value_of("PROJECT").unwrap_or_default());
     if let Some(title) = matches.value_of("CREATE") {
         create(cfg, title, project)?;
     } else if let Some(path) = matches.value_of("UPDATE") {
@@ -134,7 +134,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_title(zs, title, exact);
     }
     if let Some(project) = matches.value_of("PROJECT") {
-        zs = filter_project(zs, project, exact);
+        zs = filter_project(zs, realproject(project), exact);
     }
     if let Some(text) = matches.value_of("TEXT_REGEX") {
         let vs = filter_text(zs.clone(), text, cfg);
@@ -512,4 +512,14 @@ fn generate(cfg: &ConfigOptions) -> Result<(), Error>
              start.elapsed().as_millis());
 
     Ok(())
+}
+
+/// Given a project name-alias, return the real project's name
+/// Note how `main` is an alias for the main Zettelkasten, whose real project is `` (empty string)
+fn realproject(project: &str) -> &str
+{
+    match project {
+        "main" | "" => "", // main project
+        any => any,        // any other project
+    }
 }
