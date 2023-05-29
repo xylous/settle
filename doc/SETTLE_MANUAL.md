@@ -10,13 +10,15 @@ Vim and Neovim.
 
 #### Table of contents
 
-<details><summary></summary>
+<details><summary>Click to expand</summary>
 
 - [Synopsis](#synopsis)
 - [Options](#options)
 - [Commands](#commands)
-    - [the `settle query` command](#the-query-command)
-    - [the `settle sync` command](#the-sync-command)
+    - [the `query` command](#the-query-command)
+        - [examples](#examples-of-the-query-command)
+    - [the `sync` command](#the-sync-command)
+        - [examples](#examples-of-the-sync-command)
 - [Configuration](#configuration)
 - [Templates](#templates)
     - [Template placeholders](#template-placeholders)
@@ -122,7 +124,7 @@ Here are the query flags:
     NOTE: all direct (immediate) links that the notes in the query results have
     *will appear* on the graph.
 
-##### Query examples
+##### Examples of the query command
 
 - `settle query --text "sample" --loners` returns all notes that contain `sample`
     in their text and that aren't linked with any other note in the
@@ -165,24 +167,27 @@ don't work with regex (except `--move`). Matches here need to be exact, since
 we're dealing with more or less precise database changes. Also, unless
 specified otherwise, most/all options are mutually exclusive.
 
-- `-p | --project <PROJECT>` - specify project. NOTE: This option actually
-    doesn't do anything on its own, and is instead used as a helper option to
-    `--create` and `--move`
+Here are the options for this command:
+
+- `-p | --project <PROJECT>` - specify project (NOTE: by itself, this option
+    doesn't do anything)
 
 - `-c | --create <TITLE>` - create a new Zettel with the provided title. If the
-    `--project` flag is provided, then make it part of that project
+    `--project` flag is provided, then make it part of that project; if not,
+    then add it to the main Zettelkasten project
 
-- `-u | --update <PATH>` - update a note's metadata, given its path on the
-    filesystem
+- `-u | --update <PATH>` - update a note's metadata, given its path (relative or
+    absolute) on the filesystem. If the file is not part of the Zettelkasten or
+    doesn't exist, then an error is returned.
 
 - `-g | --generate` - generate the entire database; that is to say, every
-    Zettel's metadata is updated (or stored, if they weren't in the database
+    Zettel's metadata is updated (or added, if they weren't in the database
     already)
 
-- `-m | --move <REGEX>` - all Zettel whose title matches `<REGEX>` are moved to
-    the specified project. NOTE: this requires the `--project` option
+- `-m | --move <REGEX>` - move all Zettel whose title matches `<REGEX>` to the
+    project specified by the `--project` option
 
-- `-n | --rename <ARGS...>` - this option accepts multiple values; however, it
+- `-n | --rename <TITLES...>` - this option accepts multiple values; however, it
     only renames the first Zettel whose title it can find in the database, with
     the name specified by the last argument in the list. If the names coincide,
     or if there's no valid Zettel title in the list, or if by renaming it would
@@ -190,10 +195,32 @@ specified otherwise, most/all options are mutually exclusive.
     Zettel is not changed. Also note that all links pointing to the previous
     Zettel's title are changed, so that the links point to the same file.
 
+##### Examples of the sync command
+
+- `settle sync --generate` (re)generates the database from the notes in the
+    Zettelkasten directory
+
+- `settle sync --create "My super interesting note"` creates a note called `My
+    super interesting note` inside the main Zettelkasten project
+
+- `settle sync --create "A novel idea" --project "inbox"` creates a note called
+    `A novel idea` inside the `inbox` project
+
+- assuming that the Zettelkasten directory is at `$HOME/zettelkasten`, then
+    `settle sync --update "$HOME/zettelkasten/My super interesting note"` updates
+    the metadata of `My super interesting note` in the database
+
+- `settle sync --move "My super interesting note" --project "inbox"` moves the
+    note `My super interesting note` to the `inbox` project
+
+- `settle sync --rename "My super interesting note" "My less interesting note"`
+    renames `My super interesting note` to `My less interesting note`, if the
+    former exists
+
 ## Configuration
 
-The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
-`$XDG_CONFIG_HOME` is set, either `~/.config/settle/settle.yaml`, by default.
+The configuration file is found at either `$XDG_CONFIG_HOME/settle/settle.yaml`,
+if `$XDG_CONFIG_HOME` is set, either `~/.config/settle/settle.yaml`, by default.
 
 The configuration specifies the following properties:
 
@@ -215,7 +242,7 @@ inside said new note, replacing variables.
 
 ### Template placeholders
 
-- `${TITLE}` - placeholder for the actual title
+- `${TITLE}` - replaced with the title of the note
 - `${DATE}` - replaced with the output of `date +%Y-%m-%d`
 
 ### Example template
