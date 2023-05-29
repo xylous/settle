@@ -13,7 +13,7 @@ Vim and Neovim.
 <details><summary></summary>
 
 - [Synopsis](#synopsis)
-- [General options](#options)
+- [Options](#options)
 - [Commands](#commands)
     - [the `settle query` command](#the-query-command)
     - [the `settle sync` command](#the-sync-command)
@@ -49,18 +49,19 @@ settle ls ['tags' | 'projects' | 'ghosts' | 'path']
     information for said subcommand
 
 - `compl <SHELL>` - generate autocompletion file for a certain shell (currently
-    supported: zsh, bash, fish) (see: section on autocompletion)
+    supported: zsh, bash, fish) (see: [section on shell
+    autocompletion](#shell-autocompletion))
 
-- `ls <OBJECT>` - list things that are not directly related to notes. The only
-    accepted `<OBJECT>` values are `tags`, `projects`, `ghosts`, and `path`. The
-    first prints all unique tags, the second prints all projects in your
-    Zettelkasten, the third prints all Zettel that have links pointing to them
-    but have not yet been created, and the last one prints the path to the
-    Zettelkasten (as per your configuration options).
+- `ls <OBJECT>` - list things that don't directly involve notes. Possible
+    arguments:
+    - `path` -  print the path to the Zettelkasten
+    - `tags` -  print all existing tags
+    - `projects` - print all existing projects
+    - `ghosts` - print notes that have links pointed to them, but don't exist
 
-- `query | -Q` (described below)
+- `query` or `-Q` (described below)
 
-- `sync | -S` (described below)
+- `sync` or `-S` (described below)
 
 ### The query command
 
@@ -69,7 +70,9 @@ option acts as a criteria for querying. `settle query --title "Foo.*" --tag
 "bar"` will only return notes whose titles starts with `Foo` AND have the tag
 `bar`, not notes whose titles start with `Foo` OR have the tag `bar`. By
 default, when no filter parameter is applied (that is to say, `settle query` is
-ran without options), the entire Zettelkasten is returned.
+ran without options), all notes are returned.
+
+Here are the query flags:
 
 - `-t | --title <REGEX>` - keep Zettel whose title matches `<REGEX>`
 
@@ -80,13 +83,13 @@ ran without options), the entire Zettelkasten is returned.
 - `-x | --text <REGEX>` - keep Zettel whose text contents match `<REGEX>`. Note
     that this unlocks the `%a` format option (see below)
 
-- `-l | --links <REGEX>` - for the Zettel whose title matches `<REGEX>`,
-    keep all the Zettel that they have a link pointing to
+- `-l | --links <REGEX>` - keep Zettel to which the notes whose titles match
+    `<REGEX>` have links pointing to
 
-- `-b | --backlinks <REGEX>` - for the Zettel whose title matches `<REGEX>`,
-    keep all Zettel that have a link pointing to them
+- `-b | --backlinks <REGEX>` - keep Zettel which have a link pointing to the
+    notes whose title match `<REGEX>`
 
-- `-o | --loners` - keep Zettel that have no links pointing to other zettel AND
+- `-o | --loners` - keep Zettel that have no links pointing to other notes AND
     have no links pointing to them.
 
 - `-f | --format <FORMAT>` - print according to `<FORMAT>`, which has the
@@ -116,9 +119,8 @@ ran without options), the entire Zettelkasten is returned.
     can read DOT for that matter) to render the graph into an image, or, rather,
     explore the graph interactively.
 
-    NOTE: Even if a note doesn't appear in the results-proper, it may appear in
-    the graph. Thus, it's worth mentioning that all direct (immediate) links
-    that the notes in the query results have *will appear* on the graph.
+    NOTE: all direct (immediate) links that the notes in the query results have
+    *will appear* on the graph.
 
 ##### Query examples
 
@@ -142,10 +144,15 @@ ran without options), the entire Zettelkasten is returned.
     (note the absence of regex wildcards)
 
 - `settle query --format "[%P]\t%l" --link_sep "\t" --title "Note.*"` takes
-    every Zettel whose title starts with `Note`, printing their absolute path
-    between square brackets, separating links with tabs.
+    every Zettel whose title starts with `Note` and prints their absolute path
+    between square brackets, but also their forward links, which are separated
+    with tabs.
 
-- `settle query --graph` prints a DOT file of the entire Zettelkasten to stdout
+- `settle query --graph 1>graph.gv` prints DOT output of the entire Zettelkasten
+    to a file called `graph.gv`
+
+- `settle query --graph --tag "neurology"` prints a DOT graph of all Zettel
+    who have the `neurology` tag.
 
 - `settle query --text ".*search.*" --format "%t (%a)"` not only prints every
     Zettel that contains the word `search` in it, but it also prints every line
@@ -188,13 +195,15 @@ specified otherwise, most/all options are mutually exclusive.
 The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
 `$XDG_CONFIG_HOME` is set, either `~/.config/settle/settle.yaml`, by default.
 
-- `zettelkasten` - directory in which the notes are stored at
+The configuration specifies the following properties:
+
+- `zettelkasten` - directory in which the notes are stored in
 
     If you don't specify an absolute path, e.g. `notes`, it's assumed you want
     your Zettelkasten to be at `~/notes`. You can also use paths containing
     environment variables or paths starting with a tilde (`~`)
 
-- `template` - Path to Zettel template
+- `template` - path to Zettel template
 
     If empty, or if the path is invalid, then templates won't be used. You can
     use paths containing environment variables, or a leading tilde (`~`).
@@ -224,7 +233,7 @@ inside said new note, replacing variables.
 ## Shell autocompletion
 
 Shell completions can be generated by the user at runtime, by using the `compl`
-command. In most cases, you'll need to create a directory for user-defined
+subcommand. In most cases, you'll need to create a directory for user-defined
 completions, then add `settle`'s output to it.
 
 If you want XDG compliance, you probably know what you're doing, so just replace
