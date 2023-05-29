@@ -65,7 +65,32 @@ settle ls ['tags' | 'projects' | 'ghosts' | 'path']
 
 - `sync` or `-S` (described below)
 
+##### A short briefing on regular expressions (REGEX)
+
+Regex is a useful tool that `settle` has support for, because it provides
+wildcards and patterns which allow matching multiple strings. See [this regular
+expression specification](http://www.math.clemson.edu/~warner/M865/RegexBasics.html) for
+all supported patterns. But here are a few of the most useful characters you're
+going to use:
+
+- `.` - match any single character
+- `*` - match the previous character zero or more times
+- `+` - match the previous character one or more times
+
+If you wanted to match a literal `.`, `*` or `+`, you'd have to escape them with
+a backslash: `\.`, `\*` and `\+` respectively.
+
+Here are some examples:
+
+- `.*` matches *anything*, even empty strings
+- `f+` matches the character `f` one or more times
+- `.*foo.*` matches any string containing the word `foo`
+
 ### The query command
+
+The `query` command is used for getting information related to the notes in the
+Zettelkasten - most of the time, by returning those that match a given set of
+criteria.
 
 Note that the various options listed here all compound - that is to say, every
 option acts as a criteria for querying. `settle query --title "Foo.*" --tag
@@ -161,6 +186,10 @@ Here are the query flags:
     containing that word.
 
 ### The sync command
+
+The `sync` command is used for changing things related to notes - be it creating
+new ones, updating their metadata in the database, moving them from a project to
+another project, or renaming them.
 
 Note that, unlike the query command, the options that do take arguments here
 don't work with regex (except `--move`). Matches here need to be exact, since
