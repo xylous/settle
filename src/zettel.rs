@@ -10,14 +10,13 @@ use crate::io::*;
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
+    let ws_re = Regex::new(r#"[\n\t ]+"#).unwrap();
     re.captures_iter(contents)
       .par_bridge()
       .map(|cap| {
-          let title = cap.get(1)
-                         .map_or("", |m| m.as_str())
-                         .to_string()
-                         .replace(['\n', '\t'], " ");
-          title
+          cap.get(1).map_or("".to_string(), |m| {
+                        ws_re.replace_all(m.as_str(), " ").to_string()
+                    })
       })
       .collect()
 }
