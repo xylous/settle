@@ -78,7 +78,7 @@ impl Database
         let tags = crate::vec_to_str(&zettel.tags);
         self.conn.execute(
             "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
-            &[&zettel.title, &zettel.project, &links, &tags],
+            [&zettel.title, &zettel.project, &links, &tags],
         )?;
         Ok(())
     }
@@ -88,7 +88,7 @@ impl Database
     {
         self.conn
             .execute("DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
-                     &[&zettel.title, &zettel.project])?;
+                     [&zettel.title, &zettel.project])?;
         Ok(())
     }
 
@@ -238,7 +238,7 @@ impl Database
     {
         self.conn
             .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
-                     &[new_project, &zettel.title, &zettel.project])?;
+                     [new_project, &zettel.title, &zettel.project])?;
         Ok(())
     }
 
@@ -247,7 +247,7 @@ impl Database
     {
         self.conn
             .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
-                     &[new_title, &zettel.title, &zettel.project])?;
+                     [new_title, &zettel.title, &zettel.project])?;
         Ok(())
     }
 }

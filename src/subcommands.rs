@@ -391,14 +391,14 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 }
 
 /// Rename a note, but keep it in the same project
-fn rename(cfg: &ConfigOptions, arr: &Vec<String>) -> Result<(), Error>
+fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
     // basically, look thru the values provided by clap, and extract the first Zettel title that
     // exists and is different from the new title
-    let old_title: String = arr.clone()
-                               .into_iter()
+    let old_title: String = arr.iter()
+                               .cloned()
                                .find(|x| !db.find_by_title(x).unwrap_or_default().is_empty())
                                .unwrap_or(String::from(""));
     let new_title: String = arr.last().unwrap_or(&String::from("")).to_string();

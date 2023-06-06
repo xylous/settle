@@ -16,8 +16,7 @@ fn find_links(contents: &str) -> Vec<String>
           let title = cap.get(1)
                          .map_or("", |m| m.as_str())
                          .to_string()
-                         .replace('\n', " ")
-                         .replace('\t', " ");
+                         .replace(['\n', '\t'], " ");
           title
       })
       .collect()
