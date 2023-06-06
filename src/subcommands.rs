@@ -347,8 +347,10 @@ fn backlinks(all: &[Zettel], links_to: &str, exact: bool) -> Vec<Zettel>
     all.iter()
        .cloned()
        .filter(|z| {
-           if let Some(l) = z.links.first() {
-               return if exact { links_to == l } else { re.is_match(l) };
+           for l in z.links.clone() {
+               if links_to == l || (!exact && re.is_match(&l)) {
+                   return true;
+               };
            }
            false
        })
