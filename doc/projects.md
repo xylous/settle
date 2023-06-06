@@ -1,6 +1,6 @@
 # Projects
 
-### The definition of a project
+### What is a project?
 
 `settle` understands your Zettelkasten in terms of *projects*. A project is any
 directory that contains at least one note, i.e. at least one Markdown file.

@@ -119,6 +119,8 @@ Here are the query flags:
 - `-o | --loners` - keep Zettel that have no links pointing to other notes AND
     have no links pointing to them.
 
+- `-e | --exact` - disable ALL regular expressions and make every match literal
+
 - `-f | --format <FORMAT>` - print according to `<FORMAT>`, which has the
     following flags:
     - `%t` - the title of the note

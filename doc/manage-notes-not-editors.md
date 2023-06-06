@@ -9,5 +9,6 @@ universal backend-like interface to your notes.
 
 Any editor integration is done with editor plugins/wrappers. Since I'm a Neovim
 user myself, I wrote [settle.vim](https://github.com/xylous/settle.vim), which
-overall improves the whole experience, by doing things like automatically
-updating the notes you're working on.
+overall improves the writing experience, by doing things like automatically
+updating the notes you're working on, by providing autocompletion, and by
+creating a few useful commands.

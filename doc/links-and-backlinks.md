@@ -18,7 +18,7 @@ links to X.
 More concretely, let's say we have two notes, note X that links to note Y.
 Therefore, X has Y as a forward link, Y has X as a backlink.
 
-Since [only the bare minimum of metadata is stored](./minimum-metadata.md),
-backlinks aren't actually kept in the database: they can be deduced, or, rather,
-computed, from forward links. Moreover, backlinks aren't stored anywhere within
-the notes' contents.
+Since only the bare minimum of metadata is stored, backlinks aren't actually
+kept in the database: they can be deduced, or, rather, computed, from forward
+links. Also note that, of course, backlinks aren't stored anywhere within the
+notes' contents.

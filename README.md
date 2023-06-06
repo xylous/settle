@@ -19,17 +19,17 @@ cargo install settle
 
 ### Overview
 
+- [full usage manual](./doc/SETTLE_MANUAL.md), contains more technical descriptions
 - [design principles](./doc/design-principles.md)
 - [project history](./doc/history.md)
 - [configuration](./doc/configuration.md)
-- [full usage manual](./doc/SETTLE_MANUAL.md), contains more technical descriptions
+- [tags and subtags](./doc/tags-and-subtags.md)
+- [links and backlinks](./doc/links-and-backlinks.md)
 - [creating new notes (with templates as well)](./doc/creating-notes.md)
+- [keeping the database up to date](./doc/keeping-the-database-up-to-date.md)
 - [projects](./doc/projects.md)
     - [moving notes between projects](./doc/moving-notes-between-projects.md)
 - [renaming notes](./doc/renaming-notes.md)
-- [keeping the database up to date](./doc/keeping-the-database-up-to-date.md)
-- [tags and subtags](./doc/tags-and-subtags.md)
-- [links and backlinks](./doc/links-and-backlinks.md)
 - [query, search and filter](./doc/query-search-and-filter.md)
     - [making a graph of your Zettelkasten](./doc/graphs.md)
 
@@ -78,7 +78,9 @@ cargo install settle
 Pull requests are welcome. For major changes, please open an issue first to
 discuss what you would like to change.
 
+<!--
 Please make sure to update tests as appropriate.
+-->
 
 ## License
 

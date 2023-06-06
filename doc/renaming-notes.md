@@ -8,9 +8,9 @@ You can rename a note by using the `settle sync --rename <ARGS>` command;
 matched exactly, as using regex could match multiple notes.
 
 The technical behaviour of this command is a bit tough to describe: it checks
-thru the list of titles incrementally, from left to right, and the first title
-that it finds a note for (in the database) is renamed with the title of the last
-note. All other titles are discarded.
+through the list of titles incrementally, from left to right, and the first
+title that it finds a note for (in the database) is renamed with the title of
+the last note. All other titles are discarded.
 
 This seems like weird behaviour. Indeed, it is, but its technical specification
 doesn't really concern.

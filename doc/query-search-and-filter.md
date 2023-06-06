@@ -1,7 +1,7 @@
 # Querying and filtering notes
 
 `settle` can also query-filter notes based on various criteria, on various
-elements of their metadatas.
+elements of their metadata.
 
 Note that all filters compound, that is to say, any resulting note must match
 ALL criteria specified, not one or the other.

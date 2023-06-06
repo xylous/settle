@@ -19,11 +19,9 @@ However, based on certain conditions, this operation may have three outcomes:
 - if you try to create a new note but one with the same title in the same
     project already exists, then nothing is changed and an error is returned
     (duplicates are forbidden)
-
 - if you try to create a new note but there is a file (on the filesystem) that
     exists with that title and in the same project as the one specified, then
     the file is not overwritten, and its metadata is added to the database
-
 - if a corresponding file doesn't exist and a database entry for it doesn't
     exist, then indeed, a new note is created
 
