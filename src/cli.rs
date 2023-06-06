@@ -1,5 +1,5 @@
 //use clap::{Arg, Command};
-use clap::builder::{Arg, Command};
+use clap::builder::{Arg, ArgAction, Command};
 
 /// Generate the clap App by using a builer pattern
 pub fn build() -> Command
@@ -127,6 +127,7 @@ pub fn build() -> Command
             .short('o')
             .long("loners")
             .num_args(0)
+            .action(ArgAction::SetTrue)
             .help("keep Zettel that don't have any links to and fro")
         )
         .arg(Arg::new("FORMAT")
@@ -150,6 +151,7 @@ pub fn build() -> Command
             .display_order(10)
             .long("graph")
             .num_args(0)
+            .action(ArgAction::SetTrue)
             .help("generate a .dot graph from the query results")
         )
         .arg(Arg::new("EXACT_MATCH")
@@ -157,6 +159,7 @@ pub fn build() -> Command
             .short('e')
             .long("exact")
             .num_args(0)
+            .action(ArgAction::SetTrue)
             .help("match everything exactly, disabling regex")
         )
     )

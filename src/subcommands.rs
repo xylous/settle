@@ -26,13 +26,13 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         update(cfg, path)?;
     } else if let Some(title) = matches.get_one::<String>("MOVE") {
         mv(cfg, title, project)?;
-    } else if matches.contains_id("RENAME") {
+    } else if matches.get_flag("RENAME") {
         let args_arr = matches.get_many::<String>("RENAME")
                               .unwrap_or_default()
                               .map(|a| a.to_string())
                               .collect::<Vec<_>>();
         rename(cfg, &args_arr)?;
-    } else if matches.contains_id("GENERATE") {
+    } else if matches.get_flag("GENERATE") {
         generate(cfg)?;
     }
     Ok(())
@@ -137,7 +137,7 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let mut zs: Vec<Zettel> = db.all()?;
     let mut printer = Printer::default();
 
-    let exact = matches.contains_id("EXACT_MATCH");
+    let exact = matches.get_flag("EXACT_MATCH");
 
     if let Some(title) = matches.get_one::<String>("TITLE") {
         zs = filter_title(zs, title, exact);
@@ -165,11 +165,11 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     if let Some(links_to) = matches.get_one::<String>("BACKLINKS") {
         zs = intersect(&zs, &backlinks(&zs, links_to, exact));
     }
-    if matches.contains_id("LONERS") {
+    if matches.get_flag("LONERS") {
         zs = filter_isolated(zs);
     }
 
-    if matches.contains_id("GRAPH") {
+    if matches.get_flag("GRAPH") {
         zk_graph_dot_output(&zs);
         return Ok(());
     }
