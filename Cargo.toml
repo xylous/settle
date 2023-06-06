@@ -13,15 +13,15 @@ readme = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.1.5" }
-clap_complete = { version = "3.1.1" }
-rusqlite = { version = "0.27.0", features = [ "backup" ] }
-rayon = { version = "1.5.1" }
-glob = { version = "0.3.0" }
-regex = { version = "1.5.4" }
-serde = { version = "1.0.136", features = [ "derive" ] }
-serde_yaml = { version = "0.8.23" }
-shellexpand = { version = "2.1.0" }
-chrono = { version = "0.4.19" }
-dialoguer = { version = "0.10.1" }
-petgraph = { version = "0.6.2" }
+clap = { version = "4.3.2" }
+clap_complete = { version = "4.3.1" }
+rusqlite = { version = "0.29.0", features = [ "backup" ] }
+rayon = { version = "1.7.0" }
+glob = { version = "0.3.1" }
+regex = { version = "1.8.4" }
+serde = { version = "1.0.163", features = [ "derive" ] }
+serde_yaml = { version = "0.9.21" }
+shellexpand = { version = "3.1.0" }
+chrono = { version = "0.4.26" }
+dialoguer = { version = "0.10.4" }
+petgraph = { version = "0.6.3" }

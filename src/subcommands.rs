@@ -14,16 +14,24 @@ use crate::io::{abs_path, file_exists};
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
-    let project = realproject(matches.value_of("PROJECT").unwrap_or_default());
-    if let Some(title) = matches.value_of("CREATE") {
+    let project = realproject(if let Some(p) = matches.get_one::<String>("PROJECT") {
+                                  p
+                              } else {
+                                  ""
+                              });
+    if let Some(title) = matches.get_one::<String>("CREATE") {
         create(cfg, title, project)?;
-    } else if let Some(path) = matches.value_of("UPDATE") {
+    } else if let Some(path) = matches.get_one::<String>("UPDATE") {
         update(cfg, path)?;
-    } else if let Some(title) = matches.value_of("MOVE") {
+    } else if let Some(title) = matches.get_one::<String>("MOVE") {
         mv(cfg, title, project)?;
-    } else if let Some(args_arr) = matches.values_of("RENAME") {
-        rename(cfg, args_arr)?;
-    } else if matches.is_present("GENERATE") {
+    } else if matches.contains_id("RENAME") {
+        let args_arr = matches.get_many::<String>("RENAME")
+                              .unwrap_or_default()
+                              .map(|a| a.to_string())
+                              .collect::<Vec<_>>();
+        rename(cfg, &args_arr)?;
+    } else if matches.contains_id("GENERATE") {
         generate(cfg)?;
     }
     Ok(())
@@ -128,15 +136,15 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     let mut zs: Vec<Zettel> = db.all()?;
     let mut printer = Printer::default();
 
-    let exact = matches.is_present("EXACT_MATCH");
+    let exact = matches.contains_id("EXACT_MATCH");
 
-    if let Some(title) = matches.value_of("TITLE") {
+    if let Some(title) = matches.get_one::<String>("TITLE") {
         zs = filter_title(zs, title, exact);
     }
-    if let Some(project) = matches.value_of("PROJECT") {
+    if let Some(project) = matches.get_one::<String>("PROJECT") {
         zs = filter_project(zs, realproject(project), exact);
     }
-    if let Some(text) = matches.value_of("TEXT_REGEX") {
+    if let Some(text) = matches.get_one::<String>("TEXT_REGEX") {
         let vs = filter_text(zs.clone(), text, cfg);
         let mut texts: Vec<String> = vec![];
         zs = vec![]; // reset Zettel vector and append indiivdually
@@ -147,26 +155,26 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         }
         printer.set_additional(texts);
     }
-    if let Some(tag) = matches.value_of("TAG") {
+    if let Some(tag) = matches.get_one::<String>("TAG") {
         zs = filter_tag(zs, tag, exact);
     }
-    if let Some(linked_from) = matches.value_of("LINKS") {
+    if let Some(linked_from) = matches.get_one::<String>("LINKS") {
         zs = intersect(&zs, &fwlinks(&db.all()?, linked_from, exact));
     }
-    if let Some(links_to) = matches.value_of("BACKLINKS") {
+    if let Some(links_to) = matches.get_one::<String>("BACKLINKS") {
         zs = intersect(&zs, &backlinks(&zs, links_to, exact));
     }
-    if matches.is_present("LONERS") {
+    if matches.contains_id("LONERS") {
         zs = filter_isolated(zs);
     }
 
-    if matches.is_present("GRAPH") {
+    if matches.contains_id("GRAPH") {
         zk_graph_dot_output(&zs);
         return Ok(());
     }
 
-    if let Some(format) = matches.value_of("FORMAT") {
-        let link_sep = matches.value_of("LINK_SEP").unwrap_or(" | ");
+    if let Some(format) = matches.get_one::<String>("FORMAT") {
+        let link_sep = matches.get_one::<&str>("LINK_SEP").unwrap_or(&" | ");
         printer.set_format(replace_literals(format));
         printer.set_link_separator(replace_literals(link_sep));
     }
@@ -188,15 +196,20 @@ pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let m = matches.value_of("OBJECT").unwrap_or_default();
+    let obj = if let Some(m) = matches.get_one::<String>("OBJECT") {
+        m
+    } else {
+        ""
+    };
+
     // TODO: maybe implement word suggestion? actually, that'd be quite useless
-    match m {
+    match obj {
         "tags" => print_list_of_strings(&db.list_tags()?),
         "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
         "projects" => print_list_of_strings(&db.list_projects()?),
         "path" => println!("{}", cfg.zettelkasten),
         _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
-                       m),
+                       obj),
     }
     Ok(())
 }
@@ -204,7 +217,11 @@ pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Generate completions for a shell
 pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 {
-    let shell = matches.value_of("SHELL").unwrap_or_default();
+    let shell = if let Some(m) = matches.get_one::<String>("OBJECT") {
+        m
+    } else {
+        ""
+    };
 
     let sh = match shell {
         "zsh" => Some(Zsh),
@@ -374,17 +391,17 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 }
 
 /// Rename a note, but keep it in the same project
-fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
+fn rename(cfg: &ConfigOptions, arr: &Vec<String>) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
     // basically, look thru the values provided by clap, and extract the first Zettel title that
     // exists and is different from the new title
-    let old_title = arr.clone()
-                       .into_iter()
-                       .find(|x| !db.find_by_title(x).unwrap_or_default().is_empty())
-                       .unwrap_or("");
-    let new_title = arr.clone().next_back().unwrap_or_default();
+    let old_title: String = arr.clone()
+                               .into_iter()
+                               .find(|x| !db.find_by_title(x).unwrap_or_default().is_empty())
+                               .unwrap_or(String::from(""));
+    let new_title: String = arr.last().unwrap_or(&String::from("")).to_string();
 
     if old_title == new_title {
         eprintln!("error: first match is the same as the new title ('{}'), so no rename",
@@ -392,10 +409,10 @@ fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
         return Ok(());
     }
 
-    let results = db.find_by_title(old_title)?;
+    let results = db.find_by_title(&old_title)?;
 
     // check if there's already a note with this title
-    let overwrite_failsafe = db.find_by_title(new_title)?;
+    let overwrite_failsafe = db.find_by_title(&new_title)?;
     if overwrite_failsafe.first().is_some() {
         eprintln!("error: a note with the new title already exists: won't overwrite");
         return Ok(());
@@ -407,7 +424,7 @@ fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
     } else {
         results.first().unwrap()
     };
-    let new_zettel = Zettel::new(new_title, &old_zettel.project);
+    let new_zettel = Zettel::new(&new_title, &old_zettel.project);
 
     let mut dial = dialoguer::Confirm::new();
     let prompt = dial.with_prompt(format!("{} --> {}", old_title, new_title));
@@ -415,9 +432,9 @@ fn rename(cfg: &ConfigOptions, arr: clap::Values<'_>) -> Result<(), Error>
     // If the user confirms, change the note's title, and update the links to this Zettel
     if prompt.interact().unwrap_or_default() {
         crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
-        db.change_title(old_zettel, new_title).unwrap();
+        db.change_title(old_zettel, &new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
-        let backlinks = backlinks(&db.all()?, old_title, true);
+        let backlinks = backlinks(&db.all()?, &old_title, true);
         // for some reason rustfmt has absolutely cursed formatting here. this is not my fault, I
         // swear
         backlinks.iter().for_each(|bl| {
