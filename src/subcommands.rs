@@ -6,6 +6,7 @@ use rusqlite::Error;
 
 use crate::config::ConfigOptions;
 use crate::graph::zk_graph_dot_output;
+use crate::zettel::strip_multiple_whitespace;
 use crate::Database;
 use crate::Zettel;
 
@@ -359,7 +360,7 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let zettel = Zettel::new(title, project);
+    let zettel = Zettel::new(&strip_multiple_whitespace(title), project);
 
     // reject bad formats
     if zettel.title.is_empty() || zettel.title.starts_with('.') {

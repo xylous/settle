@@ -5,25 +5,24 @@ use regex::Regex;
 use crate::config::ConfigOptions;
 use crate::io::*;
 
-// Find and return wiki-style links inside of `contents` string
-// wiki-style links are of the form `[[LINK]]`
+/// Find and return wiki-style links inside of `contents` string
+/// wiki-style links are of the form `[[LINK]]`
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
-    let ws_re = Regex::new(r#"[\n\t ]+"#).unwrap();
     re.captures_iter(contents)
       .par_bridge()
       .map(|cap| {
-          cap.get(1).map_or("".to_string(), |m| {
-                        ws_re.replace_all(m.as_str(), " ").to_string()
-                    })
+          cap.get(1)
+             .map_or("".to_string(), |m| strip_multiple_whitespace(m.as_str()))
       })
       .collect()
 }
 
-// Find tags inside of `contents` string and return them
-// Tags are hashtag-tags, e.g. `#gardening`, `#note-taking`, but they MUST be delimited by any kind
-// of whitespace
+/// Find tags inside of `contents` string and return them
+///
+/// Tags are hashtag-tags, e.g. `#gardening`, `#note-taking`, but they MUST be delimited by any
+/// kind of whitespace
 fn find_tags(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r"\s#([\w/_-]+?)\s").unwrap();
@@ -34,6 +33,13 @@ fn find_tags(contents: &str) -> Vec<String>
           tag
       })
       .collect()
+}
+
+/// Replace all multiple consecutive whitespace with a single space character.
+pub fn strip_multiple_whitespace(s: &str) -> String
+{
+    let re = Regex::new(r#"[\n\t ]+"#).unwrap();
+    re.replace_all(s, " ").to_string()
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -59,8 +65,17 @@ impl Zettel
     /// Create a Zettel from a file, provided the ABSOLUTE path to the Zettel
     pub fn from_file(cfg: &ConfigOptions, path: &str) -> Self
     {
-        let title = basename(&replace_extension(path, ""));
+        let mut title = basename(&replace_extension(path, ""));
         let contents = file_to_string(path);
+
+        let fixed_ws = strip_multiple_whitespace(&title);
+        if fixed_ws != title {
+            eprintln!("warning: multiple consecutive whitespaces are not allowed; '{}' was renamed",
+                      title);
+            let newpath = format!("{}/{}.md", dirname(path), fixed_ws);
+            rename(path, &newpath);
+            title = fixed_ws;
+        }
 
         let project = if dirname(path) == cfg.zettelkasten {
             "".to_string()
