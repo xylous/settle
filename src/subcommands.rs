@@ -360,7 +360,12 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
-    let zettel = Zettel::new(&strip_multiple_whitespace(title), project);
+    let actual_title = strip_multiple_whitespace(title);
+    let zettel = Zettel::new(&actual_title, project);
+
+    if actual_title != title {
+        eprintln!("warning: truncating newlines, tabs and/or multiple consecutive whitespaces");
+    }
 
     // reject bad formats
     if zettel.title.is_empty() || zettel.title.starts_with('.') {

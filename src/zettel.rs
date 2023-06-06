@@ -70,7 +70,7 @@ impl Zettel
 
         let fixed_ws = strip_multiple_whitespace(&title);
         if fixed_ws != title {
-            eprintln!("warning: multiple consecutive whitespaces are not allowed; '{}' was renamed",
+            eprintln!("warning: multiple consecutive whitespaces in titles are not allowed; '{}' was renamed",
                       title);
             let newpath = format!("{}/{}.md", dirname(path), fixed_ws);
             rename(path, &newpath);
