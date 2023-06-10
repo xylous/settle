@@ -2,6 +2,14 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.9 - 2023-06-10
+
+- fix: automatically rename Zettel with multiple consecutive whitespace, so that
+    words in them may be separated only by a single space character
+- fix `query`: return backlinks properly, instead of just a subset, or none (!)
+- clarify documentation
+- update dependencies to latest versions
+
 ## v0.39.8 - 2023-05-21
 
 - add `main` as an alias for the main Zettelkasten project, i.e. the empty
