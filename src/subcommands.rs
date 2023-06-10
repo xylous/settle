@@ -26,7 +26,7 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         update(cfg, path)?;
     } else if let Some(title) = matches.get_one::<String>("MOVE") {
         mv(cfg, title, project)?;
-    } else if matches.get_flag("RENAME") {
+    } else if matches.contains_id("RENAME") {
         let args_arr = matches.get_many::<String>("RENAME")
                               .unwrap_or_default()
                               .map(|a| a.to_string())
