@@ -6,8 +6,9 @@ elements of their metadata.
 Note that all filters compound, that is to say, any resulting note must match
 ALL criteria specified, not one or the other.
 
-Also note that all filter options that accept a parameter use regex matching by
-default, but if you specify the `--exact` option, then *all* regex is disabled.
+Also note that all filter options that accept a parameter use [regex
+matching](./regex.md) by default, but if you specify the `--exact` option, then
+*all* regex is disabled.
 
 ## Query parameters
 
