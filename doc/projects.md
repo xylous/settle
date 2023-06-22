@@ -10,8 +10,7 @@ The catch is that only the root of your Zettelkasten directory and only the
 the root of your Zettelkasten is at `~/docs/zettelkasten`, then
 `~/docs/zettelkasten/myproject` can be a project, but
 `~/docs/zettelkasten/myproject/mysubproject` cannot. Likewise, since `~/docs`
-isn't a subdirectory of your Zettelkasten's root, it can't can't count as a
-project.
+isn't a subdirectory of your Zettelkasten's root, it can't count as a project.
 
 The reason for this design choice is that, with subprojects like this, it would
 become a hierarchical nightmare extremely fast.

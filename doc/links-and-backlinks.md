@@ -4,7 +4,7 @@
 
 `settle` can only understand wiki-style links, such as `[[Neurons]]`, or
 `[[Language learning]]`, which would redirect to a note called `Neurons` or
-`Lanuage leraning`, respectively. Case-in-point, a wiki-style link is any text
+`Language leraning`, respectively. Case-in-point, a wiki-style link is any text
 between two matching `[[` and `]]`.
 
 Such links may be embedded anywhere inside a note.

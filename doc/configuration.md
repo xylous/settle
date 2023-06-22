@@ -1,7 +1,7 @@
 # Configuration
 
 The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
-`$XDG_CONFIG_HOME` is set, either `~/.config/settle/settle.yaml`, by default,
+`$XDG_CONFIG_HOME` is set, or `~/.config/settle/settle.yaml`, by default,
 and is written in YAML Format.
 
 Note that paths specified in configuration may contain environment variables, or
