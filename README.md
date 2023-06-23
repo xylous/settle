@@ -6,12 +6,12 @@
 
 ### Requirements
 
-* cargo/rust toolchain
-* SQLite
+* cargo/rust toolchain (for building)
+* SQLite (for running)
 
 ### Installation
 
-There's a crate on crates.io, so you can simply run:
+There's a Rust crate available, so you can simply run:
 
 ```
 cargo install settle
@@ -20,8 +20,8 @@ cargo install settle
 ### Overview
 
 - [full usage manual](./doc/SETTLE_MANUAL.md), contains more technical descriptions
+- [project motivation](./doc/history.md)
 - [design principles](./doc/design-principles.md)
-- [project history](./doc/history.md)
 - [configuration](./doc/configuration.md)
 - [tags and subtags](./doc/tags-and-subtags.md)
 - [links and backlinks](./doc/links-and-backlinks.md)
@@ -34,8 +34,6 @@ cargo install settle
     - [making a graph of your Zettelkasten](./doc/graphs.md)
 
 ## Roadmap
-
-#### Before 2023
 
 - [x] generate the database from existing files
 - [x] create Zettel
@@ -59,24 +57,19 @@ cargo install settle
     - [x] move notes from project to project
 - [x] rename notes
     - [x] update all links to the renamed note
-
-#### After/During 2023
-
+- [x] simplify command structure
 - [x] query: filter notes based on various criteria (title, tags, etc.)
     - [x] support regex
     - [x] print according to a format
     - [x] put custom separator between links, both forward and backward
-- [x] graph
-    - [x] DOT output
-    - [ ] ~~render DOT as image~~
+    - [x] add option to print DOT graphs, which can be read with e.g. `graphviz`
 - [ ] writing experience (help deal with writer's block)
     - [ ] find related notes
-    - [ ] suggest random notes
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to
-discuss what you would like to change.
+Pull requests are welcome. For any minor or major changes, you can open an issue
+to discuss what you would like to change.
 
 <!--
 Please make sure to update tests as appropriate.
