@@ -320,7 +320,7 @@ In your terminal, run:
 
 ```zsh
 mkdir ~/.zsh_completion.d
-settle compl zsh >~/zsh_completion.d/_settle
+settle compl zsh >~/.zsh_completion.d/_settle
 ```
 
 Then add this line in your zshrc:
