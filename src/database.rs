@@ -1,7 +1,10 @@
 use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
-use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
-use std::sync::{Arc, Mutex};
+use rusqlite::{
+    named_params, Connection, DatabaseName, Error, Result, Row, Transaction, TransactionBehavior,
+};
+use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
 
 impl Zettel
 {
@@ -207,21 +210,54 @@ impl Database
     pub fn generate(&self, cfg: &ConfigOptions) -> Result<(), Error>
     {
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
+
+        let (tx, rx) = mpsc::sync_channel::<String>(1);
+        let conn = self.conn.clone();
+        let data_sep: &str = "=?=";
+
+        // Add a separate thread to handle transactioning everything at once
+        thread::spawn(move || {
+            let conn_lock = conn.lock().unwrap();
+            let tsx =
+                Transaction::new_unchecked(&conn_lock, TransactionBehavior::Immediate).unwrap();
+            let stmt =
+                "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)";
+            loop {
+                let data = rx.recv();
+                match data {
+                    Ok(s) => {
+                        let res: Vec<&str> = s.split(data_sep).collect();
+                        tsx.execute(stmt, [res[0], res[1], res[2], res[3]]).unwrap();
+                    }
+                    // If we get a RecvError, then we know we've encountered the end
+                    Err(mpsc::RecvError) => {
+                        tsx.commit().unwrap();
+                        return;
+                    }
+                }
+            }
+        });
+
         directories.push(cfg.zettelkasten.clone());
         directories.par_iter().for_each(|dir| {
-                                  let paths: Vec<String> =
-                                      // don't add markdown file that starts with a dot (which
-                                      // includes the empty title file, the '.md')
-                                      crate::io::list_md_files(dir).into_iter()
-                                                                   .filter(|f| {
-                                                                       !crate::io::basename(f).starts_with('.')
-                                                                   })
-                                                                   .collect();
-                                  paths.par_iter().for_each(|path| {
+                                    let paths: Vec<String> =
+                                        // don't add markdown file that starts with a dot (which
+                                        // includes the empty title file, the '.md')
+                                        crate::io::list_md_files(dir).into_iter()
+                                                                    .filter(|f| {
+                                                                        !crate::io::basename(f).starts_with('.')
+                                                                    })
+                                                                    .collect();
+                                    paths.par_iter().for_each(|path| {
                                                     let zettel = Zettel::from_file(cfg, path);
-                                                    self.save(&zettel).unwrap();
-                                                  });
-                              });
+                                                    let links = crate::vec_to_str(&zettel.links);
+                                                    let tags = crate::vec_to_str(&zettel.tags);
+                                                    let data = [zettel.title, zettel.project, links, tags].join(data_sep);
+                                                    tx.send(data).unwrap();
+                                    });
+        });
+        // Send RecvError to the thread
+        drop(tx);
 
         Ok(())
     }
