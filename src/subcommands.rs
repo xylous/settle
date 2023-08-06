@@ -528,9 +528,9 @@ fn generate(cfg: &ConfigOptions) -> Result<(), Error>
 {
     let start = std::time::Instant::now();
 
-    let mem_db = Database::in_memory(&cfg.db_file())?;
+    let mem_db = Database::new_in_memory(&cfg.db_file())?;
     mem_db.init()?;
-    mem_db.generate(cfg);
+    mem_db.generate(cfg)?;
     mem_db.write_to(&cfg.db_file())?;
 
     println!("database generated successfully, took {}ms",

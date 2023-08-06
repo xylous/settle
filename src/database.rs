@@ -1,7 +1,7 @@
-use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
-
 use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel};
 use rayon::prelude::*;
+use rusqlite::{named_params, Connection, DatabaseName, Error, Result, Row};
+use std::sync::{Arc, Mutex};
 
 impl Zettel
 {
@@ -22,27 +22,24 @@ impl Zettel
 
 pub struct Database
 {
-    name: String,
-    conn: Connection,
+    conn: Arc<Mutex<Connection>>,
 }
 
 impl Database
 {
     /// Create a `Database` interface to an SQLite database
     /// Return an Error if the connection couldn't be made
-    pub fn new(name: &str) -> Result<Self, Error>
+    pub fn new(uri: &str) -> Result<Self, Error>
     {
-        Ok(Database { name: name.to_string(),
-                      conn: Connection::open(name)? })
+        Ok(Database { conn: Arc::new(Mutex::new(Connection::open(uri)?)) })
     }
 
     /// Create a `Database` interface to a named SQLite database, opened in memory
     /// Return an Error if the connection couldn't be made
-    pub fn in_memory(name: &str) -> Result<Self, Error>
+    pub fn new_in_memory(filename: &str) -> Result<Self, Error>
     {
-        let uri = &format!("file:{}?mode=memory&cache=shared", name);
-        Ok(Database { name: name.to_string(),
-                      conn: Connection::open(uri)? })
+        let uri = &format!("file:{}?mode=memory&cache=shared", filename);
+        Database::new(uri)
     }
 
     /// Initialise the current Database with a `zettelkasten` table that holds the properties of
@@ -50,15 +47,15 @@ impl Database
     /// Return an Error if this wasn't possible
     pub fn init(&self) -> Result<(), Error>
     {
-        self.conn.execute(
-                           "CREATE TABLE IF NOT EXISTS zettelkasten (
+        self.conn.lock().unwrap().execute(
+                                           "CREATE TABLE IF NOT EXISTS zettelkasten (
                 title       TEXT NOT NULL,
                 project     TEXT,
                 links       TEXT,
                 tags        TEXT,
                 UNIQUE(title, project)
             )",
-                           [],
+                                           [],
         )?;
         Ok(())
     }
@@ -67,7 +64,10 @@ impl Database
     /// Return an Error if this wasn't possible
     pub fn write_to(&self, path: &str) -> Result<(), Error>
     {
-        self.conn.backup(DatabaseName::Main, path, None)?;
+        self.conn
+            .lock()
+            .unwrap()
+            .backup(DatabaseName::Main, path, None)?;
         Ok(())
     }
 
@@ -76,7 +76,7 @@ impl Database
     {
         let links = crate::vec_to_str(&zettel.links);
         let tags = crate::vec_to_str(&zettel.tags);
-        self.conn.execute(
+        self.conn.lock().unwrap().execute(
             "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
             [&zettel.title, &zettel.project, &links, &tags],
         )?;
@@ -87,6 +87,8 @@ impl Database
     pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
         self.conn
+            .lock()
+            .unwrap()
             .execute("DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
                      [&zettel.title, &zettel.project])?;
         Ok(())
@@ -97,7 +99,8 @@ impl Database
     /// unreachable
     pub fn all(&self) -> Result<Vec<Zettel>, Error>
     {
-        let mut stmt = self.conn.prepare("SELECT * FROM zettelkasten")?;
+        let conn_lock = self.conn.lock().unwrap();
+        let mut stmt = conn_lock.prepare("SELECT * FROM zettelkasten")?;
         let mut rows = stmt.query([])?;
 
         let mut results: Vec<Zettel> = Vec::new();
@@ -116,8 +119,8 @@ impl Database
     /// `pattern` uses SQL pattern syntax, e.g. `%` to match zero or more characters.
     pub fn find_by_title(&self, pattern: &str) -> Result<Vec<Zettel>, Error>
     {
-        let mut stmt = self.conn
-                           .prepare("SELECT * FROM zettelkasten WHERE title LIKE :pattern")?;
+        let conn_lock = self.conn.lock().unwrap();
+        let mut stmt = conn_lock.prepare("SELECT * FROM zettelkasten WHERE title LIKE :pattern")?;
         let mut rows = stmt.query(named_params! {":pattern": pattern})?;
 
         let mut results: Vec<Zettel> = Vec::new();
@@ -134,7 +137,8 @@ impl Database
     /// Return an Error if the database was unreachable
     pub fn list_tags(&self) -> Result<Vec<String>, Error>
     {
-        let mut stmt = self.conn.prepare("SELECT tags FROM zettelkasten")?;
+        let conn_lock = self.conn.lock().unwrap();
+        let mut stmt = conn_lock.prepare("SELECT tags FROM zettelkasten")?;
         let mut rows = stmt.query([])?;
 
         let mut results: Vec<String> = Vec::new();
@@ -154,7 +158,8 @@ impl Database
     /// Return an Error if the database was unreachable
     pub fn list_projects(&self) -> Result<Vec<String>, Error>
     {
-        let mut stmt = self.conn.prepare("SELECT project FROM zettelkasten")?;
+        let conn_lock = self.conn.lock().unwrap();
+        let mut stmt = conn_lock.prepare("SELECT project FROM zettelkasten")?;
         let mut rows = stmt.query([])?;
 
         let mut results: Vec<String> = Vec::new();
@@ -174,7 +179,8 @@ impl Database
     /// accessed
     pub fn zettel_not_yet_created(&self) -> Result<Vec<String>>
     {
-        let mut stmt = self.conn.prepare("SELECT links FROM zettelkasten")?;
+        let conn_lock = self.conn.lock().unwrap();
+        let mut stmt = conn_lock.prepare("SELECT links FROM zettelkasten")?;
         let mut rows = stmt.query([])?;
 
         let mut unique_links: Vec<String> = Vec::new();
@@ -198,14 +204,12 @@ impl Database
 
     /// Look for Markdown files in the Zettelkasten directory and populate the database with their
     /// metadata
-    pub fn generate(&self, cfg: &ConfigOptions)
+    pub fn generate(&self, cfg: &ConfigOptions) -> Result<(), Error>
     {
-        let db_name = &self.name;
-
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
         directories.push(cfg.zettelkasten.clone());
         directories.par_iter().for_each(|dir| {
-                                  let notes: Vec<String> =
+                                  let paths: Vec<String> =
                                       // don't add markdown file that starts with a dot (which
                                       // includes the empty title file, the '.md')
                                       crate::io::list_md_files(dir).into_iter()
@@ -213,14 +217,13 @@ impl Database
                                                                        !crate::io::basename(f).starts_with('.')
                                                                    })
                                                                    .collect();
-                                  notes.par_iter().for_each(|note| {
-                                                      let thread_db =
-                                                          Self::in_memory(db_name).unwrap();
-                                                      let thread_zettel =
-                                                          Zettel::from_file(cfg, note);
-                                                      thread_db.save(&thread_zettel).unwrap();
+                                  paths.par_iter().for_each(|path| {
+                                                    let zettel = Zettel::from_file(cfg, path);
+                                                    self.save(&zettel).unwrap();
                                                   });
                               });
+
+        Ok(())
     }
 
     /// Update the metadata for a given Zettel. The specified path *must* exist
@@ -237,6 +240,8 @@ impl Database
     pub fn change_project(&self, zettel: &Zettel, new_project: &str) -> Result<(), Error>
     {
         self.conn
+            .lock()
+            .unwrap()
             .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
                      [new_project, &zettel.title, &zettel.project])?;
         Ok(())
@@ -246,6 +251,8 @@ impl Database
     pub fn change_title(&self, zettel: &Zettel, new_title: &str) -> Result<(), Error>
     {
         self.conn
+            .lock()
+            .unwrap()
             .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
                      [new_title, &zettel.title, &zettel.project])?;
         Ok(())
