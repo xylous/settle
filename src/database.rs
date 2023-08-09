@@ -211,9 +211,8 @@ impl Database
     {
         let mut directories = crate::io::list_subdirectories(&cfg.zettelkasten);
 
-        let (tx, rx) = mpsc::sync_channel::<String>(1);
+        let (tx, rx) = mpsc::sync_channel::<Zettel>(1);
         let conn = self.conn.clone();
-        let data_sep: &str = "=?=";
 
         // Add a separate thread to handle transactioning everything at once
         thread::spawn(move || {
@@ -225,9 +224,11 @@ impl Database
             loop {
                 let data = rx.recv();
                 match data {
-                    Ok(s) => {
-                        let res: Vec<&str> = s.split(data_sep).collect();
-                        tsx.execute(stmt, [res[0], res[1], res[2], res[3]]).unwrap();
+                    Ok(zettel) => {
+                        let links = crate::vec_to_str(&zettel.links);
+                        let tags = crate::vec_to_str(&zettel.tags);
+                        tsx.execute(stmt, [&zettel.title, &zettel.project, &links, &tags])
+                           .unwrap();
                     }
                     // If we get a RecvError, then we know we've encountered the end
                     Err(mpsc::RecvError) => {
@@ -250,10 +251,7 @@ impl Database
                                                                     .collect();
                                     paths.par_iter().for_each(|path| {
                                                     let zettel = Zettel::from_file(cfg, path);
-                                                    let links = crate::vec_to_str(&zettel.links);
-                                                    let tags = crate::vec_to_str(&zettel.tags);
-                                                    let data = [zettel.title, zettel.project, links, tags].join(data_sep);
-                                                    tx.send(data).unwrap();
+                                                    tx.send(zettel).unwrap();
                                     });
         });
         // Send RecvError to the thread
