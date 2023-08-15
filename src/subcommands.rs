@@ -148,17 +148,6 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     if let Some(project) = matches.get_one::<String>("PROJECT") {
         zs = filter_project(zs, realproject(project), exact);
     }
-    if let Some(text) = matches.get_one::<String>("TEXT_REGEX") {
-        let vs = filter_text(zs.clone(), text, cfg);
-        let mut texts: Vec<String> = vec![];
-        zs = vec![]; // reset Zettel vector and append indiivdually
-                     // maybe speed this up by using unzip? I digress
-        for (z, t) in vs {
-            zs.push(z);
-            texts.push(t);
-        }
-        printer.set_additional(texts);
-    }
     if let Some(tag) = matches.get_one::<String>("TAG") {
         zs = filter_tag(zs, tag, exact);
     }
@@ -168,6 +157,19 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     if let Some(links_to) = matches.get_one::<String>("BACKLINKS") {
         zs = intersect(&zs, &backlinks(&zs, links_to, exact));
     }
+    if let Some(text) = matches.get_one::<String>("TEXT_REGEX") {
+        let vs = filter_text(zs.clone(), text, cfg);
+        let mut texts: Vec<String> = vec![];
+        let mut found = vec![];
+        // maybe speed this up by using unzip? I digress
+        for (z, t) in vs {
+            found.push(z);
+            texts.push(t);
+        }
+        printer.set_additional(texts);
+        zs = intersect(&zs, &found);
+    }
+
     if matches.get_flag("LONERS") {
         zs = filter_isolated(zs);
     }
