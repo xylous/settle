@@ -296,8 +296,7 @@ fn filter_tag(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 /// Keep only those Zettel that neither link to other notes, nor have links pointing to them
 fn filter_isolated(zs: Vec<Zettel>) -> Vec<Zettel>
 {
-    zs.clone()
-      .into_iter()
+    zs.into_iter()
       .filter(|z| z.links.is_empty() && z.backlinks.is_empty())
       .collect()
 }

@@ -794,7 +794,7 @@ dependencies = [
 
 [[package]]
 name = "settle"
-version = "0.39.9"
+version = "0.39.10"
 dependencies = [
  "chrono",
  "clap",

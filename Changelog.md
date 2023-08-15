@@ -2,6 +2,21 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.10 - 2023-08-15
+
+- change: make titles be unique *globally*, i.e. *a single unique title per
+    Zettelkasten*, instead of having them be unique per-project basis.
+- refactor: rework the database architecture entirely, but keep (roughly) the
+    same functionality
+- fix: make finding backlinks just as fast as finding forward links
+- fix: make `sync --create` return the proper error
+- fix: prevent `compl` from creating configuration files
+- fix: make `compl` recognise its input properly
+- fix: prevent `query` from returning a capacity overflow error when using the
+    `--text` option.
+- fix: don't insert duplicate links into the database
+- fix: include more information in I/O panics, to make debugging easier
+
 ## v0.39.9 - 2023-06-10
 
 - fix: automatically rename Zettel with multiple consecutive whitespace, so that
