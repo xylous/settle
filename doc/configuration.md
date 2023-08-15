@@ -1,13 +1,19 @@
 # Configuration
 
-The configuration file is at either `$XDG_CONFIG_HOME/settle/settle.yaml`, if
-`$XDG_CONFIG_HOME` is set, or `~/.config/settle/settle.yaml`, by default,
-and is written in YAML Format.
+The configuration options are passed in YAML format. The location of the
+configuration file may be influenced by environment variables:
 
-Note that paths specified in configuration may contain environment variables, or
+1. if `$SETTLE_CONFIG` is set: `$SETTLE_CONFIG`
+2. if `$XDG_CONFIG_HOME` is set: `$XDG_CONFIG_HOME/settle/settle.yaml`
+3. default: `$HOME/.config/settle/settle.yaml`
+
+A generic configuration file is automatically created when `settle` is ran with
+any command (except `compl`), if it doesn't already exist.
+
+### Configuration option
+
+NOTE: the paths specified in configuration may contain environment variables, or
 a leading tilde.
-
-Here are the configuration options:
 
 - `zettelkasten` - path to the directory in which the notes are stored at
 
@@ -19,9 +25,6 @@ Here are the configuration options:
     If empty, or if the path is invalid, then templates won't be used.
 
 ### Example configuration file
-
-The configuration file is automatically created when `settle` is ran, if it
-doesn't already exist. They can be as simple as:
 
 ```YAML
 zettelkasten: ~/docs/zettelkasten

@@ -83,12 +83,14 @@ impl ConfigOptions
     // 3. default: `$HOME/.config/settle/settle.yaml`
     pub fn cfg_file() -> String
     {
-        if let Ok(path) = env::var("SETTLE_CONFIG") {
-            path
-        } else if let Ok(path) = env::var("XDG_CONFIG_HOME") {
-            format!("{}/settle/settle.yaml", path)
+        let settle_cfg = env::var("SETTLE_CONFIG").unwrap_or_default();
+        let xdg_cfg_home = env::var("XDG_CONFIG_HOME").unwrap_or_default();
+        if !settle_cfg.is_empty() {
+            settle_cfg
+        } else if !xdg_cfg_home.is_empty() {
+            format!("{}/settle/settle.yaml", xdg_cfg_home)
         } else {
-            format!("{}/.config/settle/settle.yaml", env!("HOME"))
+            format!("{}/.config/settle/settle.yaml", env::var("HOME").unwrap())
         }
     }
 }
