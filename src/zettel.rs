@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use rayon::iter::{ParallelBridge, ParallelIterator};
+use rayon::prelude::*;
 use regex::Regex;
 
 use crate::config::ConfigOptions;
@@ -10,13 +10,17 @@ use crate::io::*;
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
-    re.captures_iter(contents)
-      .par_bridge()
-      .map(|cap| {
-          cap.get(1)
-             .map_or("".to_string(), |m| strip_multiple_whitespace(m.as_str()))
-      })
-      .collect()
+    let mut links: Vec<String> = re.captures_iter(contents)
+                                   .par_bridge()
+                                   .map(|cap| {
+                                       cap.get(1).map_or("".to_string(), |m| {
+                                                     strip_multiple_whitespace(m.as_str())
+                                                 })
+                                   })
+                                   .collect();
+    links.par_sort();
+    links.dedup();
+    links
 }
 
 /// Find tags inside of `contents` string and return them
