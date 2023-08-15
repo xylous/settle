@@ -3,10 +3,10 @@
 Settle is a Zettelkasten note manager. All notes are written in Markdown and are
 stored locally.
 
-As of v0.26.0, Settle no longer supports editing a file directly.
-Therefore, you're probably going to want to use (or write) a plugin for your
-favourite editor, such as [settle.vim](https://github.com/xylous/settle.vim) for
-Vim and Neovim.
+Note that `settle` does not edit the files it handles directly. Therefore,
+you're probably going to want to use (or write) a plugin for your favourite
+editor, such as [settle.vim](https://github.com/xylous/settle.vim) for Vim and
+Neovim.
 
 #### Table of contents
 
