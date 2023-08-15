@@ -3,22 +3,29 @@ use rayon::prelude::*;
 use rusqlite::{
     named_params, Connection, DatabaseName, Error, Result, Row, Transaction, TransactionBehavior,
 };
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex, MutexGuard};
 use std::thread;
 
 impl Zettel
 {
     /// Construct a Zettel from an entry in the database metadata
     /// Return an Error if the `row` was invalid
-    fn from_db(row: &Row) -> Result<Zettel, rusqlite::Error>
+    fn from_db(conn_lock: &MutexGuard<Connection>, row: &Row) -> Result<Zettel, rusqlite::Error>
     {
         let title: String = row.get(0)?;
         let project: String = row.get(1)?;
-        let links: String = row.get(2)?;
-        let tags: String = row.get(3)?;
         let mut z = Zettel::new(&title, &project);
-        z.links = str_to_vec(&links);
-        z.tags = str_to_vec(&tags);
+
+        let mut stmt = conn_lock.prepare("SELECT link_id FROM links WHERE zettel_id = ?1")?;
+        let mut links = stmt.query([&z.title])?;
+        while let Some(link_row) = links.next()? {
+            z.links.push(link_row.get(0)?);
+        }
+        let mut stmt = conn_lock.prepare("SELECT tag FROM tags WHERE zettel_id = ?1")?;
+        let mut tags = stmt.query([&z.title])?;
+        while let Some(tag_row) = tags.next()? {
+            z.tags.push(tag_row.get(0)?);
+        }
         Ok(z)
     }
 }
@@ -50,16 +57,25 @@ impl Database
     /// Return an Error if this wasn't possible
     pub fn init(&self) -> Result<(), Error>
     {
-        self.conn.lock().unwrap().execute(
-                                           "CREATE TABLE IF NOT EXISTS zettelkasten (
-                title       TEXT NOT NULL,
-                project     TEXT,
-                links       TEXT,
-                tags        TEXT,
-                UNIQUE(title, project)
-            )",
-                                           [],
-        )?;
+        let conn_lock = self.conn.lock().unwrap();
+        conn_lock.execute("CREATE TABLE IF NOT EXISTS zettelkasten (
+                                                title       TEXT NOT NULL,
+                                                project     TEXT,
+                                                UNIQUE(title)
+                                            )",
+                          [])?;
+        conn_lock.execute("CREATE TABLE IF NOT EXISTS links (
+                                                zettel_id   TEXT,
+                                                link_id     TEXT,
+                                                FOREIGN KEY (zettel_id) REFERENCES zettelkasten (title)
+                                            )",
+                          [])?;
+        conn_lock.execute("CREATE TABLE IF NOT EXISTS tags (
+                                                zettel_id   TEXT,
+                                                tag         TEXT,
+                                                FOREIGN KEY (zettel_id) REFERENCES zettelkasten (title)
+                                            )",
+                          [])?;
         Ok(())
     }
 
@@ -77,12 +93,26 @@ impl Database
     /// Save a Zettel's metadata to the database
     pub fn save(&self, zettel: &Zettel) -> Result<(), Error>
     {
-        let links = crate::vec_to_str(&zettel.links);
-        let tags = crate::vec_to_str(&zettel.tags);
-        self.conn.lock().unwrap().execute(
-            "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)",
-            [&zettel.title, &zettel.project, &links, &tags],
-        )?;
+        let conn_lock = self.conn.lock().unwrap();
+        let tsx = Transaction::new_unchecked(&conn_lock, TransactionBehavior::Immediate).unwrap();
+        Self::save_tsx(&tsx, zettel)?;
+        tsx.commit()?;
+        Ok(())
+    }
+
+    /// Save a Zettel's metadata in the given transaction
+    pub fn save_tsx(tsx: &Transaction, zettel: &Zettel) -> Result<(), Error>
+    {
+        tsx.execute("INSERT INTO zettelkasten (title, project) values (?1, ?2)",
+                    [&zettel.title, &zettel.project])?;
+        for link in &zettel.links {
+            tsx.execute("INSERT INTO links (zettel_id, link_id) values (?1, ?2)",
+                        [&zettel.title, link])?;
+        }
+        for tag in &zettel.tags {
+            tsx.execute("INSERT INTO tags (zettel_id, tag) values (?1, ?2)",
+                        [&zettel.title, tag])?;
+        }
         Ok(())
     }
 
@@ -92,8 +122,7 @@ impl Database
         self.conn
             .lock()
             .unwrap()
-            .execute("DELETE FROM zettelkasten WHERE title=?1 AND project=?2",
-                     [&zettel.title, &zettel.project])?;
+            .execute("DELETE FROM zettelkasten WHERE title=?1", [&zettel.title])?;
         Ok(())
     }
 
@@ -108,7 +137,7 @@ impl Database
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let zettel = Zettel::from_db(row)?;
+            let zettel = Zettel::from_db(&conn_lock, row)?;
             results.push(zettel);
         }
 
@@ -128,7 +157,7 @@ impl Database
 
         let mut results: Vec<Zettel> = Vec::new();
         while let Some(row) = rows.next()? {
-            let zettel = Zettel::from_db(row)?;
+            let zettel = Zettel::from_db(&conn_lock, row)?;
             results.push(zettel);
         }
 
@@ -219,16 +248,11 @@ impl Database
             let conn_lock = conn.lock().unwrap();
             let tsx =
                 Transaction::new_unchecked(&conn_lock, TransactionBehavior::Immediate).unwrap();
-            let stmt =
-                "INSERT INTO zettelkasten (title, project, links, tags) values (?1, ?2, ?3, ?4)";
             loop {
                 let data = rx.recv();
                 match data {
                     Ok(zettel) => {
-                        let links = crate::vec_to_str(&zettel.links);
-                        let tags = crate::vec_to_str(&zettel.tags);
-                        tsx.execute(stmt, [&zettel.title, &zettel.project, &links, &tags])
-                           .unwrap();
+                        Database::save_tsx(&tsx, &zettel).unwrap();
                     }
                     // If we get a RecvError, then we know we've encountered the end
                     Err(mpsc::RecvError) => {
@@ -276,8 +300,8 @@ impl Database
         self.conn
             .lock()
             .unwrap()
-            .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2 AND project=?3",
-                     [new_project, &zettel.title, &zettel.project])?;
+            .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2",
+                     [new_project, &zettel.title])?;
         Ok(())
     }
 
@@ -287,8 +311,8 @@ impl Database
         self.conn
             .lock()
             .unwrap()
-            .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2 AND project=?3",
-                     [new_title, &zettel.title, &zettel.project])?;
+            .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2",
+                     [new_title, &zettel.title])?;
         Ok(())
     }
 }
