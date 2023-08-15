@@ -237,9 +237,19 @@ impl Database
             loop {
                 let data = rx.recv();
                 match data {
-                    Ok(zettel) => {
-                        Database::save_tsx(&tsx, &zettel).unwrap();
-                    }
+                    Ok(zettel) => match Database::save_tsx(&tsx, &zettel) {
+                        Ok(_) => continue,
+                        Err(_) => {
+                            eprintln!("Warning: couldn't add Zettel '{}' to the '{}' project; there is another note with that title, and titles must be unique",
+                                      &zettel.title,
+                                      if zettel.project.is_empty() {
+                                          "main"
+                                      } else {
+                                          &zettel.project
+                                      },
+                                    )
+                        }
+                    },
                     // If we get a RecvError, then we know we've encountered the end
                     Err(mpsc::RecvError) => {
                         tsx.commit().unwrap();

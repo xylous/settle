@@ -1,6 +1,5 @@
 use clap::ArgMatches;
 use clap_complete::Shell::*;
-use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::Error;
 
@@ -12,33 +11,6 @@ use crate::Zettel;
 
 use crate::cli;
 use crate::io::{abs_path, file_exists};
-
-pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
-{
-    Database::new(&cfg.db_file())?.init()?;
-
-    let project = realproject(if let Some(p) = matches.get_one::<String>("PROJECT") {
-                                  p
-                              } else {
-                                  ""
-                              });
-    if let Some(title) = matches.get_one::<String>("CREATE") {
-        create(cfg, title, project)?;
-    } else if let Some(path) = matches.get_one::<String>("UPDATE") {
-        update(cfg, path)?;
-    } else if let Some(title) = matches.get_one::<String>("MOVE") {
-        mv(cfg, title, project)?;
-    } else if matches.contains_id("RENAME") {
-        let args_arr = matches.get_many::<String>("RENAME")
-                              .unwrap_or_default()
-                              .map(|a| a.to_string())
-                              .collect::<Vec<_>>();
-        rename(cfg, &args_arr)?;
-    } else if matches.get_flag("GENERATE") {
-        generate(cfg)?;
-    }
-    Ok(())
-}
 
 /// A printer that prints. Because it's convenient.
 struct Printer
@@ -64,11 +36,6 @@ impl Printer
         self.zettel = new_zettel;
     }
 
-    fn set_single_zettel(&mut self, new_zettel: Zettel)
-    {
-        self.zettel = vec![new_zettel];
-    }
-
     fn set_additional(&mut self, new_additional: Vec<String>)
     {
         self.additional = new_additional;
@@ -82,6 +49,12 @@ impl Printer
     fn set_link_separator(&mut self, new_separator: String)
     {
         self.link_separator = new_separator;
+    }
+
+    fn print_one(&mut self, cfg: &ConfigOptions, zettel: Zettel)
+    {
+        self.zettel = vec![zettel];
+        self.print(cfg);
     }
 
     /// Abracadabra, yadda yadda. Print everything properly.
@@ -129,6 +102,33 @@ impl Default for Printer
                   format: "[%p] %t".to_string(),
                   link_separator: "|".to_string() }
     }
+}
+
+pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
+{
+    Database::new(&cfg.db_file())?.init()?;
+
+    let project = realproject(if let Some(p) = matches.get_one::<String>("PROJECT") {
+                                  p
+                              } else {
+                                  ""
+                              });
+    if let Some(title) = matches.get_one::<String>("CREATE") {
+        create(cfg, title, project)?;
+    } else if let Some(path) = matches.get_one::<String>("UPDATE") {
+        update(cfg, path)?;
+    } else if let Some(title) = matches.get_one::<String>("MOVE") {
+        mv(cfg, title, project)?;
+    } else if matches.contains_id("RENAME") {
+        let args_arr = matches.get_many::<String>("RENAME")
+                              .unwrap_or_default()
+                              .map(|a| a.to_string())
+                              .collect::<Vec<_>>();
+        rename(cfg, &args_arr)?;
+    } else if matches.get_flag("GENERATE") {
+        generate(cfg)?;
+    }
+    Ok(())
 }
 
 /// Query the database, applying various filters if proivded
@@ -378,16 +378,14 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
     }
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
-    let exists_in_db = db.all()?
-                         .into_par_iter()
-                         .any(|z| (z.title == zettel.title) && (z.project == zettel.project));
+    let exists_in_db = db.find_by_title(&zettel.title)?.len() == 1;
 
     // If the corresponding file exists and there's an entry in the database, abort.
     // If there's an entry in the database but no corresponding file, replace the database entry
     // If there's a file but there's no entry in the database, create an entry.
     // Otherwise, create a new file from template and add a database entry.
     if exists_in_fs && exists_in_db {
-        eprintln!("error: couldn't create new Zettel: one with the same title and project already exists");
+        eprintln!("error: couldn't create new Zettel: one with the same title already exists");
         return Ok(());
     } else if !exists_in_fs && exists_in_db {
         eprintln!("Zettel exists in the database but not on the filesystem; replaced entry");
@@ -398,9 +396,7 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
         // saved outside of the loop
     } else {
         zettel.create(cfg);
-        let mut printer = Printer::default();
-        printer.set_single_zettel(zettel.clone());
-        printer.print(cfg);
+        Printer::default().print_one(cfg, zettel.clone());
     }
     db.save(&zettel)?;
 
