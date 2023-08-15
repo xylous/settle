@@ -1,5 +1,6 @@
-use crate::io::{dir_exists, file_exists, file_to_string, mkdir, write_to_file};
+use crate::io::{dir_exists, dirname, file_exists, file_to_string, mkdir, write_to_file};
 use serde::{Deserialize, Serialize};
+use std::env;
 
 /// The location of the database file. Unchangeable: the user doesn't need to know the location of
 /// this file
@@ -48,39 +49,46 @@ impl ConfigOptions
 {
     pub fn load() -> ConfigOptions
     {
-        let xdg_cfg_dir = option_env!("XDG_CONFIG_HOME");
-        let config_path = if xdg_cfg_dir.is_none() {
-            // Use $HOME/.config/settle/settle.yaml if XDG_CONFIG_HOME isn't set
-            format!("{}/.config/settle", env!("HOME"))
-        } else {
-            // Use $XDG_CONFIG_HOME/settle/settle.yaml otherwise
-            format!("{}/settle", xdg_cfg_dir.unwrap())
-        };
-        let config_file = format!("{}/settle.yaml", config_path);
+        let config_file = Self::cfg_file();
+        let config_dir = dirname(&config_file);
 
-        // If the dir doesn't exist, create it
-        if !dir_exists(&config_path) {
-            mkdir(&config_path);
+        // The configuration directory is necessary to creating the configuration file
+        if !dir_exists(&config_dir) {
+            mkdir(&config_dir);
         }
 
-        // If the file doesn't exist, create it
+        // Provide a default configuration file if it doesn't exist
         if !file_exists(&config_file) {
             let data = serde_yaml::to_string(&ConfigOptions::default()).unwrap();
             write_to_file(&config_file, &data);
         }
 
-        // The paths inside the config file may not be absolute, and so we need to expand them
+        // The config file may have relative paths, but we only deal in absolutes
         let tmp: ConfigOptions = serde_yaml::from_str(&file_to_string(&config_file)).unwrap();
-
         let cfg = ConfigOptions { zettelkasten: expand_path(&tmp.zettelkasten),
                                   template: expand_path(&tmp.template) };
 
-        // Create the Zettelkasten directory and the 'inbox'project if it doesn't exist
+        // Create the Zettelkasten directory and the 'inbox' project if it doesn't exist
         if !dir_exists(&cfg.zettelkasten) {
             mkdir(&cfg.zettelkasten);
             mkdir(&format!("{}/inbox", &cfg.zettelkasten));
         }
 
         cfg
+    }
+
+    // The configuration is determined by looking at the environment variables in this order:
+    // 1. If `$SETTLE_CONFIG` is set: `$SETTLE_CONFIG`
+    // 2. If `$XDG_CONFIG_HOME` is set: `$XDG_CONFIG_HOME/settle/settle.yaml`
+    // 3. default: `$HOME/.config/settle/settle.yaml`
+    pub fn cfg_file() -> String
+    {
+        if let Ok(path) = env::var("SETTLE_CONFIG") {
+            path
+        } else if let Ok(path) = env::var("XDG_CONFIG_HOME") {
+            format!("{}/settle/settle.yaml", path)
+        } else {
+            format!("{}/.config/settle/settle.yaml", env!("HOME"))
+        }
     }
 }
