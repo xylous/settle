@@ -378,16 +378,23 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
     }
 
     let exists_in_fs = file_exists(&zettel.filename(cfg));
-    let exists_in_db = db.all()?.into_par_iter().any(|z| z == zettel);
+    let exists_in_db = db.all()?
+                         .into_par_iter()
+                         .any(|z| (z.title == zettel.title) && (z.project == zettel.project));
 
     // If the corresponding file exists and there's an entry in the database, abort.
+    // If there's an entry in the database but no corresponding file, replace the database entry
     // If there's a file but there's no entry in the database, create an entry.
     // Otherwise, create a new file from template and add a database entry.
     if exists_in_fs && exists_in_db {
-        eprintln!("error: couldn't create new Zettel: one with the same title already exists");
+        eprintln!("error: couldn't create new Zettel: one with the same title and project already exists");
         return Ok(());
-    } else if exists_in_fs {
-        println!("file exists in the filesystem but not in the database; added entry");
+    } else if !exists_in_fs && exists_in_db {
+        eprintln!("Zettel exists in the database but not on the filesystem; replaced entry");
+        db.delete(&zettel)?;
+        // saved outside of the loop
+    } else if exists_in_fs && !exists_in_db {
+        eprintln!("Zettel exists on the filesystem but not in the database; added entry");
         // saved outside of the loop
     } else {
         zettel.create(cfg);
