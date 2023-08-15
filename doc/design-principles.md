@@ -18,3 +18,5 @@ stems from the design principles:
     isn't any hard boundary - any note may reference any other note
 - [links between Zettel](./links-and-backlinks.md) are wiki-style links, which
     are extremely straightforward.
+- no two Zettel should have the same title, even if they are in different
+    projects. This is only to avoid potential ambiguity with links.

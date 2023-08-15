@@ -65,6 +65,9 @@ settle ls ['tags' | 'projects' | 'ghosts' | 'path']
 
 - `sync` or `-S` (described below)
 
+All warnings and errors are printed to `stderr`, so you can suppress them (e.g.
+`2>/dev/null`).
+
 ##### A short briefing on regular expressions (REGEX)
 
 Regex is a useful tool that `settle` has support for, because it provides
@@ -205,7 +208,8 @@ Here are the options for this command:
 
 - `-c | --create <TITLE>` - create a new Zettel with the provided title. If the
     `--project` flag is provided, then make it part of that project; if not,
-    then add it to the main Zettelkasten project
+    then add it to the main Zettelkasten project. This operation may only fail
+    if there is already an entry in the database with the same title.
 
 - `-u | --update <PATH>` - update a note's metadata, given its path (relative or
     absolute) on the filesystem. If the file is not part of the Zettelkasten or
