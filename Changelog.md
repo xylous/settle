@@ -2,6 +2,13 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.39.11 - 2023-08-15
+
+- add: make configuration file location flexible by allowing using the
+    `SETTLE_CONFIG` environment option
+- fix: check for environment variables at runtime, not at compile time
+- fix: don't use environment variables if they are set but empty
+
 ## v0.39.10 - 2023-08-15
 
 - change: make titles be unique *globally*, i.e. *a single unique title per
