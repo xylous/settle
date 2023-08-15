@@ -2,12 +2,6 @@ use glob::glob;
 use std::fs::{canonicalize, read_to_string, write};
 use std::path::{Path, PathBuf};
 
-/// Read `path` and return the contents
-pub fn file_to_string(path: &str) -> String
-{
-    read_to_string(path).expect("failed to read file")
-}
-
 /// Return true if the path specified exists and is a file
 pub fn file_exists(path: &str) -> bool
 {
@@ -34,19 +28,7 @@ pub fn dirname(path: &str) -> String
     pieces[0..pieces.len() - 1].join("/")
 }
 
-/// Write `data` to `path`
-pub fn write_to_file(path: &str, data: &str)
-{
-    write(path, data).expect("Unable to write file")
-}
-
-/// Rename `from` to `to`
-pub fn rename(from: &str, to: &str)
-{
-    std::fs::rename(from, to).unwrap();
-}
-
-/// Given a filename, replace its extension with `new_ext`
+/// Given a path, replace its extension with `new_ext` and return the resulting path
 pub fn replace_extension(file: &str, new_ext: &str) -> String
 {
     let mut path = PathBuf::from(file);
@@ -54,24 +36,42 @@ pub fn replace_extension(file: &str, new_ext: &str) -> String
     path.to_string_lossy().to_string()
 }
 
-/// List all markdown files in the specified directory
-pub fn list_md_files(dir: &str) -> Vec<String>
+/// Read `path` and return the contents
+pub fn file_to_string(path: &str) -> String
 {
-    glob(&format!("{}/*.md", dir)).expect("failed to read directory")
-                                  .map(|f| f.unwrap().to_string_lossy().to_string())
-                                  .collect()
+    read_to_string(path).unwrap_or_else(|_| panic!("Can't read file '{}'", path))
+}
+
+/// Write `data` to `path`
+pub fn write_to_file(path: &str, data: &str)
+{
+    write(path, data).unwrap_or_else(|_| panic!("Can't write to file '{}'", path))
+}
+
+/// Rename `from` to `to`
+pub fn rename(from: &str, to: &str)
+{
+    std::fs::rename(from, to).unwrap_or_else(|_| panic!("Can't rename file '{}' to '{}'", from, to))
 }
 
 /// Create specified `path` as a directory
 pub fn mkdir(path: &str)
 {
-    std::fs::create_dir_all(path).expect("Wasn't able to create directory:")
+    std::fs::create_dir_all(path).unwrap_or_else(|_| panic!("Can't create directory '{}'", path))
+}
+
+/// List all markdown files in the specified directory
+pub fn list_md_files(dir: &str) -> Vec<String>
+{
+    glob(&format!("{}/*.md", dir)).unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
+                                  .map(|f| f.unwrap().to_string_lossy().to_string())
+                                  .collect()
 }
 
 /// List all subdirectories in the specified directory
 pub fn list_subdirectories(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*/", dir)).expect("failed to read directory")
+    glob(&format!("{}/*/", dir)).unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
                                 .map(|f| f.unwrap().to_string_lossy().to_string())
                                 .collect()
 }

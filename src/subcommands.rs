@@ -443,8 +443,6 @@ fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
         db.change_title(old_zettel, &new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
         let backlinks = backlinks(&db.all()?, &old_title, true);
-        // for some reason rustfmt has absolutely cursed formatting here. this is not my fault, I
-        // swear
         backlinks.iter().for_each(|bl| {
                             let contents = crate::io::file_to_string(&bl.filename(cfg));
                             // The link might span over multiple lines. We must account for that
