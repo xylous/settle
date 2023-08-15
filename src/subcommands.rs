@@ -15,6 +15,8 @@ use crate::io::{abs_path, file_exists};
 
 pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
+    Database::new(&cfg.db_file())?.init()?;
+
     let project = realproject(if let Some(p) = matches.get_one::<String>("PROJECT") {
                                   p
                               } else {
@@ -133,6 +135,7 @@ impl Default for Printer
 pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
+    db.init()?;
 
     let mut zs: Vec<Zettel> = db.all()?;
     let mut printer = Printer::default();
@@ -196,6 +199,7 @@ fn replace_literals(s: &str) -> String
 pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
+    db.init()?;
 
     let obj = if let Some(m) = matches.get_one::<String>("OBJECT") {
         m

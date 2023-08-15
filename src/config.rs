@@ -71,7 +71,16 @@ impl ConfigOptions
 
         // The paths inside the config file may not be absolute, and so we need to expand them
         let tmp: ConfigOptions = serde_yaml::from_str(&file_to_string(&config_file)).unwrap();
-        ConfigOptions { zettelkasten: expand_path(&tmp.zettelkasten),
-                        template: expand_path(&tmp.template) }
+
+        let cfg = ConfigOptions { zettelkasten: expand_path(&tmp.zettelkasten),
+                                  template: expand_path(&tmp.template) };
+
+        // Create the Zettelkasten directory and the 'inbox'project if it doesn't exist
+        if !dir_exists(&cfg.zettelkasten) {
+            mkdir(&cfg.zettelkasten);
+            mkdir(&format!("{}/inbox", &cfg.zettelkasten));
+        }
+
+        cfg
     }
 }

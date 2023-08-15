@@ -36,25 +36,15 @@ fn main() -> Result<(), rusqlite::Error>
 {
     let matches = cli::build().get_matches();
 
-    let cfg = ConfigOptions::load();
-    io::mkdir(&cfg.zettelkasten);
-    io::mkdir(&format!("{}/inbox", &cfg.zettelkasten));
-
     let cmd = matches.subcommand_name().unwrap_or_default();
     // NOTE: this won't crash on unwrap, because if no subcommand was specified, clap-rs would
     // print the help message
     let cmd_matches = matches.subcommand_matches(cmd).unwrap();
 
-    // If the database isn't initialised, the program would likely panic, complaining that it isn't
-    // able to find SQL tables.
-    // Yes, it's kind of lazy to put this here, but putting it in every function that accesses the
-    // database, just to make sure that the database exists in the first place, is worse.
-    Database::new(&cfg.db_file())?.init()?;
-
     match cmd {
-        "sync" => sync(cmd_matches, &cfg)?,
-        "query" => query(cmd_matches, &cfg)?,
-        "ls" => ls(cmd_matches, &cfg)?,
+        "sync" => sync(cmd_matches, &ConfigOptions::load())?,
+        "query" => query(cmd_matches, &ConfigOptions::load())?,
+        "ls" => ls(cmd_matches, &ConfigOptions::load())?,
         "compl" => compl(cmd_matches)?,
         _ => (),
     };
