@@ -222,13 +222,9 @@ pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 /// Generate completions for a shell
 pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 {
-    let shell = if let Some(m) = matches.get_one::<String>("OBJECT") {
-        m
-    } else {
-        ""
-    };
+    let shell = matches.get_one::<String>("SHELL").unwrap();
 
-    let sh = match shell {
+    let sh = match shell.as_str() {
         "zsh" => Some(Zsh),
         "bash" => Some(Bash),
         "fish" => Some(Fish),
