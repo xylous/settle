@@ -17,7 +17,7 @@ impl ::std::default::Default for ConfigOptions
 {
     fn default() -> ConfigOptions
     {
-        ConfigOptions { zettelkasten: format!("{}/zettelkasten", env!("HOME")),
+        ConfigOptions { zettelkasten: format!("{}/zettelkasten", env::var("HOME").unwrap()),
                         template: String::from("") }
     }
 }
