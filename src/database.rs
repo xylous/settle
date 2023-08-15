@@ -21,6 +21,11 @@ impl Zettel
         while let Some(link_row) = links.next()? {
             z.links.push(link_row.get(0)?);
         }
+        let mut stmt = conn_lock.prepare("SELECT zettel_id FROM links WHERE link_id = ?1")?;
+        let mut backlinks = stmt.query([&z.title])?;
+        while let Some(backlink_row) = backlinks.next()? {
+            z.backlinks.push(backlink_row.get(0)?);
+        }
         let mut stmt = conn_lock.prepare("SELECT tag FROM tags WHERE zettel_id = ?1")?;
         let mut tags = stmt.query([&z.title])?;
         while let Some(tag_row) = tags.next()? {

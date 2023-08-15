@@ -51,8 +51,9 @@ pub struct Zettel
 {
     pub title: String,
     pub project: String,
-    pub links: Vec<String>,
     pub tags: Vec<String>,
+    pub links: Vec<String>,
+    pub backlinks: Vec<String>,
 }
 
 impl Zettel
@@ -62,8 +63,9 @@ impl Zettel
     {
         Zettel { title: title.to_string(),
                  project: project.to_string(),
+                 tags: vec![],
                  links: vec![],
-                 tags: vec![] }
+                 backlinks: vec![] }
     }
 
     /// Create a Zettel from a file, provided the ABSOLUTE path to the Zettel

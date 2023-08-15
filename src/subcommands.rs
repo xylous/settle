@@ -75,18 +75,7 @@ impl Printer
             result = result.replace("%P", &z.filename(cfg));
             result = result.replace("%l", &z.links.join(&self.link_separator));
             result = result.replace("%a", a);
-            // Based on the provided ConfigOptions, we may or may not get the backlinks for the given
-            // Zettel, so if we don't, we just consume the `%b` token and move on
-            if result.contains("%b") {
-                let maybe_get_backlinks = || -> Result<Vec<String>, Error> {
-                    let all = Database::new(&cfg.db_file())?.all()?;
-                    let bks = backlinks(&all, &z.title, true);
-                    Ok(bks.iter().map(|z| z.title.clone()).collect())
-                };
-                if let Ok(bks) = maybe_get_backlinks() {
-                    result = result.replace("%b", &bks.join(&self.link_separator));
-                }
-            }
+            result = result.replace("%b", &z.backlinks.join(&self.link_separator));
 
             println!("{}", result);
         }
@@ -309,7 +298,7 @@ fn filter_isolated(zs: Vec<Zettel>) -> Vec<Zettel>
 {
     zs.clone()
       .into_iter()
-      .filter(|z| z.links.is_empty() && backlinks(&zs, &z.title, true).is_empty())
+      .filter(|z| z.links.is_empty() && z.backlinks.is_empty())
       .collect()
 }
 
@@ -494,6 +483,7 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
         let new_notes = zs.iter().map(|z| Zettel { title: z.title.clone(),
                                                    project: project.to_string(),
                                                    links: z.links.clone(),
+                                                   backlinks: z.backlinks.clone(),
                                                    tags: z.tags.clone() });
         let pairs = zs.iter().zip(new_notes);
         pairs.for_each(|(old, new)| {
