@@ -1,4 +1,4 @@
-use crate::{config::ConfigOptions, str_to_vec, zettel::Zettel};
+use crate::{config::ConfigOptions, zettel::Zettel};
 use rayon::prelude::*;
 use rusqlite::{
     named_params, Connection, DatabaseName, Error, Result, Row, Transaction, TransactionBehavior,
@@ -170,18 +170,13 @@ impl Database
     pub fn list_tags(&self) -> Result<Vec<String>, Error>
     {
         let conn_lock = self.conn.lock().unwrap();
-        let mut stmt = conn_lock.prepare("SELECT tags FROM zettelkasten")?;
+        let mut stmt = conn_lock.prepare("SELECT DISTINCT tag FROM tags")?;
         let mut rows = stmt.query([])?;
 
         let mut results: Vec<String> = Vec::new();
         while let Some(row) = rows.next()? {
-            let tags: String = row.get(0)?;
-            for tag in str_to_vec(&tags) {
-                results.push(tag);
-            }
+            results.push(row.get(0)?);
         }
-        results.par_sort();
-        results.dedup();
         Ok(results)
     }
 
@@ -191,7 +186,7 @@ impl Database
     pub fn list_projects(&self) -> Result<Vec<String>, Error>
     {
         let conn_lock = self.conn.lock().unwrap();
-        let mut stmt = conn_lock.prepare("SELECT project FROM zettelkasten")?;
+        let mut stmt = conn_lock.prepare("SELECT DISTINCT project FROM zettelkasten")?;
         let mut rows = stmt.query([])?;
 
         let mut results: Vec<String> = Vec::new();
@@ -201,37 +196,28 @@ impl Database
                 results.push(project);
             }
         }
-        results.par_sort();
-        results.dedup();
         Ok(results)
     }
 
     /// Search in the database for Zettel that have been linked to, but don't yet exist
+    ///
     /// Return an Error if the database was unreachable or if the data in a Row couldn't have been
     /// accessed
-    pub fn zettel_not_yet_created(&self) -> Result<Vec<String>>
+    pub fn zettel_not_yet_created(&self) -> Result<Vec<String>, Error>
     {
         let conn_lock = self.conn.lock().unwrap();
-        let mut stmt = conn_lock.prepare("SELECT links FROM zettelkasten")?;
+        let mut stmt = conn_lock.prepare("SELECT DISTINCT link_id FROM links WHERE link_id NOT IN (SELECT title FROM zettelkasten)")?;
         let mut rows = stmt.query([])?;
 
-        let mut unique_links: Vec<String> = Vec::new();
+        let mut ghosts: Vec<String> = Vec::new();
         while let Some(row) = rows.next()? {
-            let links_str: String = row.get(0)?;
-            let links = str_to_vec(&links_str);
-            unique_links.extend(links);
+            ghosts.push(row.get(0)?);
         }
 
-        unique_links.par_sort();
-        unique_links.dedup();
+        ghosts.sort();
+        ghosts.dedup();
 
-        Ok(unique_links.into_iter()
-                       .filter(|link| {
-                           // if the response was empty, then nothing has been found, meaning it doesn't exist
-                           // in the database
-                           self.find_by_title(link).unwrap().is_empty()
-                       })
-                       .collect())
+        Ok(ghosts)
     }
 
     /// Look for Markdown files in the Zettelkasten directory and populate the database with their
