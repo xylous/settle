@@ -32,12 +32,15 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        let node_scale_factor = 3;
-        let link_scale_factor = 1;
+        let nodeScaleFactor = 3;
+        let linkScaleFactor = 1;
 
-        let centerForceStrength = 1;
-        let repulsionForceStrength = 1;
-        let attractionForceStrength = 1;
+        let centerForceStrengthFactor = 1;
+        let repulsionForceStrengthFactor = 1;
+        let attractionForceStrengthFactor = 1;
+
+        const zoomTransformExtentFactor = 1;
+        const zoomScaleExtentFactor = 1;
 
         let graph = {
             nodes: [
@@ -85,10 +88,12 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         }
 
         let dragEnd = (d) => {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
+            //if (!event.active) simulation.alphaTarget(0);
+            //event.fx = null;
+            //event.fy = null;
         }
+
+        let totalSize = 0;
 
         // Count the number of links that the nodes have; used for scaling up
         // nodes
@@ -105,7 +110,7 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             .enter()
             .append('circle')
             .attr("r", (d) => {
-                return d.size ? d.size * node_scale_factor : node_scale_factor
+                return d.size ? d.size * nodeScaleFactor : nodeScaleFactor
             })
             .attr('fill', (d) => {'orange'})
             .call(d3.drag()
@@ -118,34 +123,31 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             .data(graph.links)
             .enter()
             .append('line')
-            .attr('stroke-width', link_scale_factor)
+            .attr('stroke-width', linkScaleFactor)
             .style('stroke', 'pink')
-            .attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
 
         const simulation = d3.forceSimulation(graph.nodes)
             // Attract nodes to center
             .force('center', d3.forceCenter(width / 2, height / 2)
-                                .strength(centerForceStrength))
+                                .strength(centerForceStrengthFactor))
             // Repulse nodes from each other
-            .force("charge", d3.forceManyBody().strength(repulsionForceStrength))
+            .force("repulsion", d3.forceManyBody().strength((-repulsionForceStrengthFactor)))
             // Attract linked nodes
             .force("links", d3.forceLink(graph.links)
-                            .distance(d => 3.5 * (d.source.size + d.target.size))
-                            .strength(attractionForceStrength))
+                            .distance(30)
+                            .strength(attractionForceStrengthFactor))
             // Repulse nodes if they collide
-            .force('collide', d3.forceCollide(d => 20))
+            .force('collide', d3.forceCollide().radius((d) => d.size * nodeScaleFactor + 1))
             .on('tick', ticked);
 
         let handleZoom = (event) => {
             g.attr('transform', event.transform)
         }
 
-        const transformExtentFactor = 1;
-        const scaleExtentFactor = 1;
         svg.call(d3.zoom()
-            .translateExtent([[transformExtentFactor * (-width), transformExtentFactor * (-height)],
-                            [2 * transformExtentFactor * width, 2 * transformExtentFactor * height]])
-            .scaleExtent([scaleExtentFactor * 0.5, scaleExtentFactor * 10])
+            .translateExtent([[zoomTransformExtentFactor * (-width), zoomTransformExtentFactor * (-height)],
+                            [2 * zoomTransformExtentFactor * width, 2 * zoomTransformExtentFactor * height]])
+            .scaleExtent([zoomScaleExtentFactor * 0.5, zoomScaleExtentFactor * 10])
             .on("zoom", handleZoom)
             .filter(() => {
                 return (event.button == 0 || event.button == 1)
