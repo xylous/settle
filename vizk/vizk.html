@@ -2,21 +2,8 @@
 <html>
 
 <head>
-    <meta charset='utf-8'>
-    <title>Force Layout Example 1</title>
-    <style>
-        .node {
-            fill: #ccc;
-            stroke: #fff;
-            stroke-width: 2px;
-        }
-
-        .link {
-            stroke: #777;
-            stroke-width: 2px;
-        }
-
-    </style>
+    <meta charset="utf-8">
+    <title>vizk</title>
 </head>
 
 <style>
@@ -27,10 +14,11 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
 <body>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script type="module">
-        const svg = d3.select('body').append('svg');
-        const g = svg.append('g');
         const width = window.innerWidth;
         const height = window.innerHeight;
+
+        const zoomTransformExtentFactor = 1;
+        const zoomScaleExtentFactor = 1;
 
         let nodeScaleFactor = 3;
         let linkScaleFactor = 1;
@@ -39,15 +27,12 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         let repulsionForceStrengthFactor = 1;
         let attractionForceStrengthFactor = 1;
 
-        const zoomTransformExtentFactor = 1;
-        const zoomScaleExtentFactor = 1;
+        let linkThickness = 1;
+        let linkOpacity = 1;
+        let linkColor = "gray";
 
         let graph = {
             nodes: [
-                {},
-                {},
-                {},
-                {},
                 {},
                 {},
                 {},
@@ -59,21 +44,28 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             links: [
                 {source: 0, target: 1},
                 {source: 0, target: 4},
-                {source: 0, target: 9},
+                {source: 0, target: 4},
                 {source: 2, target: 3},
                 {source: 1, target: 2}
             ]
         };
 
-        let ticked = () => {
+        const svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const g = svg.append("g")
+
+        // On every tick, change the positions of the links and nodes.
+        let tick = () => {
             linkSelection
-                .attr('x1', (d) => d.source.x)
-                .attr('y1', (d) => d.source.y)
-                .attr('x2', (d) => d.target.x)
-                .attr('y2', (d) => d.target.y)
+                .attr("x1", (d) => d.source.x)
+                .attr("y1", (d) => d.source.y)
+                .attr("x2", (d) => d.target.x)
+                .attr("y2", (d) => d.target.y)
             nodeSelection
-                .attr('cx', (d) => d.x)
-                .attr('cy', (d) => d.y)
+                .attr("cx", (d) => d.x)
+                .attr("cy", (d) => d.y)
         }
 
         let dragStart = (event) => {
@@ -82,18 +74,20 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             event.subject.fy = event.y;
         }
 
-        let drag = (event) => {
+        let handleDrag = (event) => {
             event.subject.fx = event.x;
             event.subject.fy = event.y;
         }
 
-        let dragEnd = (d) => {
-            //if (!event.active) simulation.alphaTarget(0);
-            //event.fx = null;
-            //event.fy = null;
+        let dragEnd = (event) => {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
         }
 
-        let totalSize = 0;
+        let handleZoom = (event) => {
+            g.attr("transform", event.transform)
+        }
 
         // Count the number of links that the nodes have; used for scaling up
         // nodes
@@ -104,45 +98,41 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             graph.nodes[link.target]["size"]++;
         });
 
-        let nodeSelection = g
-            .selectAll('.node')
+        const nodeSelection = g
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1.5)
+            .selectAll()
             .data(graph.nodes)
-            .enter()
-            .append('circle')
-            .attr("r", (d) => {
-                return d.size ? d.size * nodeScaleFactor : nodeScaleFactor
-            })
-            .attr('fill', (d) => {'orange'})
-            .call(d3.drag()
-                .on("start", dragStart)
-                .on("drag", drag)
-                .on("end", dragEnd));
+            .join("circle")
+                .attr("r", (d) => {
+                    return d.size ? d.size * nodeScaleFactor : nodeScaleFactor
+                })
+                .attr("fill", (d) => "black")
 
-        let linkSelection = g
-            .selectAll('.link')
+        const linkSelection = g
+            .attr("stroke-width", linkThickness)
+            .attr("stroke-opacity", linkOpacity)
+            .selectAll()
             .data(graph.links)
-            .enter()
-            .append('line')
-            .attr('stroke-width', linkScaleFactor)
-            .style('stroke', 'pink')
+            .join("line")
+            .attr("stroke", linkColor)
+
+        nodeSelection.call(d3.drag()
+            .on("start", dragStart)
+            .on("drag", handleDrag)
+            .on("end", dragEnd));
 
         const simulation = d3.forceSimulation(graph.nodes)
-            // Attract nodes to center
-            .force('center', d3.forceCenter(width / 2, height / 2)
-                                .strength(centerForceStrengthFactor))
-            // Repulse nodes from each other
-            .force("repulsion", d3.forceManyBody().strength((-repulsionForceStrengthFactor)))
+            // Move the nodes to the center when the simulation starts
+            .force("center", d3.forceCenter(width / 2, height / 2))
             // Attract linked nodes
             .force("links", d3.forceLink(graph.links)
-                            .distance(30)
                             .strength(attractionForceStrengthFactor))
+            // Repulse all nodes from each other by some force
+            .force("repulsion", d3.forceManyBody().strength(-repulsionForceStrengthFactor))
             // Repulse nodes if they collide
-            .force('collide', d3.forceCollide().radius((d) => d.size * nodeScaleFactor + 1))
-            .on('tick', ticked);
-
-        let handleZoom = (event) => {
-            g.attr('transform', event.transform)
-        }
+            .force("collide", d3.forceCollide().radius((d) => d.size * nodeScaleFactor + 2))
+            .on("tick", tick);
 
         svg.call(d3.zoom()
             .translateExtent([[zoomTransformExtentFactor * (-width), zoomTransformExtentFactor * (-height)],
