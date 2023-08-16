@@ -27,6 +27,8 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         let repulsionForceStrengthFactor = 1;
         let attractionForceStrengthFactor = 1;
 
+        let nodeBorderColor = "red";
+        let nodeBorderSize = 0.5;
         let linkThickness = 1;
         let linkOpacity = 1;
         let linkColor = "gray";
@@ -56,16 +58,16 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
 
         const g = svg.append("g")
 
-        // On every tick, change the positions of the links and nodes.
+        // On every tick, update the positions of the nodes and links
         let tick = () => {
-            linkSelection
-                .attr("x1", (d) => d.source.x)
-                .attr("y1", (d) => d.source.y)
-                .attr("x2", (d) => d.target.x)
-                .attr("y2", (d) => d.target.y)
             nodeSelection
-                .attr("cx", (d) => d.x)
-                .attr("cy", (d) => d.y)
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+            linkSelection
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y)
         }
 
         let dragStart = (event) => {
@@ -99,23 +101,24 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         });
 
         const nodeSelection = g
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 1.5)
             .selectAll()
             .data(graph.nodes)
             .join("circle")
+                .attr("stroke", nodeBorderColor)
+                .attr("stroke-width", nodeBorderSize)
                 .attr("r", (d) => {
                     return d.size ? d.size * nodeScaleFactor : nodeScaleFactor
                 })
                 .attr("fill", (d) => "black")
 
         const linkSelection = g
-            .attr("stroke-width", linkThickness)
-            .attr("stroke-opacity", linkOpacity)
             .selectAll()
             .data(graph.links)
             .join("line")
-            .attr("stroke", linkColor)
+                .attr("stroke-width", linkThickness)
+                .attr("stroke-opacity", linkOpacity)
+                .attr("stroke", linkColor)
+                .lower()
 
         nodeSelection.call(d3.drag()
             .on("start", dragStart)
