@@ -25,15 +25,12 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
 </style>
 
 <body>
-    <div id="content">
-        <svg height="100" width="100">
-        </svg>
-    </div>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script type="module">
-        let svg = d3.select('svg')
-        let width = window.innerWidth;
-        let height = window.innerHeight;
+        const svg = d3.select('body').append('svg');
+        const g = svg.append('g');
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
         let node_scale_factor = 3;
         let link_scale_factor = 1;
@@ -102,8 +99,7 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             graph.nodes[link.target]["size"]++;
         });
 
-        let nodeSelection = svg
-            .append('g')
+        let nodeSelection = g
             .selectAll('.node')
             .data(graph.nodes)
             .enter()
@@ -117,8 +113,7 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
                 .on("drag", drag)
                 .on("end", dragEnd));
 
-        let linkSelection = svg
-            .append('g')
+        let linkSelection = g
             .selectAll('.link')
             .data(graph.links)
             .enter()
@@ -140,6 +135,15 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             // Repulse nodes if they collide
             .force('collide', d3.forceCollide(d => 20))
             .on('tick', ticked);
+
+        let handleZoom = (event) => {
+            g.attr('transform', event.transform)
+        }
+
+        svg.call(d3.zoom()
+            .extent([[0, 0], [width, height]])
+            .scaleExtent([0.5, 10])
+            .on("zoom", handleZoom));
     </script>
 </body>
 
