@@ -47,6 +47,9 @@
         const zoomTransformExtentFactor = 1;
         const zoomScaleExtentFactor = 1;
 
+        // not completely immobile but also not too spasmodic
+        const averageEntropyTarget = 0.1;
+
         const repulsionForceFactor = 20;
         let attractionForceStrength = 1; // 0 to 5
         let repulsionForceStrength = 1 * repulsionForceFactor; // 0 to 5
@@ -124,7 +127,7 @@
             g.attr("transform", event.transform)
         }
 
-        let computeNodeSize(d) => {
+        let computeNodeSize = (d) => {
             return d.size ? d.size * nodeSizeFactor : nodeSizeFactor
         }
 
@@ -236,12 +239,14 @@
             attractionForceStrength = linkForceSlider.value;
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength));
+            simulation.alphaTarget(averageEntropyTarget)
         }
 
         let repulsionForceSlider = document.getElementById("repulsion_force");
         repulsionForceSlider.oninput = () => {
             repulsionForceStrength = repulsionForceFactor * repulsionForceSlider.value;
             simulation.force("charge", d3.forceManyBody().strength(-repulsionForceStrength));
+            simulation.alphaTarget(averageEntropyTarget)
         }
 
         let centerForceSlider = document.getElementById("center_force");
@@ -249,6 +254,7 @@
             centerForceStrength = centerForceSlider.value;
             simulation.force("centerX", d3.forceX(width / 2).strength(centerForceStrength));
             simulation.force("centerY", d3.forceY(height / 2).strength(centerForceStrength));
+            simulation.alphaTarget(averageEntropyTarget)
         }
     </script>
 </body>
