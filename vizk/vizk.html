@@ -33,6 +33,7 @@
     <div class="top-div" id="slider_container">
         <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="node_size">
         <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="link_thickness">
+        <input type="range" min="30" max="100" step="1" value="30" class="slider" id="link_distance">
         <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="link_force">
         <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="repulsion_force">
         <input type="range" min="0" max="1" step="0.01" value="0.2" class="slider" id="center_force">
@@ -59,6 +60,7 @@
 
         let nodeSizeFactor = 2.5; // 0 to 5
         let linkScaleFactor = 2.5; // 0 to 5
+        let linkDistance = 30;
 
         let nodeBorderColor = "white";
         let nodeBorderSize = 0.5;
@@ -204,7 +206,8 @@
             .force("centerY", d3.forceY(height / 2).strength(centerForceStrength))
             // Attract linked nodes
             .force("links", d3.forceLink(graph.links)
-                .strength(attractionForceStrength))
+                .strength(attractionForceStrength)
+                .distance(linkDistance))
             // Repulse all nodes from each other by some force
             .force("repulsion",
             d3.forceManyBody().strength(-repulsionForceStrength))
@@ -234,11 +237,21 @@
             linkSelection.style("stroke-width", linkThickness);
         }
 
+        let linkDistanceSlider = document.getElementById("link_distance");
+        linkDistanceSlider.oninput = () => {
+            linkDistance = linkDistanceSlider.value;
+            simulation.force("links", d3.forceLink(graph.links)
+                .strength(attractionForceStrength)
+                .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
+            simulation.alphaTarget(averageEntropyTarget)
+        }
+
         let linkForceSlider = document.getElementById("link_force");
         linkForceSlider.oninput = () => {
             attractionForceStrength = linkForceSlider.value;
             simulation.force("links", d3.forceLink(graph.links)
-                .strength(attractionForceStrength));
+                .strength(attractionForceStrength)
+                .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
             simulation.alphaTarget(averageEntropyTarget)
         }
 
