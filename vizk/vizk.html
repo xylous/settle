@@ -140,10 +140,17 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             g.attr('transform', event.transform)
         }
 
+        const transformExtentFactor = 1;
+        const scaleExtentFactor = 1;
         svg.call(d3.zoom()
-            .extent([[0, 0], [width, height]])
-            .scaleExtent([0.5, 10])
-            .on("zoom", handleZoom));
+            .translateExtent([[transformExtentFactor * (-width), transformExtentFactor * (-height)],
+                            [2 * transformExtentFactor * width, 2 * transformExtentFactor * height]])
+            .scaleExtent([scaleExtentFactor * 0.5, scaleExtentFactor * 10])
+            .on("zoom", handleZoom)
+            .filter(() => {
+                return (event.button == 0 || event.button == 1)
+            })
+        );
     </script>
 </body>
 
