@@ -35,12 +35,12 @@
 <body>
     <!--The sliders go on top of the simulation nicely-->
     <div class="top-div" id="slider_container">
-        <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="node_size">
-        <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="link_thickness">
+        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="node_size">
+        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="link_thickness">
         <input type="range" min="30" max="100" step="1" value="30" class="slider" id="link_distance">
-        <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="link_force">
-        <input type="range" min="0" max="5" step="0.1" value="2.5" class="slider" id="repulsion_force">
-        <input type="range" min="0" max="1" step="0.01" value="0.2" class="slider" id="center_force">
+        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="link_force">
+        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="repulsion_force">
+        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="center_force">
         <p class="slider-description" id="node_size_description"></p>
         <p class="slider-description" id="link_thickness_description"></p>
         <p class="slider-description" id="link_distance_description"></p>
@@ -58,28 +58,33 @@
         const zoomTransformExtentFactor = 1;
         const zoomScaleExtentFactor = 1;
 
+        const nodeSizeSlider = document.getElementById("node_size");
+        const linkThicknessSlider = document.getElementById("link_thickness");
+        const linkDistanceSlider = document.getElementById("link_distance");
+        const linkForceSlider = document.getElementById("link_force");
+        const repulsionForceSlider = document.getElementById("repulsion_force");
+        const centerForceSlider = document.getElementById("center_force");
+
         // not completely immobile but also not too spasmodic
         const averageEntropyTarget = 0.1;
-
+        // The normal repulsion force is usually too weak
         const repulsionForceFactor = 20;
-        let attractionForceStrength = 1; // 0 to 5
-        let repulsionForceStrength = 1 * repulsionForceFactor; // 0 to 5
-        let centerForceStrength = 0; // 0 to 1
 
-        const sliderColor = "#85bb65"
+        let nodeSizeFactor = nodeSizeSlider.value; // 0 to 5
+        let linkThickness = linkThicknessSlider.value; // 0 to 5
+        let linkDistance = linkDistanceSlider.value; // 30 to 100
+        let attractionForceStrength = linkForceSlider.value; // 0 to 5
+        let repulsionForceStrength = repulsionForceSlider.value * repulsionForceFactor; // 0 to 5
+        let centerForceStrength = centerForceSlider.value; // 0 to 1
 
-        let nodeSizeFactor = 2.5; // 0 to 5
-        let linkScaleFactor = 2.5; // 0 to 5
-        let linkDistance = 30;
+        let linkOpacity = 1;
+        let linkColor = "black";
 
         let nodeBorderColor = "white";
         let nodeBorderSize = 0.5;
         let highlightSourceColor = "purple";
         let highlightUnrelated = "gray";
         let highlightRegularNode = "yellow";
-        let linkThickness = 1;
-        let linkOpacity = 1;
-        let linkColor = "black";
 
         let graph = {
             nodes: [
@@ -235,28 +240,26 @@
             })
         );
 
-        let nodeSizeSlider = document.getElementById("node_size");
         let nodeSizeSliderDescription = document.getElementById("node_size_description");
-        nodeSizeSliderDescription.innerHTML = "Link force: " + nodeSizeSlider.value;
+        nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
         nodeSizeSlider.oninput = () => {
+            nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
             nodeSizeFactor = nodeSizeSlider.value;
             nodeSelection.attr("r", (d) => computeNodeSize(d));
         }
 
-        let linkThicknessSlider = document.getElementById("link_thickness");
         let linkThicknessSliderDescription = document.getElementById("link_thickness_description");
-        linkThicknessSliderDescription.innerHTML = "Link force: " + linkThicknessSlider.value;
+        linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
         linkThicknessSlider.oninput = () => {
-            linkThicknessSliderDescription.innerHTML = "Link force: " + linkThicknessSlider.value;
+            linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
             linkThickness = linkThicknessSlider.value;
             linkSelection.style("stroke-width", linkThickness);
         }
 
-        let linkDistanceSlider = document.getElementById("link_distance");
         let linkDistanceSliderDescription = document.getElementById("link_distance_description");
-        linkDistanceSliderDescription.innerHTML = "Link force: " + linkDistanceSlider.value;
+        linkDistanceSliderDescription.innerHTML = "Link distance: " + linkDistanceSlider.value;
         linkDistanceSlider.oninput = () => {
-            linkDistanceSliderDescription.innerHTML = "Link force: " + linkDistanceSlider.value;
+            linkDistanceSliderDescription.innerHTML = "Link distance: " + linkDistanceSlider.value;
             linkDistance = linkDistanceSlider.value;
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength)
@@ -264,7 +267,6 @@
             simulation.alphaTarget(averageEntropyTarget)
         }
 
-        let linkForceSlider = document.getElementById("link_force");
         let linkForceSliderDescription = document.getElementById("link_force_description");
         linkForceSliderDescription.innerHTML = "Link force: " + linkForceSlider.value;
         linkForceSlider.oninput = () => {
@@ -276,7 +278,6 @@
             simulation.alphaTarget(averageEntropyTarget)
         }
 
-        let repulsionForceSlider = document.getElementById("repulsion_force");
         let repulsionForceSliderDescription = document.getElementById("repulsion_force_description");
         repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
         repulsionForceSlider.oninput = () => {
@@ -286,7 +287,6 @@
             simulation.alphaTarget(averageEntropyTarget)
         }
 
-        let centerForceSlider = document.getElementById("center_force");
         let centerForceSliderDescription = document.getElementById("center_force_description");
         centerForceSliderDescription.innerHTML = "Center force: " + centerForceSlider.value;
         centerForceSlider.oninput = () => {
