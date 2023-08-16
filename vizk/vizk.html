@@ -38,6 +38,10 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         let node_scale_factor = 3;
         let link_scale_factor = 1;
 
+        let centerForceStrength = 1;
+        let repulsionForceStrength = 1;
+        let attractionForceStrength = 1;
+
         let graph = {
             nodes: [
                 {},
@@ -61,29 +65,61 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             ]
         };
 
+        let ticked = () => {
+            linkSelection
+                .attr('x1', (d) => d.source.x)
+                .attr('y1', (d) => d.source.y)
+                .attr('x2', (d) => d.target.x)
+                .attr('y2', (d) => d.target.y)
+            nodeSelection
+                .attr('cx', (d) => d.x)
+                .attr('cy', (d) => d.y)
+        }
+
+        let dragStart = (event) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+
+        let drag = (event) => {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+
+        let dragEnd = (d) => {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+
         // Count the number of links that the nodes have; used for scaling up
         // nodes
         graph.links.forEach((link) => {
-            if (!graph.nodes[link.source]["linkCount"]) graph.nodes[link.source]["linkCount"] = 0;
-            if (!graph.nodes[link.target]["linkCount"]) graph.nodes[link.target]["linkCount"] = 0;
-            graph.nodes[link.source]["linkCount"]++;
-            graph.nodes[link.target]["linkCount"]++;
+            if (!graph.nodes[link.source]["size"]) graph.nodes[link.source]["size"] = 0;
+            if (!graph.nodes[link.target]["size"]) graph.nodes[link.target]["size"] = 0;
+            graph.nodes[link.source]["size"]++;
+            graph.nodes[link.target]["size"]++;
         });
 
-        let node = svg
+        let nodeSelection = svg
             .append('g')
-            .selectAll('circle')
+            .selectAll('.node')
             .data(graph.nodes)
             .enter()
             .append('circle')
             .attr("r", (d) => {
-                return d.linkCount ? d.linkCount * node_scale_factor : node_scale_factor
+                return d.size ? d.size * node_scale_factor : node_scale_factor
             })
             .attr('fill', (d) => {'orange'})
+            .call(d3.drag()
+                .on("start", dragStart)
+                .on("drag", drag)
+                .on("end", dragEnd));
 
-        let link = svg
+        let linkSelection = svg
             .append('g')
-            .selectAll('line')
+            .selectAll('.link')
             .data(graph.links)
             .enter()
             .append('line')
@@ -91,30 +127,18 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             .style('stroke', 'pink')
             .attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
 
-        let ticked = () => {
-            link
-                .attr('x1', (d) => d.source.x)
-                .attr('y1', (d) => d.source.y)
-                .attr('x2', (d) => d.target.x)
-                .attr('y2', (d) => d.target.y)
-            node
-                .attr('cx', (d) => d.x)
-                .attr('cy', (d) => d.y)
-        }
-
-        let simulation = d3.forceSimulation(graph.nodes)
-            // Repulsion force
-            .force("charge", d3.forceManyBody().strength(-150))
-            // Attraction force
-            //.force("link", d3.forceLink(graph.links).id((d) => {
-                //return d.name;
-            //}))
-            .force("link", d3.forceLink(graph.links).strength(link_scale_factor))
-            // Attraction to center
-            .force('center', d3.forceCenter(width / 2, height / 2))
+        const simulation = d3.forceSimulation(graph.nodes)
+            // Attract nodes to center
+            .force('center', d3.forceCenter(width / 2, height / 2)
+                                .strength(centerForceStrength))
+            // Repulse nodes from each other
+            .force("charge", d3.forceManyBody().strength(repulsionForceStrength))
+            // Attract linked nodes
+            .force("links", d3.forceLink(graph.links)
+                            .distance(d => 3.5 * (d.source.size + d.target.size))
+                            .strength(attractionForceStrength))
+            // Repulse nodes if they collide
             .force('collide', d3.forceCollide(d => 20))
-            .force("x", d3.forceX())
-            .force("y", d3.forceY())
             .on('tick', ticked);
     </script>
 </body>
