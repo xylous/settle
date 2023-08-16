@@ -27,11 +27,14 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
         let repulsionForceStrengthFactor = 1;
         let attractionForceStrengthFactor = 1;
 
-        let nodeBorderColor = "red";
+        let nodeBorderColor = "white";
         let nodeBorderSize = 0.5;
+        let highlightSourceColor = "purple";
+        let highlightUnrelated = "gray";
+        let highlightRegularNode = "yellow";
         let linkThickness = 1;
         let linkOpacity = 1;
-        let linkColor = "gray";
+        let linkColor = "black";
 
         let graph = {
             nodes: [
@@ -106,10 +109,11 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             .join("circle")
                 .attr("stroke", nodeBorderColor)
                 .attr("stroke-width", nodeBorderSize)
+                .attr("id", (d,id) => id)
                 .attr("r", (d) => {
                     return d.size ? d.size * nodeScaleFactor : nodeScaleFactor
                 })
-                .attr("fill", (d) => "black")
+                .style("fill", (d) => highlightRegularNode)
 
         const linkSelection = g
             .selectAll()
@@ -124,6 +128,33 @@ svg { position:fixed; top:0; left:0; height:100%; width:100% }
             .on("start", dragStart)
             .on("drag", handleDrag)
             .on("end", dragEnd));
+
+        const linkedByIndex = {};
+        graph.links.forEach(d => {
+            linkedByIndex[`${d.source},${d.target}`] = 1;
+        });
+
+        let isConnected = (a, b) => {
+            console.log(b);
+            return linkedByIndex[`${a},${b}`] || linkedByIndex[`${b},${a}`] || a === b;
+        }
+
+        nodeSelection.on('mouseover', function(d) {
+                let current = d3.select(this)
+                let c_id = current.attr("id")
+                nodeSelection
+                    .filter(n => !isConnected(c_id, n.index))
+                    .style("fill", highlightUnrelated)
+                current.style("fill", highlightSourceColor)
+                linkSelection
+                    .filter(l => c_id == l.source.index || c_id == l.target.index)
+                    .style("stroke", highlightSourceColor)
+            })
+        nodeSelection.on('mouseout', (d) => {
+                nodeSelection.style("fill", highlightRegularNode)
+                linkSelection
+                    .style("stroke", linkColor)
+            })
 
         const simulation = d3.forceSimulation(graph.nodes)
             // Move the nodes to the center when the simulation starts
