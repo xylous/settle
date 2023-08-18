@@ -104,13 +104,13 @@
 
         let graph = {
             nodes: [
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
+                {name: "1"},
+                {name: "2"},
+                {name: "3"},
+                {name: "4"},
+                {name: "5"},
+                {name: "6"},
+                {name: "7"},
             ],
             links: [
                 {source: 0, target: 1},
@@ -130,8 +130,9 @@
         // On every tick, update the positions of the nodes and links
         let tick = () => {
             nodeSelection
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y)
+                .attr("transform", (d) => `translate(${d.x} ${d.y})`)
+            textSelection
+                .attr("transform", (d) => `translate(${d.x} ${d.y})`)
             linkSelection
                 .attr("x1", d => d.source.x)
                 .attr("y1", d => d.source.y)
@@ -182,6 +183,20 @@
             .attr("id", (d, id) => id)
             .attr("r", (d) => computeNodeSize(d))
             .style("fill", (d) => highlightRegularNode)
+
+        // the text layer is separate to not allow dragging a node by its name
+        // or to complicate highlighting code
+        const textSelection = g
+            .selectAll()
+            .data(graph.nodes)
+            .join("text")
+            .text((d) => d.name)
+            .attr("x", (d) => d.x)
+            .attr("y", (d) => d.y)
+            .attr("text-anchor", "middle")
+            .attr("dy", (d) => d.size * 2 + 18)
+            .style("fill", "white")
+            .classed("no-select", true)
 
         const linkSelection = g
             .selectAll()
