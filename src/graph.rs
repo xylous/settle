@@ -155,9 +155,6 @@ pub fn vizk(zs: &[Zettel])
             links: raw_links.map((l) => {{return {{source: l[0], target: l[1]}}}})
         }};
 
-        const zoomTransformExtentFactor = 1;
-        const zoomScaleExtentFactor = 1;
-
         const nodeSizeSlider = document.getElementById("node_size");
         const linkThicknessSlider = document.getElementById("link_thickness");
         const linkDistanceSlider = document.getElementById("link_distance");
@@ -327,9 +324,6 @@ pub fn vizk(zs: &[Zettel])
             .on("tick", tick);
 
         svg.call(d3.zoom()
-            .translateExtent([[zoomTransformExtentFactor * (-width), zoomTransformExtentFactor * (-height)],
-                            [2 * zoomTransformExtentFactor * width, 2 * zoomTransformExtentFactor * height]])
-            .scaleExtent([zoomScaleExtentFactor * 0.5, zoomScaleExtentFactor * 10])
             .on("zoom", handleZoom)
             .filter(() => {{
                 return (event.button == 0 || event.button == 1)
