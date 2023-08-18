@@ -9,6 +9,12 @@ pub fn zk_graph_dot_output(zs: &[Zettel])
     dot_output(gen_graph(zs));
 }
 
+/// Print the JSON format obtained from the graph made from the given Zettelkasten
+pub fn zk_graph_json_output(zs: &[Zettel])
+{
+    json_output(gen_graph(zs));
+}
+
 /// Turn a Zettelkasten into a directed graph, using petgraph
 fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
 {
@@ -56,4 +62,9 @@ fn find_seen_by_name(seen: Vec<(&str, NodeIndex)>, name: &str) -> (String, NodeI
 fn dot_output(g: Graph<&str, &str>)
 {
     println!("{}", Dot::with_config(&g, &[Config::EdgeNoLabel]));
+}
+
+fn json_output(g: Graph<&str, &str>)
+{
+    println!("{}", serde_json::to_string(&g).unwrap());
 }

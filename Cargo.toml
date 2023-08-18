@@ -20,8 +20,9 @@ rayon = { version = "1.7.0" }
 glob = { version = "0.3.1" }
 regex = { version = "1.8.4" }
 serde = { version = "1.0.163", features = [ "derive" ] }
+serde_json = { version = "1.0.105" }
 serde_yaml = { version = "0.9.21" }
 shellexpand = { version = "3.1.0" }
 chrono = { version = "0.4.26" }
 dialoguer = { version = "0.10.4" }
-petgraph = { version = "0.6.3" }
+petgraph = { version = "0.6.3", features = ["serde-1"] }
