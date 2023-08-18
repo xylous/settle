@@ -4,7 +4,7 @@ use regex::Regex;
 use rusqlite::Error;
 
 use crate::config::ConfigOptions;
-use crate::graph::{zk_graph_dot_output, zk_graph_json_output};
+use crate::graph::{vizk, zk_graph_dot_output, zk_graph_json_output};
 use crate::zettel::strip_multiple_whitespace;
 use crate::Database;
 use crate::Zettel;
@@ -170,6 +170,11 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
 
     if matches.get_flag("JSON_GRAPH") {
         zk_graph_json_output(&zs);
+        return Ok(());
+    }
+
+    if matches.get_flag("VIZK") {
+        vizk(&zs);
         return Ok(());
     }
 
