@@ -246,6 +246,7 @@ pub fn vizk(zs: &[Zettel])
             .attr("id", (d, id) => id)
             .attr("r", (d) => computeNodeSize(d))
             .style("fill", (d) => highlightRegularNode)
+            .raise()
 
         // the text layer is separate to not allow dragging a node by its name
         // or to complicate highlighting code
@@ -257,9 +258,10 @@ pub fn vizk(zs: &[Zettel])
             .attr("x", (d) => d.x)
             .attr("y", (d) => d.y)
             .attr("text-anchor", "middle")
-            .attr("dy", (d) => computeNodeSize(d) + 18)
+            .attr("dy", (d) => computeNodeSize(d) * 2 + 18)
             .style("fill", "white")
             .classed("no-select", true)
+            .lower()
 
         const linkSelection = g
             .selectAll()
