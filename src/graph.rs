@@ -224,7 +224,7 @@ pub fn vizk(zs: &[Zettel])
         }}
 
         let computeNodeSize = (d) => {{
-            return d.size ? d.size * nodeSizeFactor : nodeSizeFactor
+            return d.size ? Math.log(d.size) * nodeSizeFactor : nodeSizeFactor
         }}
 
         // Count the number of links that the nodes have; used for scaling up
