@@ -260,6 +260,7 @@ pub fn vizk(zs: &[Zettel])
             .attr("text-anchor", "middle")
             .attr("dy", (d) => computeNodeSize(d) * 2 + 18)
             .style("fill", "white")
+            .style("font-size", (d) => computeNodeSize(d) / 8)
             .classed("no-select", true)
             .lower()
 
