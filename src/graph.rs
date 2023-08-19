@@ -182,6 +182,7 @@ pub fn vizk(zs: &[Zettel])
         let highlightSourceColor = "purple";
         let highlightUnrelated = "gray";
         let highlightRegularNode = "yellow";
+        let highlightOpacity = 0.3;
 
         const svg = d3.select("body").append("svg")
             .attr("width", width)
@@ -289,7 +290,13 @@ pub fn vizk(zs: &[Zettel])
             nodeSelection
                 .filter(n => !isConnected(c_id, n.index))
                 .style("fill", highlightUnrelated)
-            current.style("fill", highlightSourceColor)
+                .style("opacity", highlightOpacity)
+            textSelection
+                .filter(n => !isConnected(c_id, n.index))
+                .style("opacity", highlightOpacity)
+            current
+                .style("fill", highlightSourceColor)
+                .style("opacity", 1)
             linkSelection
                 .style("stroke", highlightSourceColor)
             linkSelection
@@ -299,7 +306,11 @@ pub fn vizk(zs: &[Zettel])
                 .style("stroke-opacity", linkOpacity / 2)
         }})
         nodeSelection.on('mouseout', (d) => {{
-            nodeSelection.style("fill", highlightRegularNode)
+            nodeSelection
+                .style("fill", highlightRegularNode)
+                .style("opacity", 1)
+            textSelection
+                .style("opacity", 1)
             linkSelection
                 .style("stroke", linkColor)
                 .style("stroke-width", linkThickness)
@@ -318,7 +329,7 @@ pub fn vizk(zs: &[Zettel])
                 .distance(linkDistance))
             // Repulse all nodes from each other by some force
             .force("repulsion",
-            d3.forceManyBody().strength(-repulsionForceStrength))
+                d3.forceManyBody().strength(-repulsionForceStrength))
             // Repulse nodes if they collide
             .force("collide", d3.forceCollide().radius((d) => d.size * nodeSizeFactor + 2))
             .on("tick", tick);
