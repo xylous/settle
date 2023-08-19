@@ -225,7 +225,7 @@ pub fn vizk(zs: &[Zettel])
         }}
 
         let computeNodeSize = (d) => {{
-            return d.size ? Math.log(d.size) * nodeSizeFactor : nodeSizeFactor
+            return d.size > 1 ? Math.log(d.size) * nodeSizeFactor : nodeSizeFactor
         }}
 
         // Count the number of links that the nodes have; used for scaling up
@@ -257,7 +257,7 @@ pub fn vizk(zs: &[Zettel])
             .attr("x", (d) => d.x)
             .attr("y", (d) => d.y)
             .attr("text-anchor", "middle")
-            .attr("dy", (d) => d.size * 2 + 18)
+            .attr("dy", (d) => computeNodeSize(d) + 18)
             .style("fill", "white")
             .classed("no-select", true)
 
@@ -331,7 +331,7 @@ pub fn vizk(zs: &[Zettel])
             .force("repulsion",
                 d3.forceManyBody().strength(-repulsionForceStrength))
             // Repulse nodes if they collide
-            .force("collide", d3.forceCollide().radius((d) => d.size * nodeSizeFactor + 2))
+            .force("collide", d3.forceCollide().radius((d) => computeNodeSize(d) * 4))
             .on("tick", tick);
 
         svg.call(d3.zoom()
