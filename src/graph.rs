@@ -281,7 +281,7 @@ pub fn vizk(zs: &[Zettel])
         }});
 
         let isConnected = (a, b) => {{
-            return linkedByIndex[`${{a}},${{b}}`] || linkedByIndex[`${{b}},${{a}}`] || a === b;
+            return a == b || linkedByIndex[`${{a}},${{b}}`] || linkedByIndex[`${{b}},${{a}}`];
         }}
 
         nodeSelection.on('mouseover', function (d) {{
@@ -296,7 +296,6 @@ pub fn vizk(zs: &[Zettel])
                 .style("opacity", highlightOpacity)
             current
                 .style("fill", highlightSourceColor)
-                .style("opacity", 1)
             linkSelection
                 .style("stroke", highlightSourceColor)
             linkSelection
