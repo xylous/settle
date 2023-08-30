@@ -159,9 +159,11 @@ pub fn vizk(zs: &[Zettel])
         const centerForceSlider = document.getElementById("center_force");
 
         // not completely immobile but also not too spasmodic
-        const averageEntropyTarget = 0.1;
+        const desiredSimulationEntropy = 0.1;
         // The normal repulsion force is usually too weak
         const repulsionForceFactor = 20;
+
+        const maxDragStartDistance = 6;
 
         let nodeSizeFactor = nodeSizeSlider.value; // 0 to 5
         let linkThickness = linkThicknessSlider.value; // 0 to 5
@@ -205,7 +207,7 @@ pub fn vizk(zs: &[Zettel])
             }}
 
             // render the links
-            //context.globalAlpha = 0.6;
+            context.globalAlpha = 0.6;
             context.beginPath();
             context.strokeStyle = highlightRegularNode;
             context.lineWidth = linkThickness;
@@ -216,8 +218,7 @@ pub fn vizk(zs: &[Zettel])
             context.stroke();
 
             // render the  nodes
-            //context.save();
-            //context.globalAlpha = 1;
+            context.globalAlpha = 1;
             context.fillStyle = highlightRegularNode;
             graph.nodes.forEach((d) => {{
                 context.beginPath();
@@ -226,23 +227,6 @@ pub fn vizk(zs: &[Zettel])
                 context.fill();
             }})
             context.restore();
-        }}
-
-        let dragStart = (event) => {{
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }}
-
-        let handleDrag = (event) => {{
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }}
-
-        let dragEnd = (event) => {{
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
         }}
 
         let computeNodeSize = (d) => {{
@@ -308,7 +292,7 @@ pub fn vizk(zs: &[Zettel])
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength)
                 .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
-            simulation.alphaTarget(averageEntropyTarget)
+            simulation.alphaTarget(desiredSimulationEntropy)
         }}
 
         let linkForceSliderDescription = document.getElementById("link_force_description");
@@ -319,7 +303,7 @@ pub fn vizk(zs: &[Zettel])
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength)
                 .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
-            simulation.alphaTarget(averageEntropyTarget)
+            simulation.alphaTarget(desiredSimulationEntropy)
         }}
 
         let repulsionForceSliderDescription = document.getElementById("repulsion_force_description");
@@ -328,7 +312,7 @@ pub fn vizk(zs: &[Zettel])
             repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
             repulsionForceStrength = repulsionForceFactor * repulsionForceSlider.value;
             simulation.force("charge", d3.forceManyBody().strength(-repulsionForceStrength));
-            simulation.alphaTarget(averageEntropyTarget)
+            simulation.alphaTarget(desiredSimulationEntropy)
         }}
 
         let centerForceSliderDescription = document.getElementById("center_force_description");
@@ -338,8 +322,64 @@ pub fn vizk(zs: &[Zettel])
             centerForceStrength = centerForceSlider.value;
             simulation.force("centerX", d3.forceX(width / 2).strength(centerForceStrength));
             simulation.force("centerY", d3.forceY(height / 2).strength(centerForceStrength));
-            simulation.alphaTarget(averageEntropyTarget)
+            simulation.alphaTarget(desiredSimulationEntropy)
         }}
+
+        const drag = (circles, canvas) => {{
+            // Choose the circle that is closest to the pointer for dragging.
+            const dragSubject = (event) => {{
+                const transform = d3.zoomTransform(canvas);
+                let subject = null;
+                // Distance is expressed in unzoomed coordinates, ie. keeps proportion with circles radius
+                // at any zoom level.
+                let distance = maxDragStartDistance;
+                const x = transform.invertX(event.x);
+                const y = transform.invertY(event.y);
+                for (const c of circles) {{
+                    let d = Math.hypot(x - c.x, y - c.y);
+                    if (d < distance) {{
+                        distance = d;
+                        subject = c;
+                    }}
+                }}
+                return subject
+                    ? {{
+                        circle: subject,
+                        x: transform.applyX(subject.x),
+                        y: transform.applyY(subject.y)
+                    }}
+                    : null;
+            }}
+
+            let dragStart = (event) => {{
+                if (!event.subject.active) simulation.alphaTarget(desiredSimulationEntropy);
+                circles.splice(circles.indexOf(event.subject.circle), 1);
+                circles.push(event.subject.circle);
+                event.subject.active = true;
+            }}
+
+            let handleDrag = (event) => {{
+                const transform = d3.zoomTransform(canvas);
+                event.subject.circle.fx = transform.invertX(event.x);
+                event.subject.circle.fy = transform.invertY(event.y);
+            }}
+
+            let dragEnd = (event) => {{
+                if (!event.subject.active) simulation.alphaTarget(0);
+                event.subject.circle.fx = null;
+                event.subject.circle.fy = null;
+                event.subject.active = false;
+            }}
+
+            return d3.drag()
+                .subject(dragSubject)
+                .on("start", dragStart)
+                .on("drag", handleDrag)
+                .on("end", dragEnd);
+        }}
+
+        d3.select(context.canvas).call(drag(graph.nodes, context.canvas)
+            .on("start.render drag.render end.render", (event) => render(event.transform)));
 
         d3.selectAll("canvas").call(d3.zoom()
             .on("zoom", ({{transform}}) => render(transform)))
