@@ -73,8 +73,7 @@ pub fn vizk(zs: &[Zettel])
 {
     let jsongraph = json_output(gen_graph(zs));
     println!(
-             r#"
-             <!DOCTYPE html>
+             r#"<!DOCTYPE html>
 <html>
 
 <head>
@@ -92,7 +91,7 @@ pub fn vizk(zs: &[Zettel])
         overflow: hidden;
     }}
 
-    svg {{
+    canvas {{
         position: relative;
         z-index: 1;
         top: 0;
@@ -147,12 +146,9 @@ pub fn vizk(zs: &[Zettel])
         const height = window.innerHeight;
 
         const raw_json_input = {};
-        const raw_nodes = raw_json_input.nodes;
-        const raw_links = raw_json_input.edges;
-
         let graph = {{
-            nodes: raw_nodes.map((n) => {{return {{name: n}}}}),
-            links: raw_links.map((l) => {{return {{source: l[0], target: l[1]}}}})
+            nodes: raw_json_input.nodes.map((n) => {{return {{name: n}}}}),
+            links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1]}}}})
         }};
 
         const nodeSizeSlider = document.getElementById("node_size");
@@ -181,26 +177,55 @@ pub fn vizk(zs: &[Zettel])
         let nodeBorderSize = 0.5;
         let highlightSourceColor = "purple";
         let highlightUnrelated = "gray";
-        let highlightRegularNode = "yellow";
+        let highlightRegularNode = "gray";
         let highlightOpacity = 0.3;
 
-        const svg = d3.select("body").append("svg")
+        const canvas = d3.select("body").append("canvas")
             .attr("width", width)
             .attr("height", height);
+        const context = canvas.node().getContext("2d");
 
-        const g = svg.append("g")
+        const customBase = document.createElement("custom");
+        const custom = d3.select(customBase)
 
-        // On every tick, update the positions of the nodes and links
-        let tick = () => {{
-            nodeSelection
-                .attr("transform", (d) => `translate(${{d.x}} ${{d.y}})`)
-            textSelection
-                .attr("transform", (d) => `translate(${{d.x}} ${{d.y}})`)
-            linkSelection
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y)
+        let currentTransform = d3.zoomIdentity;
+        let render = (transform) => {{
+            context.clearRect(0, 0, width, height);
+            context.save();
+
+            // if provided with the transform property, then scale accordingly
+            // otherwise, keep the same ratios
+            if (transform === undefined) {{
+                context.translate(currentTransform.x, currentTransform.y);
+                context.scale(currentTransform.k, currentTransform.k);
+            }} else {{
+                context.translate(transform.x, transform.y);
+                context.scale(transform.k, transform.k);
+                currentTransform = transform;
+            }}
+
+            // render the links
+            //context.globalAlpha = 0.6;
+            context.beginPath();
+            context.strokeStyle = highlightRegularNode;
+            context.lineWidth = linkThickness;
+            graph.links.forEach((d) => {{
+                context.moveTo(d.source.x, d.source.y);
+                context.lineTo(d.target.x, d.target.y);
+            }})
+            context.stroke();
+
+            // render the  nodes
+            //context.save();
+            //context.globalAlpha = 1;
+            context.fillStyle = highlightRegularNode;
+            graph.nodes.forEach((d) => {{
+                context.beginPath();
+                context.moveTo(d.x + 5, d.y);
+                context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
+                context.fill();
+            }})
+            context.restore();
         }}
 
         let dragStart = (event) => {{
@@ -220,10 +245,6 @@ pub fn vizk(zs: &[Zettel])
             event.subject.fy = null;
         }}
 
-        let handleZoom = (event) => {{
-            g.attr("transform", event.transform)
-        }}
-
         let computeNodeSize = (d) => {{
             return d.size > 1 ? Math.log(d.size) * nodeSizeFactor : nodeSizeFactor
         }}
@@ -237,47 +258,6 @@ pub fn vizk(zs: &[Zettel])
             graph.nodes[link.target]["size"]++;
         }});
 
-        const nodeSelection = g
-            .selectAll()
-            .data(graph.nodes)
-            .join("circle")
-            .attr("stroke", nodeBorderColor)
-            .attr("stroke-width", nodeBorderSize)
-            .attr("id", (d, id) => id)
-            .attr("r", (d) => computeNodeSize(d))
-            .style("fill", (d) => highlightRegularNode)
-            .raise()
-
-        // the text layer is separate to not allow dragging a node by its name
-        // or to complicate highlighting code
-        const textSelection = g
-            .selectAll()
-            .data(graph.nodes)
-            .join("text")
-            .text((d) => d.name)
-            .attr("x", (d) => d.x)
-            .attr("y", (d) => d.y)
-            .attr("text-anchor", "middle")
-            .attr("dy", (d) => computeNodeSize(d) * 2 + 18)
-            .style("fill", "white")
-            .style("font-size", (d) => computeNodeSize(d) / 8)
-            .classed("no-select", true)
-            .lower()
-
-        const linkSelection = g
-            .selectAll()
-            .data(graph.links)
-            .join("line")
-            .attr("stroke-width", linkThickness)
-            .attr("stroke-opacity", linkOpacity)
-            .attr("stroke", linkColor)
-            .lower()
-
-        nodeSelection.call(d3.drag()
-            .on("start", dragStart)
-            .on("drag", handleDrag)
-            .on("end", dragEnd));
-
         const linkedByIndex = {{}};
         graph.links.forEach(d => {{
             linkedByIndex[`${{d.source}},${{d.target}}`] = 1;
@@ -286,38 +266,6 @@ pub fn vizk(zs: &[Zettel])
         let isConnected = (a, b) => {{
             return a == b || linkedByIndex[`${{a}},${{b}}`] || linkedByIndex[`${{b}},${{a}}`];
         }}
-
-        nodeSelection.on('mouseover', function (d) {{
-            let current = d3.select(this)
-            let c_id = current.attr("id")
-            nodeSelection
-                .filter(n => !isConnected(c_id, n.index))
-                .style("fill", highlightUnrelated)
-                .style("opacity", highlightOpacity)
-            textSelection
-                .filter(n => !isConnected(c_id, n.index))
-                .style("opacity", highlightOpacity)
-            current
-                .style("fill", highlightSourceColor)
-            linkSelection
-                .style("stroke", highlightSourceColor)
-            linkSelection
-                .filter(l => !(c_id == l.source.index || c_id == l.target.index))
-                .style("stroke", linkColor)
-                .style("stroke-width", linkThickness / 2)
-                .style("stroke-opacity", linkOpacity / 2)
-        }})
-        nodeSelection.on('mouseout', (d) => {{
-            nodeSelection
-                .style("fill", highlightRegularNode)
-                .style("opacity", 1)
-            textSelection
-                .style("opacity", 1)
-            linkSelection
-                .style("stroke", linkColor)
-                .style("stroke-width", linkThickness)
-                .style("stroke-opacity", linkOpacity)
-        }})
 
         const simulation = d3.forceSimulation(graph.nodes)
             // Move the nodes to the center when the simulation starts
@@ -334,21 +282,14 @@ pub fn vizk(zs: &[Zettel])
                 d3.forceManyBody().strength(-repulsionForceStrength))
             // Repulse nodes if they collide
             .force("collide", d3.forceCollide().radius((d) => computeNodeSize(d) * 4))
-            .on("tick", tick);
-
-        svg.call(d3.zoom()
-            .on("zoom", handleZoom)
-            .filter(() => {{
-                return (event.button == 0 || event.button == 1)
-            }})
-        );
+            .on("tick", render);
 
         let nodeSizeSliderDescription = document.getElementById("node_size_description");
         nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
         nodeSizeSlider.oninput = () => {{
             nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
             nodeSizeFactor = nodeSizeSlider.value;
-            nodeSelection.attr("r", (d) => computeNodeSize(d));
+            render();
         }}
 
         let linkThicknessSliderDescription = document.getElementById("link_thickness_description");
@@ -356,7 +297,7 @@ pub fn vizk(zs: &[Zettel])
         linkThicknessSlider.oninput = () => {{
             linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
             linkThickness = linkThicknessSlider.value;
-            linkSelection.style("stroke-width", linkThickness);
+            render();
         }}
 
         let linkDistanceSliderDescription = document.getElementById("link_distance_description");
@@ -399,6 +340,9 @@ pub fn vizk(zs: &[Zettel])
             simulation.force("centerY", d3.forceY(height / 2).strength(centerForceStrength));
             simulation.alphaTarget(averageEntropyTarget)
         }}
+
+        d3.selectAll("canvas").call(d3.zoom()
+            .on("zoom", ({{transform}}) => render(transform)))
     </script>
 </body>
 </html>"#,
