@@ -225,6 +225,8 @@ pub fn vizk(zs: &[Zettel])
                 context.moveTo(d.x + 5, d.y);
                 context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
                 context.fill();
+                context.textAlign = "center";
+                context.fillText(d.name, d.x, d.y + 5 + 2 * Math.PI)
             }})
             context.restore();
         }}
