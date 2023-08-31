@@ -393,17 +393,19 @@ pub fn vizk(zs: &[Zettel])
                 graph.links.forEach((d) => {{d.color = linkColor, d.opacity = linkOpacity}});
             }} else if (lastClosest === null || closest.index != lastClosest.index){{
                 closest.color = highlightColor;
+                closest.opacity = nodeOpacity;
                 graph.links.forEach((l) => {{
-                    //if (closest.index == l.target.index || closest.index == l.source.index) {{
                     if (closest.index === l.target.index || closest.index == l.source.index) {{
                         l.color = highlightColor;
                         l.opacity = 1;
                     }} else {{
+                        l.color = linkColor;
                         l.opacity = unhighlightedOpacity;
                     }}
                 }})
                 graph.nodes.forEach((n) => {{
                     if (!isConnected(closest.index, n.index)) {{
+                        n.color = nodeColor;
                         n.opacity = unhighlightedOpacity;
                     }}
                 }})
