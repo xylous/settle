@@ -225,7 +225,7 @@ pub fn vizk(zs: &[Zettel])
                 context.globalAlpha = d.opacity;
                 context.beginPath();
                 context.moveTo(d.x + 5, d.y);
-                context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
+                context.arc(d.x, d.y, computeNodeSize(d), 0, 2 * Math.PI);
                 context.fillStyle = d.color;
                 context.fill();
                 context.fillStyle = textColor;
