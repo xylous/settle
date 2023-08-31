@@ -173,6 +173,8 @@ pub fn vizk(zs: &[Zettel])
         let highlightSourceColor = "purple";
         let highlightUnrelated = "gray";
         let highlightRegularNode = "gray";
+        const textColor = "white";
+        const textTransparency = 0.8;
         const defaultLinkColor = "gray";
         const defaultLinkOpacity = 0.6;
         const defaultNodeOpacity = 1;
@@ -238,6 +240,10 @@ pub fn vizk(zs: &[Zettel])
                 context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
                 context.fillStyle = d.color;
                 context.fill();
+                context.fillStyle = textColor;
+                if (d.opacity == defaultNodeOpacity) {{
+                    context.globalAlpha = textTransparency;
+                }}
                 context.textAlign = "center";
                 context.fillText(d.name, d.x, d.y + 5 + 2 * Math.PI)
             }})
