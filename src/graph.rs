@@ -140,7 +140,6 @@ pub fn vizk(zs: &[Zettel])
         <p class="no-select" class="slider-description" id="center_force_description"></p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src="https://unpkg.com/d3-simple-slider"></script>
     <script type="module">
         const raw_json_input = {};
 
