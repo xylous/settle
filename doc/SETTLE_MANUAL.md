@@ -222,13 +222,10 @@ Here are the options for this command:
 - `-m | --move <REGEX>` - move all Zettel whose title matches `<REGEX>` to the
     project specified by the `--project` option
 
-- `-n | --rename <TITLES...>` - this option accepts multiple values; however, it
-    only renames the first Zettel whose title it can find in the database, with
-    the name specified by the last argument in the list. If the names coincide,
-    or if there's no valid Zettel title in the list, or if by renaming it would
-    overwrite some files, then it aborts. NOTE: the project of the renamed
-    Zettel is not changed. Also note that all links pointing to the previous
-    Zettel's title are changed, so that the links point to the same file.
+- `-n | --rename <FROM> <TO>` - rename `<FROM>` to `<TO>`, preserving the
+    project and making all the links that pointed to the old title point to the
+    new one instead. If there is no Zettel with `<FROM>` as title, or if there
+    already is a note with `<TO>` as a title, then an error is returned.
 
 ##### Examples of the sync command
 
@@ -249,8 +246,7 @@ Here are the options for this command:
     note `My super interesting note` to the `inbox` project
 
 - `settle sync --rename "My super interesting note" "My less interesting note"`
-    renames `My super interesting note` to `My less interesting note`, if the
-    former exists
+    renames `My super interesting note` to `My less interesting note`
 
 ## Configuration
 
