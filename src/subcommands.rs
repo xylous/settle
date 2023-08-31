@@ -109,11 +109,11 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     } else if let Some(title) = matches.get_one::<String>("MOVE") {
         mv(cfg, title, project)?;
     } else if matches.contains_id("RENAME") {
-        let args_arr = matches.get_many::<String>("RENAME")
-                              .unwrap_or_default()
-                              .map(|a| a.to_string())
-                              .collect::<Vec<_>>();
-        rename(cfg, &args_arr)?;
+        let args = matches.get_many::<String>("RENAME")
+                          .unwrap_or_default()
+                          .map(|a| a.to_string())
+                          .collect::<Vec<String>>();
+        rename(cfg, &args[0], &args[1])?;
     } else if matches.get_flag("GENERATE") {
         generate(cfg)?;
     }
@@ -163,18 +163,16 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         zs = filter_isolated(zs);
     }
 
-    if matches.get_flag("DOT_GRAPH") {
-        zk_graph_dot_output(&zs);
-        return Ok(());
-    }
-
-    if matches.get_flag("JSON_GRAPH") {
-        zk_graph_json_output(&zs);
-        return Ok(());
-    }
-
-    if matches.get_flag("VIZK") {
-        vizk(&zs);
+    if let Some(graph) = matches.get_one::<String>("GRAPH") {
+        match graph.as_str() {
+            "vizk" => vizk(&zs),
+            "dot" => zk_graph_dot_output(&zs),
+            "json" => zk_graph_json_output(&zs),
+            _ => {
+                eprintln!("error: expected one of 'json', 'dot', 'vizk' (got: '{}')",
+                          graph);
+            }
+        }
         return Ok(());
     }
 
@@ -402,17 +400,12 @@ fn create(cfg: &ConfigOptions, title: &str, project: &str) -> Result<(), Error>
 }
 
 /// Rename a note, but keep it in the same project
-fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
+fn rename(cfg: &ConfigOptions, old_title: &str, new_title: &str) -> Result<(), Error>
 {
     let db = Database::new(&cfg.db_file())?;
 
     // basically, look thru the values provided by clap, and extract the first Zettel title that
     // exists and is different from the new title
-    let old_title: String = arr.iter()
-                               .cloned()
-                               .find(|x| !db.find_by_title(x).unwrap_or_default().is_empty())
-                               .unwrap_or(String::from(""));
-    let new_title: String = arr.last().unwrap_or(&String::from("")).to_string();
 
     if old_title == new_title {
         eprintln!("error: first match is the same as the new title ('{}'), so no rename",
@@ -420,10 +413,10 @@ fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
         return Ok(());
     }
 
-    let results = db.find_by_title(&old_title)?;
+    let results = db.find_by_title(old_title)?;
 
     // check if there's already a note with this title
-    let overwrite_failsafe = db.find_by_title(&new_title)?;
+    let overwrite_failsafe = db.find_by_title(new_title)?;
     if overwrite_failsafe.first().is_some() {
         eprintln!("error: a note with the new title already exists: won't overwrite");
         return Ok(());
@@ -435,7 +428,7 @@ fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
     } else {
         results.first().unwrap()
     };
-    let new_zettel = Zettel::new(&new_title, &old_zettel.project);
+    let new_zettel = Zettel::new(new_title, &old_zettel.project);
 
     let mut dial = dialoguer::Confirm::new();
     let prompt = dial.with_prompt(format!("{} --> {}", old_title, new_title));
@@ -443,9 +436,9 @@ fn rename(cfg: &ConfigOptions, arr: &[String]) -> Result<(), Error>
     // If the user confirms, change the note's title, and update the links to this Zettel
     if prompt.interact().unwrap_or_default() {
         crate::io::rename(&old_zettel.filename(cfg), &new_zettel.filename(cfg));
-        db.change_title(old_zettel, &new_title).unwrap();
+        db.change_title(old_zettel, new_title).unwrap();
         // It's not enough that we renamed the file. We need to update all references to it!
-        let backlinks = backlinks(&db.all()?, &old_title, true);
+        let backlinks = backlinks(&db.all()?, old_title, true);
         backlinks.iter().for_each(|bl| {
                             let contents = crate::io::file_to_string(&bl.filename(cfg));
                             // The link might span over multiple lines. We must account for that
