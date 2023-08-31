@@ -314,6 +314,7 @@ pub fn vizk(zs: &[Zettel])
                 .strength(attractionForceStrength)
                 .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
             simulation.alphaTarget(desiredSimulationEntropy)
+            simulation.restart();
         }}
 
         let repulsionForceSliderDescription = document.getElementById("repulsion_force_description");
@@ -323,6 +324,7 @@ pub fn vizk(zs: &[Zettel])
             repulsionForceStrength = repulsionForceFactor * repulsionForceSlider.value;
             simulation.force("charge", d3.forceManyBody().strength(-repulsionForceStrength));
             simulation.alphaTarget(desiredSimulationEntropy)
+            simulation.restart();
         }}
 
         let centerForceSliderDescription = document.getElementById("center_force_description");
@@ -333,11 +335,15 @@ pub fn vizk(zs: &[Zettel])
             simulation.force("centerX", d3.forceX(width / 2).strength(centerForceStrength));
             simulation.force("centerY", d3.forceY(height / 2).strength(centerForceStrength));
             simulation.alphaTarget(desiredSimulationEntropy)
+            simulation.restart();
         }}
 
         const drag = (circles, canvas) => {{
             let dragStart = (event) => {{
-                if (!event.subject.active) simulation.alphaTarget(desiredSimulationEntropy);
+                if (!event.subject.active) {{
+                    simulation.alphaTarget(desiredSimulationEntropy);
+                    simulation.restart();
+                }};
                 event.subject.active = true;
             }}
 
