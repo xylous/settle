@@ -197,30 +197,32 @@ pub fn vizk(zs: &[Zettel])
             context.scale(transform.k, transform.k);
             currentTransform = transform;
 
-            // highlighted links and regular links have to be handled
-            // differently
-            context.beginPath();
-            context.lineWidth = linkThickness;
-            graph.links
-                .filter((d) => d.color == highlightColor)
-                .forEach((d) => {{
-                    context.strokeStyle = d.color;
-                    context.globalAlpha = 1;
-                    context.moveTo(d.source.x, d.source.y);
-                    context.lineTo(d.target.x, d.target.y);
-            }})
-            context.stroke();
-            graph.links
-                .filter((d) => d.color == nodeColor)
-                .forEach((d) => {{
-                    context.strokeStyle = d.color;
-                    context.globalAlpha = d.opacity;
-                    context.moveTo(d.source.x, d.source.y);
-                    context.lineTo(d.target.x, d.target.y);
-            }})
-            context.stroke();
+            if (linkThickness > 0) {{
+                // highlighted links and regular links have to be handled differently, since color
+                // is set on a global basis and not on a per-stroke basis, and so there would only
+                // be a single color if done in one pass
+                context.beginPath();
+                context.lineWidth = linkThickness;
+                graph.links
+                    .filter((d) => d.color == highlightColor)
+                    .forEach((d) => {{
+                        context.strokeStyle = d.color;
+                        context.globalAlpha = 1;
+                        context.moveTo(d.source.x, d.source.y);
+                        context.lineTo(d.target.x, d.target.y);
+                }})
+                context.stroke();
+                graph.links
+                    .filter((d) => d.color == nodeColor)
+                    .forEach((d) => {{
+                        context.strokeStyle = d.color;
+                        context.globalAlpha = d.opacity;
+                        context.moveTo(d.source.x, d.source.y);
+                        context.lineTo(d.target.x, d.target.y);
+                }})
+                context.stroke();
+            }}
 
-            // render the  nodes
             graph.nodes.forEach((d) => {{
                 context.globalAlpha = d.opacity;
                 context.beginPath();
