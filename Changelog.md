@@ -2,6 +2,18 @@
 
 NOTE: This Changelog is partially incomplete.
 
+## v0.40.0 - 2023-08-31
+
+- `query`: change `--graph` to take a single value insteaed of printing a DOT graph:
+    - specifying `dot` as an argument prints the DOT graph
+    - specifying `json` as an argument prints the JSON string of the graph
+    - specifying `vizk` as an argument returns HTML code using `d3.js` under the
+        hood, through which the Zettelkasten can be interactively visualised
+- fix: make `sync --rename` take precisely two arguments instead of a variable
+    amount
+- fix: get default configuration file variables at runtime instead of compile
+    time
+
 ## v0.39.11 - 2023-08-15
 
 - add: make configuration file location flexible by allowing using the
