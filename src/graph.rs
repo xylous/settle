@@ -146,10 +146,6 @@ pub fn vizk(zs: &[Zettel])
         const height = window.innerHeight;
 
         const raw_json_input = {};
-        let graph = {{
-            nodes: raw_json_input.nodes.map((n) => {{return {{name: n}}}}),
-            links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1]}}}})
-        }};
 
         const nodeSizeSlider = document.getElementById("node_size");
         const linkThicknessSlider = document.getElementById("link_thickness");
@@ -163,7 +159,7 @@ pub fn vizk(zs: &[Zettel])
         // The normal repulsion force is usually too weak
         const repulsionForceFactor = 20;
 
-        const maxDragStartDistance = 6;
+        const maxDragStartDistance = 10;
 
         let nodeSizeFactor = nodeSizeSlider.value; // 0 to 5
         let linkThickness = linkThicknessSlider.value; // 0 to 5
@@ -172,15 +168,20 @@ pub fn vizk(zs: &[Zettel])
         let repulsionForceStrength = repulsionForceSlider.value * repulsionForceFactor; // 0 to 5
         let centerForceStrength = centerForceSlider.value; // 0 to 1
 
-        let linkOpacity = 1;
-        let linkColor = "black";
-
         let nodeBorderColor = "white";
         let nodeBorderSize = 0.5;
         let highlightSourceColor = "purple";
         let highlightUnrelated = "gray";
         let highlightRegularNode = "gray";
-        let highlightOpacity = 0.3;
+        const defaultLinkColor = "gray";
+        const defaultLinkOpacity = 0.6;
+        const defaultNodeOpacity = 1;
+        const unrelatedNodeOpacity = 0.3;
+
+        let graph = {{
+            nodes: raw_json_input.nodes.map((n) => {{return {{name: n, color: highlightRegularNode, opacity: defaultNodeOpacity}}}}),
+            links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1], color: defaultLinkColor, opacity: defaultLinkOpacity}}}})
+        }};
 
         const canvas = d3.select("body").append("canvas")
             .attr("width", width)
@@ -206,24 +207,36 @@ pub fn vizk(zs: &[Zettel])
                 currentTransform = transform;
             }}
 
-            // render the links
-            context.globalAlpha = 0.6;
+            // highlighted links and regular links have to be handled
+            // differently
             context.beginPath();
-            context.strokeStyle = highlightRegularNode;
             context.lineWidth = linkThickness;
-            graph.links.forEach((d) => {{
-                context.moveTo(d.source.x, d.source.y);
-                context.lineTo(d.target.x, d.target.y);
+            graph.links
+                .filter((d) => d.color == highlightSourceColor)
+                .forEach((d) => {{
+                    context.strokeStyle = d.color;
+                    context.globalAlpha = 1;
+                    context.moveTo(d.source.x, d.source.y);
+                    context.lineTo(d.target.x, d.target.y);
+            }})
+            context.stroke();
+            graph.links
+                .filter((d) => d.color == highlightUnrelated)
+                .forEach((d) => {{
+                    context.strokeStyle = d.color;
+                    context.globalAlpha = d.opacity;
+                    context.moveTo(d.source.x, d.source.y);
+                    context.lineTo(d.target.x, d.target.y);
             }})
             context.stroke();
 
             // render the  nodes
-            context.globalAlpha = 1;
-            context.fillStyle = highlightRegularNode;
             graph.nodes.forEach((d) => {{
+                context.globalAlpha = d.opacity;
                 context.beginPath();
                 context.moveTo(d.x + 5, d.y);
                 context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
+                context.fillStyle = d.color;
                 context.fill();
                 context.textAlign = "center";
                 context.fillText(d.name, d.x, d.y + 5 + 2 * Math.PI)
@@ -379,6 +392,52 @@ pub fn vizk(zs: &[Zettel])
                 .on("drag", handleDrag)
                 .on("end", dragEnd);
         }}
+
+        const getClosestNode = (x, y) => {{
+            const transform = currentTransform;
+            let subject = null;
+            // Distance is expressed in unzoomed coordinates, ie. keeps proportion with circles radius
+            // at any zoom level.
+            let distance = maxDragStartDistance;
+            for (const c of graph.nodes) {{
+                let d = Math.hypot(x - c.x, y - c.y);
+                if (d <= distance) {{
+                    distance = d;
+                    subject = c;
+                }}
+            }}
+            return subject;
+        }}
+
+        let lastClosest = null;
+        d3.selectAll("canvas").on("mousemove", (event) => {{
+            let absMouseX = ((event.layerX || event.offsetX) - currentTransform.x) / currentTransform.k;
+            let absMouseY = ((event.layerY || event.offsetY) - currentTransform.y) / currentTransform.k;
+            let closest = getClosestNode(absMouseX, absMouseY);
+            if (closest === null) {{
+                graph.nodes.forEach((d) => {{d.color = highlightRegularNode, d.opacity = defaultNodeOpacity}});
+                graph.links.forEach((d) => {{d.color = defaultLinkColor, d.opacity = defaultLinkOpacity}});
+            }} else if (lastClosest === null || closest.index != lastClosest.index){{
+                closest.color = highlightSourceColor;
+                graph.links.forEach((l) => {{
+                    //if (closest.index == l.target.index || closest.index == l.source.index) {{
+                    if (closest.index === l.target.index || closest.index == l.source.index) {{
+                        l.color = highlightSourceColor;
+                        l.opacity = 1;
+                    }} else if (closest.index != l.target.index) {{
+                        l.opacity = unrelatedNodeOpacity;
+                    }}
+                }})
+                graph.nodes.forEach((n) => {{
+                    if (!isConnected(closest.index, n.index)) {{
+                        n.color = highlightUnrelated;
+                        n.opacity = unrelatedNodeOpacity;
+                    }}
+                }})
+            }}
+            lastClosest = closest;
+            render();
+        }})
 
         d3.select(context.canvas).call(drag(graph.nodes, context.canvas)
             .on("start.render drag.render end.render", (event) => render(event.transform)));
