@@ -89,10 +89,12 @@ impl Default for Printer
 {
     fn default() -> Printer
     {
-        Printer { zettel: vec![],
-                  additional: vec![],
-                  format: "[%p] %t".to_string(),
-                  link_separator: "|".to_string() }
+        Printer {
+            zettel: vec![],
+            additional: vec![],
+            format: "[%p] %t".to_string(),
+            link_separator: "|".to_string(),
+        }
     }
 }
 
@@ -101,10 +103,10 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     Database::new(&cfg.db_file())?.init()?;
 
     let project = realproject(if let Some(p) = matches.get_one::<String>("PROJECT") {
-                                  p
-                              } else {
-                                  ""
-                              });
+        p
+    } else {
+        ""
+    });
     if let Some(title) = matches.get_one::<String>("CREATE") {
         create(cfg, title, project)?;
     } else if let Some(path) = matches.get_one::<String>("UPDATE") {
@@ -112,10 +114,11 @@ pub fn sync(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
     } else if let Some(title) = matches.get_one::<String>("MOVE") {
         mv(cfg, title, project)?;
     } else if matches.contains_id("RENAME") {
-        let args = matches.get_many::<String>("RENAME")
-                          .unwrap_or_default()
-                          .map(|a| a.to_string())
-                          .collect::<Vec<String>>();
+        let args = matches
+            .get_many::<String>("RENAME")
+            .unwrap_or_default()
+            .map(|a| a.to_string())
+            .collect::<Vec<String>>();
         rename(cfg, &args[0], &args[1])?;
     } else if matches.get_flag("GENERATE") {
         generate(cfg)?;
@@ -172,8 +175,10 @@ pub fn query(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
             "dot" => zk_graph_dot_output(&zs),
             "json" => zk_graph_json_output(&zs),
             _ => {
-                eprintln!("error: expected one of 'json', 'dot', 'vizk' (got: '{}')",
-                          graph);
+                eprintln!(
+                    "error: expected one of 'json', 'dot', 'vizk' (got: '{}')",
+                    graph
+                );
             }
         }
         return Ok(());
@@ -215,8 +220,10 @@ pub fn ls(matches: &ArgMatches, cfg: &ConfigOptions) -> Result<(), Error>
         "ghosts" => print_list_of_strings(&db.zettel_not_yet_created()?),
         "projects" => print_list_of_strings(&db.list_projects()?),
         "path" => println!("{}", cfg.zettelkasten),
-        _ => eprintln!("error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
-                       obj),
+        _ => eprintln!(
+            "error: expected one of: 'tags', 'ghosts', 'projects', 'path'; got '{}'",
+            obj
+        ),
     }
     Ok(())
 }
@@ -249,8 +256,8 @@ fn print_list_of_strings(elems: &[String])
     let mut sorted = elems.to_vec();
     sorted.sort();
     sorted.iter().for_each(|e| {
-                     println!("{}", e);
-                 })
+        println!("{}", e);
+    })
 }
 
 /// Keep only those Zettel whose title matches the provided regex
@@ -258,14 +265,14 @@ fn filter_title(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", pattern)).unwrap();
     zs.into_iter()
-      .filter(|z| {
-          if exact {
-              pattern == z.title
-          } else {
-              re.is_match(&z.title)
-          }
-      })
-      .collect()
+        .filter(|z| {
+            if exact {
+                pattern == z.title
+            } else {
+                re.is_match(&z.title)
+            }
+        })
+        .collect()
 }
 
 /// Keep only those Zettel whose project matches the provided regex
@@ -273,23 +280,23 @@ fn filter_project(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", pattern)).unwrap();
     zs.into_iter()
-      .filter(|z| {
-          if exact {
-              pattern == z.project
-          } else {
-              re.is_match(&z.project)
-          }
-      })
-      .collect()
+        .filter(|z| {
+            if exact {
+                pattern == z.project
+            } else {
+                re.is_match(&z.project)
+            }
+        })
+        .collect()
 }
 
 /// Keep only those Zettel that contain the pattern in their text
 fn filter_text(zs: Vec<Zettel>, pattern: &str, cfg: &ConfigOptions) -> Vec<(Zettel, String)>
 {
     zs.into_iter()
-      .map(|z| (z.clone(), z.find_pattern(cfg, pattern)))
-      .filter(|(_, t)| !t.is_empty())
-      .collect()
+        .map(|z| (z.clone(), z.find_pattern(cfg, pattern)))
+        .filter(|(_, t)| !t.is_empty())
+        .collect()
 }
 
 /// Keep only those Zettel that have at least one tag (or subtag) that matches the regex
@@ -297,33 +304,33 @@ fn filter_tag(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}(/.*)?$", pattern)).unwrap();
     zs.into_iter()
-      .filter(|z| {
-          for tag in &z.tags {
-              if pattern == tag || (!exact && re.is_match(tag)) {
-                  return true;
-              };
-          }
-          false
-      })
-      .collect()
+        .filter(|z| {
+            for tag in &z.tags {
+                if pattern == tag || (!exact && re.is_match(tag)) {
+                    return true;
+                };
+            }
+            false
+        })
+        .collect()
 }
 
 /// Keep only those Zettel that neither link to other notes, nor have links pointing to them
 fn filter_isolated(zs: Vec<Zettel>) -> Vec<Zettel>
 {
     zs.into_iter()
-      .filter(|z| z.links.is_empty() && z.backlinks.is_empty())
-      .collect()
+        .filter(|z| z.links.is_empty() && z.backlinks.is_empty())
+        .collect()
 }
 
 /// Keep only the Zettel that are both in A and B
 fn intersect<T: Eq + Clone>(a: &[T], b: &[T]) -> Vec<T>
 {
     a.to_owned()
-     .iter()
-     .cloned()
-     .filter(|z| b.contains(z))
-     .collect::<Vec<_>>()
+        .iter()
+        .cloned()
+        .filter(|z| b.contains(z))
+        .collect::<Vec<_>>()
 }
 
 /// Return all the Zettel that are linked to by the pattern-matched zettel
@@ -333,16 +340,16 @@ fn fwlinks(all: &[Zettel], linked_from: &str, exact: bool) -> Vec<Zettel>
     // them
     let fwlinks = &filter_title(all.to_owned(), linked_from, exact);
     all.iter()
-       .cloned()
-       .filter(|z| {
-           for fw in fwlinks {
-               if fw.links.contains(&z.title) {
-                   return true;
-               }
-           }
-           false
-       })
-       .collect()
+        .cloned()
+        .filter(|z| {
+            for fw in fwlinks {
+                if fw.links.contains(&z.title) {
+                    return true;
+                }
+            }
+            false
+        })
+        .collect()
 }
 
 /// Return all the Zettel that link to the given title/pattern, within the provided list of Zettel
@@ -350,16 +357,16 @@ fn backlinks(all: &[Zettel], links_to: &str, exact: bool) -> Vec<Zettel>
 {
     let re = Regex::new(&format!("^{}$", links_to)).unwrap();
     all.iter()
-       .cloned()
-       .filter(|z| {
-           for l in z.links.clone() {
-               if links_to == l || (!exact && re.is_match(&l)) {
-                   return true;
-               };
-           }
-           false
-       })
-       .collect()
+        .cloned()
+        .filter(|z| {
+            for l in z.links.clone() {
+                if links_to == l || (!exact && re.is_match(&l)) {
+                    return true;
+                };
+            }
+            false
+        })
+        .collect()
 }
 
 /// Based on the CLI arguments and the config options, *maybe* add a new entry to the database
@@ -415,8 +422,10 @@ fn rename(cfg: &ConfigOptions, old_title: &str, new_title: &str) -> Result<(), E
     // exists and is different from the new title
 
     if old_title == new_title {
-        eprintln!("error: first match is the same as the new title ('{}'), so no rename",
-                  old_title);
+        eprintln!(
+            "error: first match is the same as the new title ('{}'), so no rename",
+            old_title
+        );
         return Ok(());
     }
 
@@ -447,16 +456,14 @@ fn rename(cfg: &ConfigOptions, old_title: &str, new_title: &str) -> Result<(), E
         // It's not enough that we renamed the file. We need to update all references to it!
         let backlinks = backlinks(&db.all()?, old_title, true);
         backlinks.iter().for_each(|bl| {
-                            let contents = crate::io::file_to_string(&bl.filename(cfg));
-                            // The link might span over multiple lines. We must account for that
-                            let regex_string =
-                                &format!(r"\[\[{}\]\]", old_title).replace(' ', r"[\n\t ]");
-                            let old_title_reg = Regex::new(regex_string).unwrap();
-                            let new_contents =
-                                old_title_reg.replace_all(&contents, format!(r"[[{}]]", new_title));
-                            crate::io::write_to_file(&bl.filename(cfg), &new_contents);
-                            db.update(cfg, bl).unwrap();
-                        })
+            let contents = crate::io::file_to_string(&bl.filename(cfg));
+            // The link might span over multiple lines. We must account for that
+            let regex_string = &format!(r"\[\[{}\]\]", old_title).replace(' ', r"[\n\t ]");
+            let old_title_reg = Regex::new(regex_string).unwrap();
+            let new_contents = old_title_reg.replace_all(&contents, format!(r"[[{}]]", new_title));
+            crate::io::write_to_file(&bl.filename(cfg), &new_contents);
+            db.update(cfg, bl).unwrap();
+        })
     }
 
     Ok(())
@@ -468,37 +475,41 @@ fn mv(cfg: &ConfigOptions, pattern: &str, project: &str) -> Result<(), Error>
     let db = Database::new(&cfg.db_file())?;
 
     let re = Regex::new(pattern).unwrap();
-    let zs: Vec<Zettel> = db.all()?
-                            .into_iter()
-                            .filter(|z| re.is_match(&z.title))
-                            .collect();
+    let zs: Vec<Zettel> = db
+        .all()?
+        .into_iter()
+        .filter(|z| re.is_match(&z.title))
+        .collect();
 
     let mut printer = Printer::default();
     printer.set_zettelkasten(zs.clone());
     printer.print(cfg);
 
     let mut dial = dialoguer::Confirm::new();
-    let prompt =
-        dial.with_prompt(format!(">> These notes will be transferred to the {}. Proceed?",
-                                 if project.is_empty() {
-                                     "main zettelkasten".to_string()
-                                 } else {
-                                     format!("'{}' project", project)
-                                 }));
+    let prompt = dial.with_prompt(format!(
+        ">> These notes will be transferred to the {}. Proceed?",
+        if project.is_empty() {
+            "main zettelkasten".to_string()
+        } else {
+            format!("'{}' project", project)
+        }
+    ));
 
     // If the user confirms, change the notes' projects, both the system path and in database
     if prompt.interact().unwrap_or_default() {
         crate::io::mkdir(&format!("{}/{}", cfg.zettelkasten, project));
-        let new_notes = zs.iter().map(|z| Zettel { title: z.title.clone(),
-                                                   project: project.to_string(),
-                                                   links: z.links.clone(),
-                                                   backlinks: z.backlinks.clone(),
-                                                   tags: z.tags.clone() });
+        let new_notes = zs.iter().map(|z| Zettel {
+            title: z.title.clone(),
+            project: project.to_string(),
+            links: z.links.clone(),
+            backlinks: z.backlinks.clone(),
+            tags: z.tags.clone(),
+        });
         let pairs = zs.iter().zip(new_notes);
         pairs.for_each(|(old, new)| {
-                 crate::io::rename(&old.filename(cfg), &new.filename(cfg));
-                 db.change_project(old, project).unwrap();
-             });
+            crate::io::rename(&old.filename(cfg), &new.filename(cfg));
+            db.change_project(old, project).unwrap();
+        });
     }
 
     Ok(())
@@ -535,8 +546,10 @@ fn generate(cfg: &ConfigOptions) -> Result<(), Error>
     mem_db.generate(cfg)?;
     mem_db.write_to(&cfg.db_file())?;
 
-    println!("database generated successfully, took {}ms",
-             start.elapsed().as_millis());
+    println!(
+        "database generated successfully, took {}ms",
+        start.elapsed().as_millis()
+    );
 
     Ok(())
 }

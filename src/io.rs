@@ -63,23 +63,26 @@ pub fn mkdir(path: &str)
 /// List all markdown files in the specified directory
 pub fn list_md_files(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*.md", dir)).unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
-                                  .map(|f| f.unwrap().to_string_lossy().to_string())
-                                  .collect()
+    glob(&format!("{}/*.md", dir))
+        .unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
+        .map(|f| f.unwrap().to_string_lossy().to_string())
+        .collect()
 }
 
 /// List all subdirectories in the specified directory
 pub fn list_subdirectories(dir: &str) -> Vec<String>
 {
-    glob(&format!("{}/*/", dir)).unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
-                                .map(|f| f.unwrap().to_string_lossy().to_string())
-                                .collect()
+    glob(&format!("{}/*/", dir))
+        .unwrap_or_else(|_| panic!("Can't read directory '{}'", dir))
+        .map(|f| f.unwrap().to_string_lossy().to_string())
+        .collect()
 }
 
 /// Given a relative path, return an absolute path, or nothing (empty string) if it failed
 pub fn abs_path(path: &str) -> String
 {
-    canonicalize(path).unwrap_or_default()
-                      .to_string_lossy()
-                      .to_string()
+    canonicalize(path)
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string()
 }

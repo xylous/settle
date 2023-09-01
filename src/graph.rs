@@ -52,9 +52,10 @@ fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
 /// of the node
 fn find_seen_by_name(seen: Vec<(&str, NodeIndex)>, name: &str) -> (String, NodeIndex)
 {
-    let (n, i) = seen.into_iter()
-                     .find(|(v, _)| v == &name)
-                     .unwrap_or_default();
+    let (n, i) = seen
+        .into_iter()
+        .find(|(v, _)| v == &name)
+        .unwrap_or_default();
     (n.to_string(), i)
 }
 
@@ -73,7 +74,7 @@ pub fn vizk(zs: &[Zettel])
 {
     let jsongraph = json_output(gen_graph(zs));
     println!(
-             r#"<!DOCTYPE html>
+        r#"<!DOCTYPE html>
 <html>
 
 <head>
@@ -429,6 +430,6 @@ pub fn vizk(zs: &[Zettel])
     </script>
 </body>
 </html>"#,
-             jsongraph
+        jsongraph
     );
 }

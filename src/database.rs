@@ -46,7 +46,9 @@ impl Database
     /// Return an Error if the connection couldn't be made
     pub fn new(uri: &str) -> Result<Self, Error>
     {
-        Ok(Database { conn: Arc::new(Mutex::new(Connection::open(uri)?)) })
+        Ok(Database {
+            conn: Arc::new(Mutex::new(Connection::open(uri)?)),
+        })
     }
 
     /// Create a `Database` interface to a named SQLite database, opened in memory
@@ -63,12 +65,14 @@ impl Database
     pub fn init(&self) -> Result<(), Error>
     {
         let conn_lock = self.conn.lock().unwrap();
-        conn_lock.execute("CREATE TABLE IF NOT EXISTS zettelkasten (
+        conn_lock.execute(
+            "CREATE TABLE IF NOT EXISTS zettelkasten (
                                                 title       TEXT NOT NULL,
                                                 project     TEXT,
                                                 UNIQUE(title)
                                             )",
-                          [])?;
+            [],
+        )?;
         conn_lock.execute("CREATE TABLE IF NOT EXISTS links (
                                                 zettel_id   TEXT,
                                                 link_id     TEXT,
@@ -108,15 +112,21 @@ impl Database
     /// Save a Zettel's metadata in the given transaction
     pub fn save_tsx(tsx: &Transaction, zettel: &Zettel) -> Result<(), Error>
     {
-        tsx.execute("INSERT INTO zettelkasten (title, project) values (?1, ?2)",
-                    [&zettel.title, &zettel.project])?;
+        tsx.execute(
+            "INSERT INTO zettelkasten (title, project) values (?1, ?2)",
+            [&zettel.title, &zettel.project],
+        )?;
         for link in &zettel.links {
-            tsx.execute("INSERT INTO links (zettel_id, link_id) values (?1, ?2)",
-                        [&zettel.title, link])?;
+            tsx.execute(
+                "INSERT INTO links (zettel_id, link_id) values (?1, ?2)",
+                [&zettel.title, link],
+            )?;
         }
         for tag in &zettel.tags {
-            tsx.execute("INSERT INTO tags (zettel_id, tag) values (?1, ?2)",
-                        [&zettel.title, tag])?;
+            tsx.execute(
+                "INSERT INTO tags (zettel_id, tag) values (?1, ?2)",
+                [&zettel.title, tag],
+            )?;
         }
         Ok(())
     }
@@ -298,22 +308,20 @@ impl Database
     /// Change the project of the given Zettel within the database
     pub fn change_project(&self, zettel: &Zettel, new_project: &str) -> Result<(), Error>
     {
-        self.conn
-            .lock()
-            .unwrap()
-            .execute("UPDATE zettelkasten SET project=?1 WHERE title=?2",
-                     [new_project, &zettel.title])?;
+        self.conn.lock().unwrap().execute(
+            "UPDATE zettelkasten SET project=?1 WHERE title=?2",
+            [new_project, &zettel.title],
+        )?;
         Ok(())
     }
 
     /// Change the title of the given Zettel within the database
     pub fn change_title(&self, zettel: &Zettel, new_title: &str) -> Result<(), Error>
     {
-        self.conn
-            .lock()
-            .unwrap()
-            .execute("UPDATE zettelkasten SET title=?1 WHERE title=?2",
-                     [new_title, &zettel.title])?;
+        self.conn.lock().unwrap().execute(
+            "UPDATE zettelkasten SET title=?1 WHERE title=?2",
+            [new_title, &zettel.title],
+        )?;
         Ok(())
     }
 }

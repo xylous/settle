@@ -17,8 +17,10 @@ impl ::std::default::Default for ConfigOptions
 {
     fn default() -> ConfigOptions
     {
-        ConfigOptions { zettelkasten: format!("{}/zettelkasten", env::var("HOME").unwrap()),
-                        template: String::from("") }
+        ConfigOptions {
+            zettelkasten: format!("{}/zettelkasten", env::var("HOME").unwrap()),
+            template: String::from(""),
+        }
     }
 }
 
@@ -65,8 +67,10 @@ impl ConfigOptions
 
         // The config file may have relative paths, but we only deal in absolutes
         let tmp: ConfigOptions = serde_yaml::from_str(&file_to_string(&config_file)).unwrap();
-        let cfg = ConfigOptions { zettelkasten: expand_path(&tmp.zettelkasten),
-                                  template: expand_path(&tmp.template) };
+        let cfg = ConfigOptions {
+            zettelkasten: expand_path(&tmp.zettelkasten),
+            template: expand_path(&tmp.template),
+        };
 
         // Create the Zettelkasten directory and the 'inbox' project if it doesn't exist
         if !dir_exists(&cfg.zettelkasten) {

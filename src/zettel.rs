@@ -10,14 +10,14 @@ use crate::io::*;
 fn find_links(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r#"\[\[((?s).*?)\]\]"#).unwrap();
-    let mut links: Vec<String> = re.captures_iter(contents)
-                                   .par_bridge()
-                                   .map(|cap| {
-                                       cap.get(1).map_or("".to_string(), |m| {
-                                                     strip_multiple_whitespace(m.as_str())
-                                                 })
-                                   })
-                                   .collect();
+    let mut links: Vec<String> = re
+        .captures_iter(contents)
+        .par_bridge()
+        .map(|cap| {
+            cap.get(1)
+                .map_or("".to_string(), |m| strip_multiple_whitespace(m.as_str()))
+        })
+        .collect();
     links.par_sort();
     links.dedup();
     links
@@ -31,8 +31,8 @@ fn find_tags(contents: &str) -> Vec<String>
 {
     let re = Regex::new(r"\s#([\w/_-]+)").unwrap();
     re.captures_iter(contents)
-      .map(|cap| cap.get(1).map_or("", |m| m.as_str()).to_string())
-      .collect()
+        .map(|cap| cap.get(1).map_or("", |m| m.as_str()).to_string())
+        .collect()
 }
 
 /// Replace all multiple consecutive whitespace with a single space character.
@@ -57,11 +57,13 @@ impl Zettel
     /// Create a Zettel with specified `title`
     pub fn new(title: &str, project: &str) -> Self
     {
-        Zettel { title: title.to_string(),
-                 project: project.to_string(),
-                 tags: vec![],
-                 links: vec![],
-                 backlinks: vec![] }
+        Zettel {
+            title: title.to_string(),
+            project: project.to_string(),
+            tags: vec![],
+            links: vec![],
+            backlinks: vec![],
+        }
     }
 
     /// Create a Zettel from a file, provided the ABSOLUTE path to the Zettel
@@ -109,15 +111,17 @@ impl Zettel
     /// Return the absolute path to the Zettel
     pub fn filename(&self, cfg: &ConfigOptions) -> String
     {
-        let dir = format!("{}/{}",
-                          cfg.zettelkasten,
-                          // if the project is empty then it's the main Zettelkasten project, and
-                          // so we don't want to introduce two forward slashes one after the other
-                          if self.project.is_empty() {
-                              self.project.clone()
-                          } else {
-                              format!("{}/", &self.project)
-                          });
+        let dir = format!(
+            "{}/{}",
+            cfg.zettelkasten,
+            // if the project is empty then it's the main Zettelkasten project, and
+            // so we don't want to introduce two forward slashes one after the other
+            if self.project.is_empty() {
+                self.project.clone()
+            } else {
+                format!("{}/", &self.project)
+            }
+        );
         format!("{}{}.md", dir, &self.title)
     }
 
@@ -136,7 +140,8 @@ impl Zettel
             }
         } else {
             ""
-        }.to_string()
+        }
+        .to_string()
     }
 
     /// Given the contents of a template file, replace all placeholders with their proper value
@@ -145,7 +150,8 @@ impl Zettel
         let re_title = Regex::new(r"\$\{TITLE\}").unwrap();
         let c1 = re_title.replace_all(contents, &self.title).to_string();
         let re_date = Regex::new(r"\$\{DATE\}").unwrap();
-        re_date.replace_all(&c1, Utc::now().format("%Y-%m-%d").to_string())
-               .to_string()
+        re_date
+            .replace_all(&c1, Utc::now().format("%Y-%m-%d").to_string())
+            .to_string()
     }
 }
