@@ -124,10 +124,10 @@ impl Database
     /// Delete a Zettel's metadata from the database
     pub fn delete(&self, zettel: &Zettel) -> Result<(), Error>
     {
-        self.conn
-            .lock()
-            .unwrap()
-            .execute("DELETE FROM zettelkasten WHERE title=?1", [&zettel.title])?;
+        let conn_lock = self.conn.lock().unwrap();
+        conn_lock.execute("DELETE FROM zettelkasten WHERE title=?1", [&zettel.title])?;
+        conn_lock.execute("DELETE FROM links WHERE zettel_id=?1", [&zettel.title])?;
+        conn_lock.execute("DELETE FROM tags WHERE zettel_id=?1", [&zettel.title])?;
         Ok(())
     }
 
