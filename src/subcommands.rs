@@ -67,7 +67,10 @@ impl Printer
         let mut empty_diff = vec!["".to_string(); len_diff];
         self.additional.append(&mut empty_diff);
 
-        for (z, a) in self.zettel.iter().zip(&self.additional) {
+        let mut zip = self.zettel.iter().zip(&self.additional).collect::<Vec<_>>();
+        zip.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        for (z, a) in zip {
             let mut result = self.format.to_string();
 
             result = result.replace("%t", &z.title);
@@ -243,9 +246,11 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
 /// Print every element in the list of Strings on an individual line
 fn print_list_of_strings(elems: &[String])
 {
-    elems.iter().for_each(|e| {
-                    println!("{}", e);
-                })
+    let mut sorted = elems.to_vec();
+    sorted.sort();
+    sorted.iter().for_each(|e| {
+                     println!("{}", e);
+                 })
 }
 
 /// Keep only those Zettel whose title matches the provided regex
