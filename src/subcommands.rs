@@ -293,8 +293,10 @@ fn filter_tag(zs: Vec<Zettel>, pattern: &str, exact: bool) -> Vec<Zettel>
     let re = Regex::new(&format!("^{}(/.*)?$", pattern)).unwrap();
     zs.into_iter()
       .filter(|z| {
-          if let Some(t) = z.tags.first() {
-              return if exact { pattern == t } else { re.is_match(t) };
+          for tag in &z.tags {
+              if pattern == tag || (!exact && re.is_match(tag)) {
+                  return true;
+              };
           }
           false
       })
