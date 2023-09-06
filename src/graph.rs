@@ -128,11 +128,11 @@ pub fn vizk(zs: &[Zettel])
     <!--The sliders go on top of the simulation nicely-->
     <div class="top-div" id="slider_container">
         <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="node_size">
-        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="link_thickness">
-        <input type="range" min="30" max="100" step="1" value="30" class="slider" id="link_distance">
-        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="link_force">
-        <input type="range" min="0" max="5" step="0.1" value="2" class="slider" id="repulsion_force">
-        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="center_force">
+        <input type="range" min="0" max="5" step="0.1" value="1" class="slider" id="link_thickness">
+        <input type="range" min="30" max="300" step="1" value="150" class="slider" id="link_distance">
+        <input type="range" min="0" max="5" step="0.1" value="1" class="slider" id="link_force">
+        <input type="range" min="0" max="10" step="0.1" value="5" class="slider" id="repulsion_force">
+        <input type="range" min="0" max="1" step="0.01" value="0.05" class="slider" id="center_force">
     </div>
     <div style="position: absolute; top: 15px; left: 15px">
         <p class="no-select" class="slider-description" id="node_size_description"></p>
@@ -156,19 +156,20 @@ pub fn vizk(zs: &[Zettel])
         const repulsionForceSlider = document.getElementById("repulsion_force");
         const centerForceSlider = document.getElementById("center_force");
 
-        const desiredSimulationEntropy = 0.1;
+        const desiredSimulationEntropy = 0.075;
 
         // used for detecting nodes on drag and hover
         const maxNodeDistanceFromCursor = 10;
 
-        let nodeSizeFactor = nodeSizeSlider.value; // 0 to 5
-        let linkThickness = linkThicknessSlider.value; // 0 to 5
-        let linkDistance = linkDistanceSlider.value; // 30 to 100
-        let attractionForceStrength = linkForceSlider.value; // 0 to 5
-        let repulsionForceFactor = 20; // multiplier for the repulsion force, since the default is
-                                       // too weak
-        let repulsionForceStrength = repulsionForceSlider.value * repulsionForceFactor; // 0 to 5 * 20 = 100
-        let centerForceStrength = centerForceSlider.value; // 0 to 1
+        const repulsionForceFactor = 20; // multiplier for the repulsion force, since the default
+                                         // is too weak
+
+        let nodeSizeFactor = nodeSizeSlider.value;
+        let linkThickness = linkThicknessSlider.value;
+        let linkDistance = linkDistanceSlider.value;
+        let attractionForceStrength = linkForceSlider.value;
+        let repulsionForceStrength = repulsionForceSlider.value * repulsionForceFactor;
+        let centerForceStrength = centerForceSlider.value;
 
         const nodeColor = "gray";
         const linkColor = "gray";
