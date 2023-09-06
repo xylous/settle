@@ -20,6 +20,7 @@ fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
 {
     let mut graph = Graph::<&str, &str>::new();
     let mut idxs = vec![];
+    let titles: Vec<String> = zs.iter().map(|z| z.title.clone()).collect();
     for z in zs {
         // basically, figure out if we've seen the current Zettel, that is, if it's already
         // added to the graph, because every entry should be added only once
@@ -42,7 +43,8 @@ fn gen_graph(zs: &[Zettel]) -> Graph<&str, &str>
             } else {
                 seen_idx
             };
-            graph.add_edge(t_idx, l_idx, "");
+            let is_ghost = if titles.contains(l) { "" } else { "ghost" };
+            graph.add_edge(t_idx, l_idx, is_ghost);
         }
     }
     graph
