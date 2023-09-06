@@ -179,11 +179,16 @@ pub fn vizk(zs: &[Zettel])
         const textOpacity = 0.8;
         const linkOpacity = 0.6;
         const unhighlightedOpacity = 0.3;
+        const ghostOpacity = 0.5;
 
         let graph = {{
-            nodes: raw_json_input.nodes.map((n) => {{return {{name: n, color: nodeColor, opacity: nodeOpacity}}}}),
+            nodes: raw_json_input.nodes.map((n) => {{return {{name: n, color: nodeColor, opacity: nodeOpacity, kind: ""}}}}),
             links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1], color: linkColor, opacity: linkOpacity}}}})
         }};
+
+        raw_json_input.edges.forEach((l) => {{
+            graph.nodes[l[1]].kind = l[2];
+        }});
 
         const canvas = d3.select("body").append("canvas")
             .attr("width", width)
@@ -227,13 +232,17 @@ pub fn vizk(zs: &[Zettel])
 
             graph.nodes.forEach((d) => {{
                 context.globalAlpha = d.opacity;
+                context.fillStyle = d.color;
                 context.beginPath();
                 context.moveTo(d.x + 5, d.y);
                 context.arc(d.x, d.y, computeNodeSize(d), 0, 2 * Math.PI);
-                context.fillStyle = d.color;
+                if (d.kind == "ghost") {{
+                    context.fillStyle = d.color;
+                    context.globalAlpha = ghostOpacity;
+                }}
                 context.fill();
                 context.fillStyle = textColor;
-                if (d.opacity == nodeOpacity) {{
+                if (d.opacity == nodeOpacity && d.kind != "ghost") {{
                     context.globalAlpha = textOpacity;
                 }}
                 context.textAlign = "center";
