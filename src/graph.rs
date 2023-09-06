@@ -179,15 +179,22 @@ pub fn vizk(zs: &[Zettel])
         const textOpacity = 0.8;
         const linkOpacity = 0.6;
         const unhighlightedOpacity = 0.3;
-        const ghostOpacity = 0.5;
+        const ghostOpacity = 0.4;
+        const unhighlightedGhostColor = "\#373737";
+
+        const renderRegular = 0;
+        const renderHighlight = 1;
+        const renderUnhighlight = 2;
 
         let graph = {{
-            nodes: raw_json_input.nodes.map((n) => {{return {{name: n, color: nodeColor, opacity: nodeOpacity, kind: ""}}}}),
-            links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1], color: linkColor, opacity: linkOpacity}}}})
+            nodes: raw_json_input.nodes.map((n) => {{return {{name: n, render: renderRegular, exists: true}}}}),
+            links: raw_json_input.edges.map((l) => {{return {{source: l[0], target: l[1], render: renderRegular}}}})
         }};
 
         raw_json_input.edges.forEach((l) => {{
-            graph.nodes[l[1]].kind = l[2];
+            if (l[2] == "ghost") {{
+                graph.nodes[l[1]].exists = false;
+            }}
         }});
 
         const canvas = d3.select("body").append("canvas")
@@ -211,19 +218,25 @@ pub fn vizk(zs: &[Zettel])
                 context.beginPath();
                 context.lineWidth = linkThickness;
                 graph.links
-                    .filter((d) => d.color == highlightColor)
+                    .filter((d) => d.render == renderHighlight)
                     .forEach((d) => {{
-                        context.strokeStyle = d.color;
+                        context.strokeStyle = highlightColor;
                         context.globalAlpha = 1;
                         context.moveTo(d.source.x, d.source.y);
                         context.lineTo(d.target.x, d.target.y);
                 }})
                 context.stroke();
                 graph.links
-                    .filter((d) => d.color == nodeColor)
+                    .filter((d) => d.render != renderHighlight)
                     .forEach((d) => {{
-                        context.strokeStyle = d.color;
-                        context.globalAlpha = d.opacity;
+                        context.strokeStyle = linkColor;
+                        // note that this only works because all links that are not highlighted
+                        // have only one of the two possible properties
+                        if (d.render == renderUnhighlight) {{
+                            context.globalAlpha = unhighlightedOpacity;
+                        }} else {{ // d.render == renderRegular
+                            context.globalAlpha = linkOpacity;
+                        }}
                         context.moveTo(d.source.x, d.source.y);
                         context.lineTo(d.target.x, d.target.y);
                 }})
@@ -231,20 +244,46 @@ pub fn vizk(zs: &[Zettel])
             }}
 
             graph.nodes.forEach((d) => {{
-                context.globalAlpha = d.opacity;
-                context.fillStyle = d.color;
+                let currentTextColor = textColor;
+                let currentTextOpacity = textOpacity;
+                let currentNodeColor = nodeColor;
+                let currentNodeOpacity = nodeOpacity;
+                if (d.exists) {{
+                    switch(d.render) {{
+                        case renderHighlight:
+                            currentNodeColor = highlightColor;
+                            break;
+                        case renderUnhighlight:
+                            currentNodeOpacity = unhighlightedOpacity;
+                            currentTextOpacity = unhighlightedOpacity;
+                            break;
+                        // the default case is handled by the parameters set before the `if`
+                        // statement
+                    }}
+                }} else {{
+                    switch(d.render) {{
+                        case renderHighlight:
+                            currentNodeColor = highlightColor;
+                            break;
+                        case renderUnhighlight:
+                            currentNodeOpacity = unhighlightedOpacity;
+                            currentNodeColor = unhighlightedGhostColor;
+                            currentTextOpacity = unhighlightedOpacity;
+                            break;
+                        default:
+                            currentNodeOpacity = ghostOpacity;
+                    }}
+                }}
+
+                context.fillStyle = currentNodeColor;
+                context.globalAlpha = currentNodeOpacity;
                 context.beginPath();
                 context.moveTo(d.x + 5, d.y);
                 context.arc(d.x, d.y, computeNodeSize(d), 0, 2 * Math.PI);
-                if (d.kind == "ghost") {{
-                    context.fillStyle = d.color;
-                    context.globalAlpha = ghostOpacity;
-                }}
                 context.fill();
-                context.fillStyle = textColor;
-                if (d.opacity == nodeOpacity && d.kind != "ghost") {{
-                    context.globalAlpha = textOpacity;
-                }}
+
+                context.fillStyle = currentTextColor;
+                context.globalAlpha = currentTextOpacity;
                 context.textAlign = "center";
                 context.fillText(d.name, d.x, d.y + 5 + 2 * Math.PI)
             }})
@@ -408,24 +447,20 @@ pub fn vizk(zs: &[Zettel])
             let absMouseY = ((event.layerY || event.offsetY) - currentTransform.y) / currentTransform.k;
             let closest = getClosestNode(absMouseX, absMouseY);
             if (closest === null) {{
-                graph.nodes.forEach((d) => {{d.color = nodeColor, d.opacity = nodeOpacity}});
-                graph.links.forEach((d) => {{d.color = linkColor, d.opacity = linkOpacity}});
+                graph.nodes.forEach((d) => {{d.render = renderRegular}});
+                graph.links.forEach((d) => {{d.render = renderRegular}});
             }} else if (lastClosest === null || closest.index != lastClosest.index){{
-                closest.color = highlightColor;
-                closest.opacity = nodeOpacity;
-                graph.links.forEach((l) => {{
-                    if (closest.index === l.target.index || closest.index == l.source.index) {{
-                        l.color = highlightColor;
-                        l.opacity = 1;
+                closest.render = renderHighlight;
+                graph.links.forEach((d) => {{
+                    if (closest.index === d.target.index || closest.index == d.source.index) {{
+                        d.render = renderHighlight
                     }} else {{
-                        l.color = linkColor;
-                        l.opacity = unhighlightedOpacity;
+                        d.render = renderUnhighlight;
                     }}
                 }})
-                graph.nodes.forEach((n) => {{
-                    if (!isConnected(closest.index, n.index)) {{
-                        n.color = nodeColor;
-                        n.opacity = unhighlightedOpacity;
+                graph.nodes.forEach((d) => {{
+                    if (!isConnected(closest.index, d.index)) {{
+                        d.render = renderUnhighlight;
                     }}
                 }})
             }}
