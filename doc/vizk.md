@@ -6,14 +6,14 @@ your web browser of choice.
 
 Under the hood, it uses [d3.js](https://d3js.org/) for the simulation and the
 rendering and, aside from having to import this single depepdency, the
-visualiser is ran completely offline.
+visualiser is ran completely offline. If you don't have an internet connection
+when you first run `vizk`, then nothing will show up because `d3.js` couldn't
+have been imported.
 
 You may highlight nodes and their connection by hovering with your mouse on
 them, you may drag nodes, and you may play around with a few parameters (namely,
 node size, link thickness, link distance, link attraction force, repulsion
-force, and the force of attraction to the center) through sliders. Note,
-however, that the initial slider parameters are rather unreliable and so you
-*will* have to adjust them to obtain something visually pleasing.
+force, and the force of attraction to the center) through sliders.
 
 ## Usage
 
