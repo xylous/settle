@@ -213,6 +213,22 @@ pub fn vizk(zs: &[Zettel])
             currentTransform = transform;
 
             if (linkThickness > 0) {{
+                let arrowHeadLength = linkThickness * 3;
+
+                const drawArrowHead = (d) => {{
+                    let arrowAngle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x);
+                    context.moveTo(d.target.x, d.target.y);
+                    context.lineTo(d.target.x - arrowHeadLength * Math.cos(arrowAngle - Math.PI / 7),
+                               d.target.y - arrowHeadLength * Math.sin(arrowAngle - Math.PI / 7));
+
+                    context.moveTo(d.target.x - arrowHeadLength * Math.cos(arrowAngle + Math.PI / 7),
+                               d.target.y - arrowHeadLength * Math.sin(arrowAngle + Math.PI / 7));
+
+                    context.lineTo(d.target.x, d.target.y);
+                    context.lineTo(d.target.x - arrowHeadLength * Math.cos(arrowAngle - Math.PI / 7),
+                               d.target.y - arrowHeadLength * Math.sin(arrowAngle - Math.PI / 7));
+                }}
+
                 // highlighted links and regular links have to be handled differently, since color
                 // is set on a global basis and not on a per-stroke basis, and so there would only
                 // be a single color if done in one pass
@@ -225,6 +241,7 @@ pub fn vizk(zs: &[Zettel])
                         context.globalAlpha = 1;
                         context.moveTo(d.source.x, d.source.y);
                         context.lineTo(d.target.x, d.target.y);
+                        drawArrowHead(d);
                 }})
                 context.stroke();
                 graph.links
@@ -240,6 +257,7 @@ pub fn vizk(zs: &[Zettel])
                         }}
                         context.moveTo(d.source.x, d.source.y);
                         context.lineTo(d.target.x, d.target.y);
+                        drawArrowHead(d);
                 }})
                 context.stroke();
             }}
