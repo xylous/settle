@@ -312,81 +312,80 @@ pub fn vizk(zs: &[Zettel])
             return a == b || linkedByIndex[`${{a}},${{b}}`] || linkedByIndex[`${{b}},${{a}}`];
         }}
 
-        const simulation = d3.forceSimulation(graph.nodes)
+        const simulation = d3.forceSimulation(graph.nodes);
+
+        const updateSimulationParameters = () => {{
             // Move the nodes to the center when the simulation starts
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            // Attract nodes to center
-            .force("centerX", d3.forceX(width / 2).strength(centerForceStrength))
-            .force("centerY", d3.forceY(height / 2).strength(centerForceStrength))
-            // Attract linked nodes
-            .force("links", d3.forceLink(graph.links)
-                .strength(attractionForceStrength)
-                .distance(linkDistance))
-            // Repulse all nodes from each other by some force
-            .force("repulsion",
-                d3.forceManyBody().strength(-repulsionForceStrength))
-            // Repulse nodes if they collide
-            .force("collide", d3.forceCollide().radius((d) => computeNodeSize(d) * 4))
-            .on("tick", render);
+            simulation.force("center", d3.forceCenter(width / 2, height / 2))
+                // Attract nodes to center
+                .force("centerX", d3.forceX(width / 2).strength(centerForceStrength))
+                .force("centerY", d3.forceY(height / 2).strength(centerForceStrength))
+                // Attract linked nodes
+                .force("links", d3.forceLink(graph.links)
+                    .strength(attractionForceStrength)
+                    .distance(linkDistance))
+                // Repulse all nodes from each other by some force
+                .force("repulsion",
+                    d3.forceManyBody().strength(-repulsionForceStrength))
+                // Repulse nodes if they collide
+                .force("collide", d3.forceCollide().radius((d) => computeNodeSize(d) * 4))
+                .on("tick", render);
+            simulation.alphaTarget(desiredSimulationEntropy)
+            simulation.restart();
+        }}
+
+        updateSimulationParameters();
 
         let nodeSizeSliderDescription = document.getElementById("node_size_description");
+        let linkThicknessSliderDescription = document.getElementById("link_thickness_description");
+        let linkDistanceSliderDescription = document.getElementById("link_distance_description");
+        let linkForceSliderDescription = document.getElementById("link_force_description");
+        let repulsionForceSliderDescription = document.getElementById("repulsion_force_description");
+        let centerForceSliderDescription = document.getElementById("center_force_description");
+
+        // display the slider values at the beginning of the simulation
         nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
+        linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
+        linkDistanceSliderDescription.innerHTML = "Link distance: " + linkDistanceSlider.value;
+        linkForceSliderDescription.innerHTML = "Link force: " + linkForceSlider.value;
+        repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
+        centerForceSliderDescription.innerHTML = "Center force: " + centerForceSlider.value;
+
         nodeSizeSlider.oninput = () => {{
             nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
             nodeSizeFactor = nodeSizeSlider.value;
+            updateSimulationParameters(); // node size affects the collision force
             render();
         }}
 
-        let linkThicknessSliderDescription = document.getElementById("link_thickness_description");
-        linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
         linkThicknessSlider.oninput = () => {{
             linkThicknessSliderDescription.innerHTML = "Link thickness: " + linkThicknessSlider.value;
             linkThickness = linkThicknessSlider.value;
             render();
         }}
 
-        let linkDistanceSliderDescription = document.getElementById("link_distance_description");
-        linkDistanceSliderDescription.innerHTML = "Link distance: " + linkDistanceSlider.value;
         linkDistanceSlider.oninput = () => {{
             linkDistanceSliderDescription.innerHTML = "Link distance: " + linkDistanceSlider.value;
             linkDistance = linkDistanceSlider.value;
-            simulation.force("links", d3.forceLink(graph.links)
-                .strength(attractionForceStrength)
-                .distance(linkDistance));
-            simulation.alphaTarget(desiredSimulationEntropy)
+            updateSimulationParameters();
         }}
 
-        let linkForceSliderDescription = document.getElementById("link_force_description");
-        linkForceSliderDescription.innerHTML = "Link force: " + linkForceSlider.value;
         linkForceSlider.oninput = () => {{
             linkForceSliderDescription.innerHTML = "Link force: " + linkForceSlider.value;
             attractionForceStrength = linkForceSlider.value;
-            simulation.force("links", d3.forceLink(graph.links)
-                .strength(attractionForceStrength)
-                .distance(linkDistance));
-            simulation.alphaTarget(desiredSimulationEntropy)
-            simulation.restart();
+            updateSimulationParameters();
         }}
 
-        let repulsionForceSliderDescription = document.getElementById("repulsion_force_description");
-        repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
         repulsionForceSlider.oninput = () => {{
             repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
             repulsionForceStrength = repulsionForceFactor * repulsionForceSlider.value;
-            simulation.force("charge", d3.forceManyBody().strength(-repulsionForceStrength));
-            simulation.alphaTarget(desiredSimulationEntropy)
-            simulation.restart();
+            updateSimulationParameters();
         }}
 
-        let centerForceSliderDescription = document.getElementById("center_force_description");
-        centerForceSliderDescription.innerHTML = "Center force: " + centerForceSlider.value;
         centerForceSlider.oninput = () => {{
             centerForceSliderDescription.innerHTML = "Center force: " + centerForceSlider.value;
             centerForceStrength = centerForceSlider.value;
-            simulation.force("centerX", d3.forceX(width / 2).strength(centerForceStrength));
-            simulation.force("centerY", d3.forceY(height / 2).strength(centerForceStrength));
-            simulation.alphaTarget(desiredSimulationEntropy)
-            simulation.restart();
+            updateSimulationParameters();
         }}
 
         const drag = (circles, canvas) => {{
