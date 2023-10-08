@@ -352,7 +352,7 @@ pub fn vizk(zs: &[Zettel])
             linkDistance = linkDistanceSlider.value;
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength)
-                .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
+                .distance(linkDistance));
             simulation.alphaTarget(desiredSimulationEntropy)
         }}
 
@@ -363,7 +363,7 @@ pub fn vizk(zs: &[Zettel])
             attractionForceStrength = linkForceSlider.value;
             simulation.force("links", d3.forceLink(graph.links)
                 .strength(attractionForceStrength)
-                .distance(linkDistance / (attractionForceStrength > 0 ? attractionForceStrength : 1)));
+                .distance(linkDistance));
             simulation.alphaTarget(desiredSimulationEntropy)
             simulation.restart();
         }}
