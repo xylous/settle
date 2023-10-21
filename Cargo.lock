@@ -169,6 +169,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete_nushell"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df47268eb308aaac1ffbfcd8ae43e43820cd094a051b03956d238f2bc60dc3fe"
+dependencies = [
+ "clap",
+ "clap_complete",
+]
+
+[[package]]
 name = "clap_lex"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -812,6 +822,7 @@ dependencies = [
  "chrono",
  "clap",
  "clap_complete",
+ "clap_complete_nushell",
  "dialoguer",
  "glob",
  "petgraph",

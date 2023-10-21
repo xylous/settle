@@ -1,5 +1,6 @@
 use clap::ArgMatches;
 use clap_complete::Shell::*;
+use clap_complete_nushell::Nushell;
 use regex::Regex;
 use rusqlite::Error;
 
@@ -240,9 +241,16 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
         _ => None,
     };
 
+    let app = &mut cli::build();
     if let Some(sh) = sh {
-        let app = &mut cli::build();
         clap_complete::generate(sh, app, app.get_name().to_string(), &mut std::io::stdout());
+    } else if shell.as_str() == "nu" || shell.as_str() == "nushell" {
+        clap_complete::generate(
+            Nushell,
+            app,
+            app.get_name().to_string(),
+            &mut std::io::stdout(),
+        );
     } else {
         eprintln!("error: '{}' isn't a (supported) shell", shell);
     }
