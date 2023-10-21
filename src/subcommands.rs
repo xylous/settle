@@ -239,6 +239,7 @@ pub fn compl(matches: &ArgMatches) -> Result<(), Error>
         "bash" => Some(Bash),
         "fish" => Some(Fish),
         _ => None,
+        // Note that Nushell is handled separately since the Enum types don't match
     };
 
     let app = &mut cli::build();

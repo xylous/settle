@@ -94,6 +94,10 @@ pub fn vizk(zs: &[Zettel])
         overflow: hidden;
     }}
 
+    p {{
+        margin: 0;
+    }}
+
     canvas {{
         position: relative;
         z-index: 1;
@@ -108,8 +112,56 @@ pub fn vizk(zs: &[Zettel])
         position: absolute;
     }}
 
-    .slider-description {{
-        position: sticky;
+    .button {{
+        z-index: 2;
+        border-radius: 20px;
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .2s;
+        transition: .2s;
+    }}
+
+    .button:before {{
+        border-radius: 50%;
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        background-color: white;
+        -webkit-transition: .2s;
+        transition: .2s;
+    }}
+
+    input:checked + .button {{
+        background-color: #2196F3;
+    }}
+
+    input:focus + .button {{
+        box-shadow: 0 0 1px #2196F3;
+    }}
+
+    input:checked + .button:before {{
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+    }}
+
+    .switch {{
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+    }}
+
+    .switch input {{
+        opacity: 0;
+        width: 0;
+        height: 0;
     }}
 
     .no-select {{
@@ -134,13 +186,18 @@ pub fn vizk(zs: &[Zettel])
         <input type="range" min="0" max="10" step="0.1" value="5" class="slider" id="repulsion_force">
         <input type="range" min="0" max="1" step="0.01" value="0.05" class="slider" id="center_force">
     </div>
-    <div style="position: absolute; top: 15px; left: 15px">
-        <p class="no-select" class="slider-description" id="node_size_description"></p>
-        <p class="no-select" class="slider-description" id="link_thickness_description"></p>
-        <p class="no-select" class="slider-description" id="link_distance_description"></p>
-        <p class="no-select" class="slider-description" id="link_force_description"></p>
-        <p class="no-select" class="slider-description" id="repulsion_force_description"></p>
-        <p class="no-select" class="slider-description" id="center_force_description"></p>
+    <div style="position: absolute; top: 30px; left: 15px">
+        <p class="no-select" id="node_size_description"></p>
+        <p class="no-select" id="link_thickness_description"></p>
+        <p class="no-select" id="link_distance_description"></p>
+        <p class="no-select" id="link_force_description"></p>
+        <p class="no-select" id="repulsion_force_description"></p>
+        <p class="no-select" id="center_force_description"></p>
+        <p style="display: inline" class="switch" class="no-select">Show arrows: </p>
+        <label class="switch">
+            <input type="checkbox" id="display_arrows">
+            <span class="button"></span>
+        </label>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script type="module">
@@ -155,6 +212,8 @@ pub fn vizk(zs: &[Zettel])
         const linkForceSlider = document.getElementById("link_force");
         const repulsionForceSlider = document.getElementById("repulsion_force");
         const centerForceSlider = document.getElementById("center_force");
+
+        const displayArrowsButton = document.getElementById("display_arrows");
 
         const desiredSimulationEntropy = 0.075;
 
@@ -216,6 +275,9 @@ pub fn vizk(zs: &[Zettel])
                 let arrowHeadLength = linkThickness * 3;
 
                 const drawArrowHead = (d) => {{
+                    if (! displayArrowsButton.checked) {{
+                        return;
+                    }}
                     let arrowAngle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x);
                     context.moveTo(d.target.x, d.target.y);
                     context.lineTo(d.target.x - arrowHeadLength * Math.cos(arrowAngle - Math.PI / 7),
