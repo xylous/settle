@@ -72,10 +72,9 @@ impl ConfigOptions
             template: expand_path(&tmp.template),
         };
 
-        // Create the Zettelkasten directory and the 'inbox' project if it doesn't exist
+        // Create the Zettelkasten directory it doesn't exist already
         if !dir_exists(&cfg.zettelkasten) {
             mkdir(&cfg.zettelkasten);
-            mkdir(&format!("{}/inbox", &cfg.zettelkasten));
         }
 
         cfg
