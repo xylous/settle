@@ -1,6 +1,32 @@
 # Changelog
 
-NOTE: This Changelog is partially incomplete.
+## v0.40.1 - 2023-10-28
+
+- fix bug where not all tags would be added to the database and therefore `query
+    --tag` results would have been incomplete
+- fix bug where `sync --update` would keep old links and tags, even if they
+    changed or were removed
+- fix panics in `settle sync --rename` caused by trying to rename a file that
+    didn't exist
+- fix overwrites in `settle sync --rename` when there was a Zettel with the new
+    title on the filesystem but didn't have an entry in the database
+- `query --graph json`: specify `"ghost"` as edge weight if the target link does
+    not exist
+- `vizk`:
+    - make nonexistent Zettel slightly darker in color and less opaque, to
+        distinguish them from those that do exist
+    - make drag distance detection dependent on node size, so that there isn't a
+        visible mismatch between large nodes and their selection radii
+    - change default parameters so that the notes don't cluster in the center
+        when opening the visualisation
+    - fix bug where link force greatly affected link distance at lower values
+        for the former
+    - add button to toggle displaying arrows at the end of each link
+- `settle compl`: add completion for `Nushell` (through `nu`, `nushell`
+    arguments)
+- change `query` and `ls`: always print output alphabetically sorted
+- change: don't enforce having an `inbox` project, since the user should have
+    control over this
 
 ## v0.40.0 - 2023-08-31
 
