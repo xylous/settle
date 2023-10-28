@@ -338,6 +338,24 @@ mkdir -p ~/.config/fish/completions
 settle compl fish >~/.config/fish/completions/settle.fish
 ```
 
+### nushell
+
+From inside nushell, you can generate the completion file by running:
+
+```
+settle compl nu | save ~/.config/nushell/settle.nu
+```
+
+(Note that `settle compl nushell` also works; `nushell` is just an alias for
+`nu`)
+
+And then you'll need to add the following line to your `config.nu`, so that the
+completions are sourced on every shell startup:
+
+```
+source ~/.config/nushell/settle.nu
+```
+
 ## License & Credits
 
 [Licensed under MIT](../LICENSE)
