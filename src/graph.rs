@@ -218,7 +218,7 @@ pub fn vizk(zs: &[Zettel])
         const desiredSimulationEntropy = 0.075;
 
         // used for detecting nodes on drag and hover
-        const maxNodeDistanceFromCursor = 10;
+        let maxNodeDistanceFromCursor = 10;
 
         const repulsionForceFactor = 20; // multiplier for the repulsion force, since the default
                                          // is too weak
@@ -431,10 +431,13 @@ pub fn vizk(zs: &[Zettel])
         repulsionForceSliderDescription.innerHTML = "Repel force: " + repulsionForceSlider.value;
         centerForceSliderDescription.innerHTML = "Center force: " + centerForceSlider.value;
 
+        let biggestNodeSize = Math.max(graph.nodes.map(d => d.size));
+
         nodeSizeSlider.oninput = () => {{
             nodeSizeSliderDescription.innerHTML = "Node size: " + nodeSizeSlider.value;
             nodeSizeFactor = nodeSizeSlider.value;
             updateSimulationParameters(); // node size affects the collision force
+            maxNodeDistanceFromCursor = computeNodeSize(biggestNodeSize) * 2 * Math.PI;
             render();
         }}
 
