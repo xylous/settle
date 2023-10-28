@@ -19,7 +19,10 @@ cargo install settle
 
 ### Overview
 
-- [full usage manual](./doc/SETTLE_MANUAL.md), contains more technical descriptions
+- [full usage manual](./doc/SETTLE_MANUAL.md), with technical descriptions of
+    every command
+    - includes [instructions on setting up shell command
+        autocompletion](./doc/SETTLE_MANUAL.md#shell-autocompletion)
 - [project motivation](./doc/history.md)
 - [design principles](./doc/design-principles.md)
 - [configuration](./doc/configuration.md)

@@ -11,15 +11,12 @@ the root of your Zettelkasten is at `~/docs/zettelkasten`, then
 isn't a subdirectory of your Zettelkasten's root, it can't count as a project.
 
 Note, however, the root of the Zettelkasten can be referenced by two names:
-`"main"`, or an empty string (`""`).
+`"main"`, or `""` (empty string)
 
 ### The role of projects
 
 Projects provide only a formal separation between notes, since any note can
 reference any other note, regardless of where they are.
-
-Your most basic projects are the root of the Zettelkasten and your inbox - the
-former should contain permanent notes, the other should contain temporary notes.
 
 It's up to you how you use projects. General Zettelkasten guidelines indicate
 using as few hierarchical structures as possible. They are most practical when

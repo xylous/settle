@@ -44,7 +44,8 @@ There are four properties in total:
     - `edges`: an array of arrays where the first element [in the sub-array] is
         the index of the source Zettel [in the `nodes` array], the second is the
         index of the target Zettel, and the third is the weight of the link
-        (which is always empty string (`""`))
+        (which is `""` (empty string) if the target Zettel exists, and `"ghost"`
+        if it doesn't)
     - `node_holes`: always empty array (`[]`)
     - `edge_property`: always `"directed"`
 
@@ -72,4 +73,5 @@ A minimal example of the format is this:
 This minimal example describes a Zettelkasten where `My first super interesting
 note` (indexed with `0`) links to `My second, albeit less interesting note`
 (indexed with `1`), and how `My third note, which is unrelated` has no links to
-or from it.
+or from it. The edge weight `""` (empty string) implies that the target exists
+in the Zettelkasten.
