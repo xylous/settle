@@ -427,25 +427,15 @@ fn rename(cfg: &ConfigOptions, old_title: &str, new_title: &str) -> Result<(), E
 {
     let db = Database::new(&cfg.db_file())?;
 
-    // basically, look thru the values provided by clap, and extract the first Zettel title that
-    // exists and is different from the new title
-
     if old_title == new_title {
         eprintln!(
-            "error: first match is the same as the new title ('{}'), so no rename",
+            "error: old title is the same as the new title ('{}'), so no rename",
             old_title
         );
         return Ok(());
     }
 
     let results = db.find_by_title(old_title)?;
-
-    // check if there's already a note with this title
-    let overwrite_failsafe = db.find_by_title(new_title)?;
-    if overwrite_failsafe.first().is_some() {
-        eprintln!("error: a note with the new title already exists: won't overwrite");
-        return Ok(());
-    }
 
     let old_zettel = if results.first().is_none() {
         eprintln!("error: no Zettel with that title");
@@ -454,6 +444,19 @@ fn rename(cfg: &ConfigOptions, old_title: &str, new_title: &str) -> Result<(), E
         results.first().unwrap()
     };
     let new_zettel = Zettel::new(new_title, &old_zettel.project);
+
+    if !file_exists(&old_zettel.filename(cfg)) {
+        eprintln!("error: the Zettel does not exist on the filesystem");
+        db.delete(&old_zettel)?;
+        return Ok(());
+    }
+
+    let exists_in_db = db.find_by_title(new_title)?.first().is_some();
+    let exists_in_fs = file_exists(&new_zettel.filename(cfg));
+    if exists_in_db || exists_in_fs {
+        eprintln!("error: a note with the new title already exists: won't overwrite");
+        return Ok(());
+    }
 
     let mut dial = dialoguer::Confirm::new();
     let prompt = dial.with_prompt(format!("{} --> {}", old_title, new_title));
