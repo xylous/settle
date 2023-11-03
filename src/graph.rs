@@ -113,55 +113,45 @@ pub fn vizk(zs: &[Zettel])
     }}
 
     .button {{
-        z-index: 2;
-        border-radius: 20px;
-        position: absolute;
+        z-index: 3;
+        position: relative;
+        display: inline;
         cursor: pointer;
+    }}
+
+    .button input {{
+        opacity: 0;
+    }}
+
+    .button span {{
+        position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .2s;
-        transition: .2s;
+        width: 38px;
+        height: 21px;
+        border-radius: 34px;;
+        background-color: gray;
+        transition: background-color 0.2s ease;
     }}
 
-    .button:before {{
-        border-radius: 50%;
-        position: absolute;
+    .button span::before {{
         content: "";
-        height: 20px;
-        width: 20px;
+        position: absolute;
+        width: 17px;
+        aspect-ratio: 1;
+        left: 2px;
+        bottom: 2px;
+        border-radius: 50%;
         background-color: white;
-        -webkit-transition: .2s;
-        transition: .2s;
+        transition: transform 0.2s ease, background-color 0.2s ease;
     }}
 
-    input:checked + .button {{
+    .button input:checked ~ span::before {{
+        transform: translateX(100%);
+    }}
+
+    .button input:checked ~ span {{
         background-color: #2196F3;
-    }}
-
-    input:focus + .button {{
-        box-shadow: 0 0 1px #2196F3;
-    }}
-
-    input:checked + .button:before {{
-        -webkit-transform: translateX(20px);
-        -ms-transform: translateX(20px);
-        transform: translateX(20px);
-    }}
-
-    .switch {{
-        position: relative;
-        display: inline-block;
-        width: 40px;
-        height: 20px;
-    }}
-
-    .switch input {{
-        opacity: 0;
-        width: 0;
-        height: 0;
     }}
 
     .no-select {{
@@ -193,10 +183,16 @@ pub fn vizk(zs: &[Zettel])
         <p class="no-select" id="link_force_description"></p>
         <p class="no-select" id="repulsion_force_description"></p>
         <p class="no-select" id="center_force_description"></p>
-        <p style="display: inline" class="switch" class="no-select">Show arrows: </p>
-        <label class="switch">
+        <p style="display: inline" class="no-select">Show arrows: </p>
+        <label class="button">
             <input type="checkbox" id="display_arrows">
-            <span class="button"></span>
+            <span></span>
+        </label>
+        <br>
+        <p style="display: inline" class="no-select">Freeze simulation: </p>
+        <label class="button">
+            <input type="checkbox" id="toggle_simulation">
+            <span></span>
         </label>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -213,7 +209,10 @@ pub fn vizk(zs: &[Zettel])
         const repulsionForceSlider = document.getElementById("repulsion_force");
         const centerForceSlider = document.getElementById("center_force");
 
+        // 0 when hidden, 1 when shown
         const displayArrowsButton = document.getElementById("display_arrows");
+        // 0 when running, 1 when stopped
+        const toggleSimulationButton = document.getElementById("toggle_simulation");
 
         const desiredSimulationEntropy = 0.075;
 
@@ -411,7 +410,9 @@ pub fn vizk(zs: &[Zettel])
                 .force("collide", d3.forceCollide().radius((d) => computeNodeSize(d) * 4))
                 .on("tick", render);
             simulation.alphaTarget(desiredSimulationEntropy)
-            simulation.restart();
+            if (!toggleSimulationButton.checked) {{
+                simulation.restart();
+            }}
         }}
 
         updateSimulationParameters();
@@ -471,11 +472,26 @@ pub fn vizk(zs: &[Zettel])
             updateSimulationParameters();
         }}
 
+        // in case of refresh
+        if (toggleSimulationButton.checked) {{
+            simulation.stop();
+        }}
+
+        toggleSimulationButton.addEventListener("change", function() {{
+            if (this.checked) {{
+                simulation.stop();
+            }} else {{
+                simulation.restart();
+            }}
+        }});
+
         const drag = (circles, canvas) => {{
             let dragStart = (event) => {{
                 if (!event.subject.active) {{
                     simulation.alphaTarget(desiredSimulationEntropy);
-                    simulation.restart();
+                    if (!toggleSimulationButton.checked) {{
+                        simulation.restart();
+                    }}
                 }};
                 event.subject.active = true;
             }}
